@@ -3,13 +3,7 @@
 #include "cuda_array.cuh"
 #include "common.cuh"
 
-struct Color {
-    int red;
-    int green;
-    int blue;
-};
-
-static const Color PALETTE[10] = {
+__device__ const Color PALETTE[10] = {
     {52, 152, 219},  // Peter River (Blue)
     {231, 76, 60},   // Alizarin (Red)
     {46, 204, 113},  // Emerald (Green)
@@ -48,16 +42,16 @@ static __global__ void d_cuda_map (
 
 }
 
-cuda_array<int>::ptr_type cuda_map(map_data& in)
+cuda_array<Color>::ptr_type cuda_map(map_data& in)
 {
         size_t N = in.max_x * in.max_y;
         auto [blocks_cnt, threads_cnt] = query_best_kernel_dims(N);
-        auto buffer2d = cuda_array<int>::make_ptr(N, 0); // fill 0
+        auto buffer2d = cuda_array<Color>::make_ptr(N, Color{0,0,0}); // fill 0
         //printf("compute_map<<<%d, %d>>> processing %d elements",
         //        blocks_cnt, threads_cnt, N); // TODO use fmt log
 
         d_cuda_map<<<blocks_cnt, threads_cnt>>>(
-        in.max_x, in.max_y *buffer2d);
+        in.max_x, in.max_y, *buffer2d);
         chck();
 
         buffer2d->cudaMemcpyDeviceToHost();

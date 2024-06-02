@@ -5,7 +5,7 @@
 
 class view_data {
 public:
-        cuda_array<int>::ptr_type buffer;
+        cuda_array<Color>::ptr_type buffer;
         int max_x;
         int max_y;
 public:
@@ -14,13 +14,15 @@ public:
         // PPM header
         out << "P3" << std::endl;
         out << max_x << " " << max_y << std::endl;
-        out << "1" << std::endl;
+        out << "255" << std::endl;
 
         size_t x_cnt = 0;
 
         auto pixels = buffer->h_ptr;
         for (auto idx = 0; idx < max_x * max_y; ++idx) {
-            out << pixels[idx] << " 0 0 ";
+            out << pixels[idx].red << " "
+                << pixels[idx].green << " "
+                << pixels[idx].blue << " ";
             ++x_cnt;
 
             if (x_cnt == max_x) {

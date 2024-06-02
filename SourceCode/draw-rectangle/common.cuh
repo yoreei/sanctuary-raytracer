@@ -10,6 +10,12 @@
 const int SHMEM_SIZE = 256 * 4; // todo unhardcode
 const bool CUDA_LOG = false;
 
+struct Color {
+    int red;
+    int green;
+    int blue;
+};
+
 std::tuple<size_t, size_t> query_best_kernel_dims(size_t elem_cnt)
 {
         size_t threads_cnt = 256;
