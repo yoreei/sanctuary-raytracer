@@ -9,7 +9,7 @@ map_data read_data(){
         // TODO read JSON
         // 
         // tower: circle
-        // poi: 
+        // poi: rectangle, which will intersect the circle. Think of this a that part of the canvas we are allowed to draw on
         map_data md = {
             .tower_radius = cuda_array<int>::make_ptr({32}),
             .tower_x = cuda_array<int>::make_ptr({32}),

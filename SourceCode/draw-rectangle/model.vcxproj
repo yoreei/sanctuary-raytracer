@@ -17,7 +17,6 @@
     <ClInclude Include="cuda_array.cuh" />
     <ClInclude Include="common.cuh" />
     <ClInclude Include="cuda_map.cuh" />
-    <ClInclude Include="cuda_reduce.cuh" />
     <ClInclude Include="view.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
