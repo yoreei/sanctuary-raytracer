@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 
 /*
-POD wrapper around device & host memory representing the same object.
+Wrapper around device & host memory representing the same object.
 */
 template<typename T>
 struct cuda_array {
