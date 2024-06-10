@@ -39,4 +39,4 @@ int main()
     hw3(buf);
     save_ppm(buf);
     return 0;
-} 
+}
