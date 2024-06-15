@@ -12,7 +12,7 @@ static const int imageWidth = 1920;
 static const int imageHeight = 1080;
 static const int maxColorComponent = 255;
 
-void save_ppm(Buffer& buf)
+void save_ppm(Buffer2D& buf)
 {
     std::ofstream ppmFileStream("crt_output_image.ppm", std::ios::out | std::ios::binary);
     ppmFileStream << "P3\n"; ppmFileStream << buf.width << " " << buf.height << "\n";
@@ -35,7 +35,7 @@ int main()
     hw4();
 
     // hw3
-    Buffer buf = {imageWidth, imageHeight};
+    Buffer2D buf = {imageWidth, imageHeight};
     hw3(buf);
     save_ppm(buf);
     return 0;

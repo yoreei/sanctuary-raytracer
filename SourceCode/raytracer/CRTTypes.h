@@ -16,10 +16,9 @@ struct Pixel
     }
 };
 
-class Buffer
+struct Buffer2D
 {
-public :
-    Buffer(uint16_t _width, uint16_t _height) : width(_width), height(_height)
+    Buffer2D(uint16_t _width, uint16_t _height) : width(_width), height(_height)
     {
         data = std::make_unique<Pixel[]>(width * height);
     }
@@ -30,11 +29,10 @@ public :
     const uint16_t height;
 };
 
-class Vec3 {
-public:
+struct Vec3 {
     float x, y, z;
 
-    Vec3() : x(0), y(0), z(0) {}
+    Vec3() : x{.0f}, y{.0f}, z{.0f} {}
 
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
@@ -51,7 +49,8 @@ public:
     }
 
     Vec3 operator/(float scalar) const {
-        return Vec3(x / scalar, y / scalar, z / scalar);
+        float divCache = 1.f/scalar; // division optimization
+        return Vec3(x * divCache, y * divCache, z * divCache);
     }
 
     float dot(const Vec3& other) const {
@@ -72,7 +71,8 @@ public:
 
     Vec3 normalize() const {
         float len = length();
-        return Vec3(x / len, y / len, z / len);
+        float divCache = 1.f/len; // division optimization
+        return Vec3(x * divCache, y * divCache, z * divCache);
     }
 
     std::string toString() const
@@ -81,6 +81,14 @@ public:
     }
 };
 
+/*
+* Linear Algebra Square Matrix in R^3
+* Cost: 9 floats
+* 
+* Example usage:
+* auto mat = Matrix3x3.identity()
+* mat(col, row) = 1.0f; // Column-major data access.
+*/
 
 class Matrix3x3 {
 public:
@@ -162,12 +170,14 @@ public:
         return result;
     }
 
-    void print() const {
+    void toString() const {
+        std::string result = "";
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 3; ++col) {
-                std::cout << (*this)(row, col) << " ";
+                result += (*this)(row, col);
+                result += " ";
             }
-            std::cout << std::endl;
+            result += "\n";
         }
     }
 
