@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <cmath>
 
-struct Pixel
+struct Color
 {
     uint8_t r = 0;
     uint8_t g = 0;
@@ -16,14 +16,26 @@ struct Pixel
     }
 };
 
+/*
+* For holding Color data.
+*/
 struct Buffer2D
 {
     Buffer2D(uint16_t _width, uint16_t _height) : width(_width), height(_height)
     {
-        data = std::make_unique<Pixel[]>(width * height);
+        data = std::make_unique<Color[]>(width * height);
     }
 
-    std::unique_ptr<Pixel[]> data;
+    Color& operator()(uint16_t x, uint16_t y)
+    {
+        if (x >= width || y >= height)
+        {
+            throw std::out_of_range("Buffer2D::operator(): Index out of range");
+        }
+        return data[y * width + x];
+    }
+
+    std::unique_ptr<Color[]> data;
 
     const uint16_t width;
     const uint16_t height;
@@ -57,7 +69,7 @@ struct Vec3 {
         return x * other.x + y * other.y + z * other.z;
     }
 
-    Vec3 cross(const Vec3& other) const {
+    [[nodiscard]] Vec3 cross(const Vec3& other) const {
         return Vec3(
             y * other.z - z * other.y,
             z * other.x - x * other.z,
@@ -69,7 +81,7 @@ struct Vec3 {
         return std::sqrt(x * x + y * y + z * z);
     }
 
-    Vec3 normalize() const {
+    [[nodiscard]] Vec3 normalize() const {
         float len = length();
         float divCache = 1.f/len; // division optimization
         return Vec3(x * divCache, y * divCache, z * divCache);
@@ -80,6 +92,13 @@ struct Vec3 {
         return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
     }
 };
+
+float dot(const Vec3& a, const Vec3& b) {
+    return a.dot(b);
+}
+Vec3 cross(const Vec3& a, const Vec3& b) {
+    return a.cross(b);
+}
 
 /*
 * Linear Algebra Square Matrix in R^3
@@ -185,35 +204,11 @@ private:
     float data[9];
 };
 
-// hw4 Task 1
-class Triangle {
-public:
-    Vec3 v0, v1, v2;
+struct Ray {
+    Vec3 origin;
+    Vec3 direction;
 
-    Triangle() : v0(Vec3()), v1(Vec3()), v2(Vec3()) {}
+    Ray() : origin(Vec3()), direction(Vec3()) {}
 
-    Triangle(const Vec3& v0, const Vec3& v1, const Vec3& v2) : v0(v0), v1(v1), v2(v2) {}
-
-    Vec3 normal() const {
-        Vec3 edge1 = v1 - v0;
-        Vec3 edge2 = v2 - v0;
-        return edge1.cross(edge2).normalize();
-    }
-
-    float area() const {
-        Vec3 edge1 = v1 - v0;
-        Vec3 edge2 = v2 - v0;
-        return edge1.cross(edge2).length() * 0.5f;
-    }
-
-    Triangle transform(const Matrix3x3& mat) const {
-        Vec3 newV0 = mat * v0;
-        Vec3 newV1 = mat * v1;
-        Vec3 newV2 = mat * v2;
-        return Triangle(newV0, newV1, newV2);
-    }
-
-    std::string toString() const {
-        return "Triangle: {" + v0.toString() + ", " + v1.toString() + ", " + v2.toString() + "}";
-    }
+    Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction) {}
 };
