@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdexcept>
 #include <cmath>
+#include <numbers>
 
 struct Color
 {
@@ -178,7 +179,7 @@ public:
         return result;
     }
 
-    static Matrix3x3 rotation(float angle) {
+    static Matrix3x3 rotation2D(float angle) {
         Matrix3x3 result = identity();
         float c = std::cos(angle);
         float s = std::sin(angle);
@@ -188,6 +189,44 @@ public:
         result(1, 1) = c;
         return result;
     }
+
+    static Matrix3x3 tilt(float deg) {
+        float rad = radFromDeg * deg;
+        float cosv = cos(rad);
+        float sinv = sin(rad);
+
+        return Matrix3x3 {{
+        1.f, 0.f, 0.f,
+        0.f, cosv, -sinv,
+        0.f, sinv, cosv
+        }};
+    }
+
+    static Matrix3x3 pan(float deg) {
+        float rad = radFromDeg * deg;
+        float cosv = cos(rad);
+        float sinv = sin(rad);
+
+        return Matrix3x3 {{
+        cosv, 0, sinv,
+        0, 1, 0,
+        -sinv, 0, cosv
+        }};
+    }
+
+    static Matrix3x3 roll(float deg) {
+        float rad = radFromDeg * deg;
+        float cosv = cos(rad);
+        float sinv = sin(rad);
+
+        return Matrix3x3 {{
+        cosv, -sinv, 0,
+        sinv, cosv, 0,
+        0,0, 1
+        }};
+    }
+
+
 
     void toString() const {
         std::string result = "";
@@ -202,6 +241,7 @@ public:
 
 private:
     float data[9];
+    static constexpr float radFromDeg = std::numbers::pi / 180.0;
 };
 
 struct Ray {

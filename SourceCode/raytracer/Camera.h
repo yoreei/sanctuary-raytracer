@@ -38,6 +38,53 @@ public:
         return Ray{this->pos, raydir};
     }
 
+    /*
+    * Move forwards/ backwards
+    */
+    void dolly(float dist)
+    {
+        pos = pos + dir * dist;
+    }
+
+    /*
+    * Raise upwards or sink downwards
+    */ 
+    void pedestal(float dist)
+    {
+        pos = pos + up * dist;
+    }
+
+    /*
+    * Stafe left or right
+    */
+    void truck(float dist)
+    {
+
+    }
+
+    /*
+    * Rotate around Y axis (as if camera direction = (0,0,-1))
+    */
+    void pan(float deg)
+    {
+
+    }
+
+    /*
+    * Rotate up/down around X axis (as if camera direction = (0,0,-1))
+    */
+    void tilt(float deg)
+    {
+
+    }
+
+    /*
+    * Rotate around Z axis (as if camera direction = (0,0,-1))
+    */
+    void roll(float deg)
+    {
+    }
+
 protected:
 
     /*
