@@ -15,31 +15,8 @@ struct Color
     {
         return std::to_string(r) + " " + std::to_string(g) + " " + std::to_string(b) + "\t";
     }
-};
 
-/*
-* For holding Color data.
-*/
-struct Buffer2D
-{
-    Buffer2D(uint16_t _width, uint16_t _height) : width(_width), height(_height)
-    {
-        data = std::make_unique<Color[]>(width * height);
-    }
-
-    Color& operator()(uint16_t x, uint16_t y)
-    {
-        if (x >= width || y >= height)
-        {
-            throw std::out_of_range("Buffer2D::operator(): Index out of range");
-        }
-        return data[y * width + x];
-    }
-
-    std::unique_ptr<Color[]> data;
-
-    const uint16_t width;
-    const uint16_t height;
+    static const int maxColorComponent = 255;
 };
 
 struct Vec3 {

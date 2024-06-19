@@ -8,5 +8,5 @@ struct Scene
     Camera camera;
     Settings settings;
     std::vector<Triangle> triangles;
-    Color backgroundColor = Color{0, 0, 0};
+    Color bgColor = Color{0, 0, 0};
 };

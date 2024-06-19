@@ -1,38 +1,28 @@
 #pragma once
 #include <tuple>
 #include "CRTTypes.h"
-
-/*
-* Transform from Color resolution to Normalized Device Coordinates [0, 1]
-* example: x [0, 1979] -> x [0, 1]
-*/
+#include "Image.h"
 
 class Camera
 {
 public:
     Camera() = default;
-    Camera(uint16_t _width, uint16_t _height, float _fov, Vec3 _pos, Matrix3x3 _mat)
-        : width(_width), height(_height), fov(_fov), pos(_pos), mat(_mat)
-    {
-        aspect_ratio = static_cast<float>(_width) / static_cast<float>(_height);
-    }
-    auto getHeight() const { return height; }
-    auto getWidth() const { return width; }
+    Camera(float _fov, Vec3 _pos, Matrix3x3 _mat)
+        : fov(_fov), pos(_pos), mat(_mat) {}
     auto getFov() const { return fov; }
     auto getPos() const { return pos; }
     auto getDir() const { return mat.col(2); }
     auto getUp() const { return mat.col(1); }
-    auto getRight() const {return mat.col(0); }
-    auto getAspectRatio() const { return aspect_ratio; }
+    auto getRight() const { return mat.col(0); }
 
     /*
     * return ray in world space, originating from pixel (x,y) on the screen
     */
-    Ray generateRay(int x, int y) const
+    Ray generateRay(const Image& image, int x, int y) const
     {
         Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
-        ndcFromRaster(coords);
-        screenFromNdc(coords);
+        ndcFromRaster(image, coords);
+        screenFromNdc(image, coords);
 
         // coords = coords.normalize(); skip this
         Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
@@ -100,7 +90,7 @@ protected:
     /*
     * x, y [0, width] [0, height] -> x, y [0, 1.0] [0, 1.0]
     */
-    void ndcFromRaster(Vec3& coordinates) const
+    void ndcFromRaster(const Image& image, Vec3& coordinates) const
     {
         float& x = coordinates.x;
         float& y = coordinates.y;
@@ -109,8 +99,8 @@ protected:
         x += 0.5f;
         y += 0.5f;
 
-        x /= width;
-        y /= height;
+        x /= image.width;
+        y /= image.height;
     }
 
     //void screenFromNdc(Vec3& coordinates) const
@@ -130,7 +120,7 @@ protected:
     //    x *= aspect_ratio;
     //}
 
-    void screenFromNdc(Vec3& coordinates) const
+    void screenFromNdc(const Image& image, Vec3& coordinates) const
     {
         float& x = coordinates.x;
         float& y = coordinates.y;
@@ -145,26 +135,15 @@ protected:
         x -= 1;
         y += 1;
 
-        x *= aspect_ratio;
+        x *= image.aspectRatio;
     }
 
 private:
-    /* Resolution of the camera */
-    uint16_t width = 800;
-    uint16_t height = 600;
-    // Assuming horizontal screen orientation
-    float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
     float fov = 90.0f; // Field of view in degrees
-
-    /* Position. World Space */
-    Vec3 pos {0.f, 0.f, 0.f};
-
-    /*
-    * Stores camera orientation. 3rd col is forward direction, 2nd col is up direction, 1st col is right direction.
-    */
+    Vec3 pos {0.f, 0.f, 0.f}; // Position. World Space
     Matrix3x3 mat = Matrix3x3 {{
     1, 0, 0,
     0, 1, 0,
     0, 0, -1
-    }};
+    }}; // 3rd col is forward dir, 2nd col is up dir, 1st col is right dir.
 };

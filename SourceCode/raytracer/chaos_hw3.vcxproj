@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CRTTypes.h" />
+    <ClInclude Include="Image.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="perlin-noise.h" />

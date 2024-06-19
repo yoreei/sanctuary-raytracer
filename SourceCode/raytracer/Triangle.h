@@ -70,6 +70,14 @@ public:
         return false;
     }
 
+    struct IntersectionData {
+        float t = FLT_MAX;    // Distance
+        Vec3 p = {0, 0, 0};     // Intersection Point
+        Vec3 n = {0, 0, 0};     // Normal at Point
+        float u = 0.f;    // First Barycentric Base
+        float v = 0.f;    // Second Barycentric Base
+    };
+
     /*
     * @Danny search OneNote 'Triangle Intersect'
     * Input: ray, rayProj
@@ -80,39 +88,40 @@ public:
     * OUtput: u, v: triangle-space coordinates of intersection for UV mapping
     * return: true if the ray intersects the triangle
     */
-    Intersection intersect(const Ray& ray, float& t, Vec3& p, Vec3& n, float& u, float& v) const {
+
+    Intersection intersect(const Ray& ray, IntersectionData& out) const {
         // Here assuming counter-clockwise order
         Vec3 e0 = v1 - v0;
         Vec3 e1 = v2 - v0;
         Vec3 plane_ortho = cross(e0, e1);
-        n = plane_ortho.normalize();
+        out.n = plane_ortho.normalize();
 
-        float rayProj = dot(ray.direction, n);
+        float rayProj = dot(ray.direction, out.n);
 
         // if triangle facing ray
         if (rayProj < -1e-6) {
-            float rpDist = dot(n, v0 - ray.origin);
-            t = rpDist / rayProj;
-            if (t < -1e-6) {
+            float rpDist = dot(out.n, v0 - ray.origin);
+            out.t = rpDist / rayProj;
+            if (out.t < -1e-6) {
                 return Intersection::BEHIND_RAY_ORIGIN;
             }
-            p = ray.origin + ray.direction * t;
+            out.p = ray.origin + ray.direction * out.t;
 
             // check if `p` is inside triangle
-            Vec3 v0p = p - v0;
+            Vec3 v0p = out.p - v0;
             Vec3 e2 = v2 - v1;
             Vec3 c0 = cross(e0, v0p);
             Vec3 c1 = cross(v0p, e1);
-            Vec3 c2 = cross(e2, p - v1);
+            Vec3 c2 = cross(e2, out.p - v1);
 
-            bool inside = dot(n, c0) > 1e-6 &&
-                   dot(n, c1) > 1e-6 &&
-                   dot(n, c2) > 1e-6;
+            bool inside = dot(out.n, c0) > 1e-6 &&
+                   dot(out.n, c1) > 1e-6 &&
+                   dot(out.n, c2) > 1e-6;
 
             if (inside) {
                 float area_inv = 1.f / plane_ortho.length();
-                u = c0.length() * area_inv;
-                v = c1.length() * area_inv;
+                out.u = c0.length() * area_inv;
+                out.v = c1.length() * area_inv;
                 return Intersection::SUCCESS;
             }
             else {

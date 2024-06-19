@@ -8,28 +8,9 @@
 #include "Scene.h"
 #include "hw4.h"
 #include "Triangle.h"
+#include "Image.h"
 
-/// Output image resolution
-static const int maxColorComponent = 255;
-
-void save_ppm(Buffer2D& buf)
-{
-    std::ofstream ppmFileStream("crt_output_image.ppm", std::ios::out | std::ios::binary);
-    ppmFileStream << "P3\n"; ppmFileStream << buf.width << " " << buf.height << "\n";
-    ppmFileStream << maxColorComponent << "\n";
-
-    for (int rowIdx = 0; rowIdx < buf.height; ++rowIdx) {
-        for (int colIdx = 0; colIdx < buf.width; ++colIdx) {
-            const Color& Color = buf.data[rowIdx * buf.width + colIdx];
-            ppmFileStream << (int)Color.r << " " << (int)Color.g << " " << (int)Color.b << "\t";
-        }
-        ppmFileStream << "\n";
-    }
-
-    ppmFileStream.close();
-}
-
-void loadScene(Scene& scene, uint16_t width, uint16_t height)
+void loadScene(Scene& scene)
 {
     float fov = 90.f;
     Vec3 camPos = {0.f,0.f,0.f};
@@ -38,7 +19,7 @@ void loadScene(Scene& scene, uint16_t width, uint16_t height)
     0, 1, 0,
     0, 0, -1
     } };
-    scene.camera = Camera{width, height, fov, camPos, camMat};
+    scene.camera = Camera{fov, camPos, camMat};
 
     Triangle tri_task1
     {
@@ -115,17 +96,26 @@ void loadScene(Scene& scene, uint16_t width, uint16_t height)
     };
 
     scene.triangles = foxShape;
+    std::cout << "0: " << foxShape[0].normal().toString() << std::endl
+        << "1: " << foxShape[1].normal().toString() << std::endl
+        << "2: " << foxShape[2].normal().toString() << std::endl;
+}
+
+void writeFile(const std::string& filename, const std::string& data) {
+    std::ofstream ppmFileStream(filename, std::ios::out | std::ios::binary);
+    ppmFileStream.write(data.c_str(), data.size());
+    ppmFileStream.close();
 }
 
 int main()
 {
-    uint16_t width = 800, height = 600;
-    Buffer2D buf = {width, height};
+    Image image = {800, 600};
     Scene scene;
-    loadScene(scene, width, height);
+    loadScene(scene);
     Renderer renderer = Renderer{&scene};
-    renderer.render(buf);
+    renderer.renderScene(image);
     std::cout << renderer.metrics.toString();
-    save_ppm(buf);
+    writeFile("crt_output_image.ppm", image.toPpmString());
+
     return 0;
 }

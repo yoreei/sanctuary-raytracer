@@ -18,8 +18,8 @@ public:
         duration = endTime - startTime;
     }
 
-    void record(Intersection x) {
-        xCounts[x]++;
+    void record(std::string s) {
+        xCounts[s]++;
     }
 
     ordered_json toJson() const {
@@ -27,7 +27,7 @@ public:
         j["timer"] = duration.count();
 
         for (const auto& pair : xCounts) {
-            j[::toString(pair.first)] = pair.second;
+            j[(pair.first)] = pair.second;
         }
         return j;
     }
@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    std::unordered_map<Intersection, int> xCounts;
+    std::unordered_map<std::string, int> xCounts;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
     std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
     std::chrono::duration<double> duration = std::chrono::duration<double>::zero();
