@@ -161,6 +161,14 @@ public:
         return *this;
     }
 
+    Vec3 col(uint8_t num) const
+    {
+        if (num > 2) {
+            throw std::out_of_range("Matrix3x3::col: Index out of range: " + num);
+        }
+        return Vec3{ data[num], data[num + 3], data[num + 6] };
+    }
+
     static Matrix3x3 identity() {
         return Matrix3x3();
     }
@@ -232,7 +240,7 @@ public:
         std::string result = "";
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 3; ++col) {
-                result += (*this)(row, col);
+                result += std::to_string((*this)(row, col));
                 result += " ";
             }
             result += "\n";
@@ -241,7 +249,7 @@ public:
 
 private:
     float data[9];
-    static constexpr float radFromDeg = std::numbers::pi / 180.0;
+    static constexpr float radFromDeg = static_cast<float>(std::numbers::pi) / 180.0f;
 };
 
 struct Ray {

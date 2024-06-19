@@ -33,11 +33,12 @@ void loadScene(Scene& scene, uint16_t width, uint16_t height)
 {
     float fov = 90.f;
     Vec3 camPos = {0.f,0.f,0.f};
-    Vec3 camUp = {0.f,1.f,0.f};
-    Vec3 camDir = {0.f,0.f,-1.f};
-    scene.camera = Camera{width, height, fov, camPos, camDir, camPos};
-        
-
+    Matrix3x3 camMat = Matrix3x3{ {
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, -1
+    } };
+    scene.camera = Camera{width, height, fov, camPos, camMat};
 
     Triangle tri_task1
     {

@@ -8,6 +8,30 @@
 #include "Scene.h"
 #include "Triangle.h"
 
+struct RendererMetrics {
+    int triangleTests = 0;
+    int trianglePlaneIntersections = 0;
+    int triangleBoundsIntersections = 0;
+    int triangleEarlyTerminated = 0; // e.g. distance culling new_t < t
+    int triangleBackfaceCulled = 0;
+
+    static constexpr const char* sTriangleTests = "triangleTests";
+    static constexpr const char* sTrianglePlaneIntersections = "trianglePlaneIntersections";
+    static constexpr const char* sTriangleBoundsIntersections = "triangleBoundsIntersections";
+    static constexpr const char* sTriangleEarlyTerminated = "triangleEarlyTerminated";
+    static constexpr const char* sTriangleBackfaceCulled = "triangleBackfaceCulled";
+
+    std::string toString() const
+    {
+        return 
+            std::string(sTriangleTests) + ": " + std::to_string(triangleTests) + "\n" +
+            std::string(sTrianglePlaneIntersections) + ": " + std::to_string(trianglePlaneIntersections) + "\n" +
+            std::string(sTriangleBoundsIntersections) + ": " + std::to_string(triangleBoundsIntersections) + "\n" +
+            std::string(sTriangleEarlyTerminated) + ": " + std::to_string(triangleEarlyTerminated) + "\n" +
+            std::string(sTriangleBackfaceCulled) + ": " + std::to_string(triangleBackfaceCulled);
+    };
+};
+
 class Renderer {
 public:
     Renderer(Scene* _scene)
@@ -53,6 +77,7 @@ public:
 
 private:
     Scene* scene;
+    RendererMetrics metrics;
 
     Color traceRay(const Ray& ray) const
     {
@@ -61,7 +86,7 @@ private:
         Color closest = scene->backgroundColor;
         float closest_t = FLT_MAX;
         for (const Triangle& tri : scene->triangles) {
-            if (tri.intersect(ray, t, p, n, u, v) && t < closest_t) {
+            if (tri.intersect(ray, t, p, n, u, v) && t < closest_t) { // TODO: Separate plane intersection & triangle uv intersection tests for perf.
                 closest_t = t;
                 closest = shade_uv(p, n, u, v);
             }

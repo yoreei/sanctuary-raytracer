@@ -11,17 +11,18 @@ class Camera
 {
 public:
     Camera() = default;
-    Camera(uint16_t width, uint16_t height, float fov, Vec3 pos, Vec3 dir, Vec3 up)
-        : width(width), height(height), fov(fov), pos(pos), dir(dir), up(up)
+    Camera(uint16_t _width, uint16_t _height, float _fov, Vec3 _pos, Matrix3x3 _mat)
+        : width(_width), height(_height), fov(_fov), pos(_pos), mat(_mat)
     {
-        aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
+        aspect_ratio = static_cast<float>(_width) / static_cast<float>(_height);
     }
     auto getHeight() const { return height; }
     auto getWidth() const { return width; }
     auto getFov() const { return fov; }
     auto getPos() const { return pos; }
-    auto getDir() const { return dir; }
-    auto getUp() const { return up; }
+    auto getDir() const { return mat.col(2); }
+    auto getUp() const { return mat.col(1); }
+    auto getRight() const {return mat.col(0); }
     auto getAspectRatio() const { return aspect_ratio; }
 
     /*
@@ -29,10 +30,12 @@ public:
     */
     Ray generateRay(int x, int y) const
     {
-        Vec3 raydir {static_cast<float>(x), static_cast<float>(y), dir.z};
-        ndcFromRaster(raydir);
-        screenFromNdc(raydir);
+        Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
+        ndcFromRaster(coords);
+        screenFromNdc(coords);
 
+        // coords = coords.normalize(); skip this
+        Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
         raydir = raydir.normalize();
 
         return Ray{this->pos, raydir};
@@ -43,6 +46,8 @@ public:
     */
     void dolly(float dist)
     {
+        // 3rd col is forward direction
+        Vec3 dir = mat.col(2);
         pos = pos + dir * dist;
     }
 
@@ -51,6 +56,8 @@ public:
     */ 
     void pedestal(float dist)
     {
+        // 2nd col is up direction
+        Vec3 up = mat.col(1);
         pos = pos + up * dist;
     }
 
@@ -59,30 +66,33 @@ public:
     */
     void truck(float dist)
     {
-
+        // 1st col is right direction
+        Vec3 right = mat.col(0);
+        pos = pos + right * dist;
     }
 
     /*
-    * Rotate around Y axis (as if camera direction = (0,0,-1))
+    * Rotate around camera's Y axis
     */
     void pan(float deg)
     {
-
+        mat = Matrix3x3::pan(deg) * mat;
     }
 
     /*
-    * Rotate up/down around X axis (as if camera direction = (0,0,-1))
+    * Rotate up/down around camera's X axis
     */
     void tilt(float deg)
     {
-
+        mat = Matrix3x3::tilt(deg) * mat;
     }
 
     /*
-    * Rotate around Z axis (as if camera direction = (0,0,-1))
+    * Rotate around camera's Z axis
     */
     void roll(float deg)
     {
+        mat = Matrix3x3::roll(deg) * mat;
     }
 
 protected:
@@ -149,9 +159,12 @@ private:
     /* Position. World Space */
     Vec3 pos {0.f, 0.f, 0.f};
 
-    /* Direction to look at. World Space */
-    Vec3 dir {0.f, 0.f, -1.f};
-
-    /* Up vector used for camera rotations. World Space */
-    Vec3 up {0.f, 1.f, 0.f};
+    /*
+    * Stores camera orientation. 3rd col is forward direction, 2nd col is up direction, 1st col is right direction.
+    */
+    Matrix3x3 mat = Matrix3x3 {{
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, -1
+    }};
 };
