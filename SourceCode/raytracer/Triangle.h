@@ -1,5 +1,6 @@
 #pragma once
 #include "CRTTypes.h"
+#include "Intersection.h"
 
 // hw4 Task 1
 class Triangle {
@@ -79,7 +80,7 @@ public:
     * OUtput: u, v: triangle-space coordinates of intersection for UV mapping
     * return: true if the ray intersects the triangle
     */
-    bool intersect(const Ray& ray, float& t, Vec3& p, Vec3& n, float& u, float& v) const {
+    Intersection intersect(const Ray& ray, float& t, Vec3& p, Vec3& n, float& u, float& v) const {
         // Here assuming counter-clockwise order
         Vec3 e0 = v1 - v0;
         Vec3 e1 = v2 - v0;
@@ -88,10 +89,13 @@ public:
 
         float rayProj = dot(ray.direction, n);
 
-        // if triangle is facing the ray, compute ray-plane intersection
+        // if triangle facing ray
         if (rayProj < -1e-6) {
             float rpDist = dot(n, v0 - ray.origin);
             t = rpDist / rayProj;
+            if (t < -1e-6) {
+                return Intersection::BEHIND_RAY_ORIGIN;
+            }
             p = ray.origin + ray.direction * t;
 
             // check if `p` is inside triangle
@@ -109,13 +113,19 @@ public:
                 float area_inv = 1.f / plane_ortho.length();
                 u = c0.length() * area_inv;
                 v = c1.length() * area_inv;
-                return true;
+                return Intersection::SUCCESS;
             }
+            else {
+                return Intersection::OUT_OF_BOUNDS;
+            }
+
+        }
+        else if (rayProj > 1e-6){
+            return Intersection::BACKFACE;
         }
         else {
-            std::cout << "Back-culling triggered for triangle: " << toString() << std::endl;
+            return Intersection::PARALLEL;
         }
-        return false;
     }
 
     bool intersect_plane(const Ray& ray, float& t, Vec3& p) const {

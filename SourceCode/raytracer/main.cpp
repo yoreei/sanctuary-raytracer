@@ -125,6 +125,7 @@ int main()
     loadScene(scene, width, height);
     Renderer renderer = Renderer{&scene};
     renderer.render(buf);
+    std::cout << renderer.metrics.toString();
     save_ppm(buf);
     return 0;
 }

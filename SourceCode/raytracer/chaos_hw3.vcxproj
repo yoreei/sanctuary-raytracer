@@ -134,9 +134,12 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CRTTypes.h" />
+    <ClInclude Include="Intersection.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="perlin-noise.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="hw4.h" />
+    <ClInclude Include="RendererMetrics.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Triangle.h" />

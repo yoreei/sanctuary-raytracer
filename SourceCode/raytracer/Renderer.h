@@ -7,38 +7,16 @@
 #include "perlin-noise.h"
 #include "Scene.h"
 #include "Triangle.h"
-
-struct RendererMetrics {
-    int triangleTests = 0;
-    int trianglePlaneIntersections = 0;
-    int triangleBoundsIntersections = 0;
-    int triangleEarlyTerminated = 0; // e.g. distance culling new_t < t
-    int triangleBackfaceCulled = 0;
-
-    static constexpr const char* sTriangleTests = "triangleTests";
-    static constexpr const char* sTrianglePlaneIntersections = "trianglePlaneIntersections";
-    static constexpr const char* sTriangleBoundsIntersections = "triangleBoundsIntersections";
-    static constexpr const char* sTriangleEarlyTerminated = "triangleEarlyTerminated";
-    static constexpr const char* sTriangleBackfaceCulled = "triangleBackfaceCulled";
-
-    std::string toString() const
-    {
-        return 
-            std::string(sTriangleTests) + ": " + std::to_string(triangleTests) + "\n" +
-            std::string(sTrianglePlaneIntersections) + ": " + std::to_string(trianglePlaneIntersections) + "\n" +
-            std::string(sTriangleBoundsIntersections) + ": " + std::to_string(triangleBoundsIntersections) + "\n" +
-            std::string(sTriangleEarlyTerminated) + ": " + std::to_string(triangleEarlyTerminated) + "\n" +
-            std::string(sTriangleBackfaceCulled) + ": " + std::to_string(triangleBackfaceCulled);
-    };
-};
+#include "RendererMetrics.h"
 
 class Renderer {
 public:
     Renderer(Scene* _scene)
         : scene(_scene){}
 
-    void render(Buffer2D& image) const
+    void render(Buffer2D& image)
     {
+        metrics.startTimer();
         for (int y = 0; y < scene->camera.getHeight(); ++y) {
             for (int x = 0; x < scene->camera.getWidth(); ++x) {
                 Ray ray = scene->camera.generateRay(x, y);
@@ -48,9 +26,10 @@ public:
                 image(x, y) = color;
             }
         }
+        metrics.stopTimer();
     }
 
-    void render_dbg(Buffer2D& image) const
+    void render_dbg(Buffer2D& image)
     {
             Ray ray;
             ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}};
@@ -75,23 +54,32 @@ public:
             //traceRay(ray);
     }
 
+    RendererMetrics metrics {};
 private:
     Scene* scene;
-    RendererMetrics metrics;
 
-    Color traceRay(const Ray& ray) const
+    Color traceRay(const Ray& ray)
     {
-        float t, u, v;
+        float u, v;
         Vec3 p, n; // intersection Point, triangle Normal
-        Color closest = scene->backgroundColor;
+        bool shouldShade = false;
+        float t = FLT_MAX;
         float closest_t = FLT_MAX;
         for (const Triangle& tri : scene->triangles) {
-            if (tri.intersect(ray, t, p, n, u, v) && t < closest_t) { // TODO: Separate plane intersection & triangle uv intersection tests for perf.
+            Intersection x = tri.intersect(ray, t, p, n, u, v);
+            if ( t < closest_t && x == Intersection::SUCCESS) {
                 closest_t = t;
-                closest = shade_uv(p, n, u, v);
+                shouldShade = true;
             }
+
+            metrics.record(x);
         }
-        return closest;
+
+        Color color = scene->backgroundColor;
+        if (shouldShade) { // TODO: Separate plane intersection & triangle uv intersection tests for perf.
+            color = shade_uv(p, n, u, v);
+        }
+        return color;
 
     }
 
