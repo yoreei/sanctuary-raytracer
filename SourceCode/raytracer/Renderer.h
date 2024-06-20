@@ -2,26 +2,27 @@
 #include <algorithm>
 #include <tuple>
 
-#include "CRTTypes.h"
 #include "Camera.h"
-#include "perlin-noise.h"
+#include "CRTTypes.h"
+#include "Image.h"
+#include "RendererMetrics.h"
 #include "Scene.h"
 #include "Triangle.h"
-#include "RendererMetrics.h"
-#include "Image.h"
+
+#include "perlin-noise.h"
 
 class Renderer {
 public:
-    Renderer(Scene* _scene)
-        : scene(_scene){}
+    Renderer() {}
 
-    void renderScene(Image& image)
+    void renderScene(const Scene& scene, Image& image)
     {
         metrics.startTimer();
         for (int y = 0; y < image.height; ++y) {
             for (int x = 0; x < image.width; ++x) {
-                Ray ray = scene->camera.generateRay(image, x, y);
-                image(x, y) = traceScene(ray); // to debug camera: traceImagePlane(ray)
+                Ray ray = scene.camera.generateRay(image, x, y);
+                image(x, y) = traceScene(scene, ray);
+                //traceImagePlane(ray) // to debug camera
             }
         }
         metrics.stopTimer();
@@ -30,21 +31,20 @@ public:
     /*
     * Fires a single ray. For Debugging traceRay
     */
-    void _renderSingle(Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
+    void _renderSingle(const Scene& scene, Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
     {
             ray.direction = ray.direction.normalize();
-            traceScene(ray);
+            traceScene(scene, ray);
     }
 
     RendererMetrics metrics {};
 private:
-    Scene* scene;
 
-    Color traceScene(const Ray& ray)
+    Color traceScene(const Scene& scene, const Ray& ray)
     {
         Triangle::IntersectionData xData, xDataBest;
         bool bSuccess = false;
-        for (const Triangle& tri : scene->triangles) {
+        for (const Triangle& tri : scene.triangles) {
             Intersection x = tri.intersect(ray, xData); // TODO: Separate plane intersection & triangle uv intersection tests for perf.
             if ( xData.t < xDataBest.t && x == Intersection::SUCCESS) {
                 xDataBest = xData;
@@ -54,15 +54,15 @@ private:
             metrics.record(toString(x));
         }
 
-        return bSuccess ? shade_abs(xDataBest) : scene->bgColor;
+        return bSuccess ? shade_abs(xDataBest) : scene.bgColor;
     }
 
     /* hw3. For debugging camera Ray generation */
-    Color traceImagePlane(const Ray& ray) const
+    Color traceImagePlane(const Scene& scene, const Ray& ray) const
     {
         float imagePlaneDist = 1.f;
         Vec3 p = ray.origin + ray.direction;
-        Vec3 ortho = ray.origin + scene->camera.getDir(); // shortest vect. to img plane
+        Vec3 ortho = ray.origin + scene.camera.getDir(); // shortest vect. to img plane
         float rayProj = dot(ortho, p);
 
         float scale = imagePlaneDist / rayProj;

@@ -2,13 +2,14 @@
 #include <tuple>
 #include "CRTTypes.h"
 #include "Image.h"
+#include "SceneObject.h"
 
-class Camera
+class Camera: public SceneObject
 {
 public:
     Camera() = default;
     Camera(float _fov, Vec3 _pos, Matrix3x3 _mat)
-        : fov(_fov), pos(_pos), mat(_mat)
+        : SceneObject(_pos, _mat), fov(_fov)
     {
         // TODO assert _mat is orthonormal
     }
@@ -89,10 +90,4 @@ protected:
 
 private:
     float fov = 90.0f; // Field of view in degrees
-    Vec3 pos {0.f, 0.f, 0.f}; // Position. World Space
-    Matrix3x3 mat = Matrix3x3 {{
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, -1
-    }}; // 3rd col is forward dir, 2nd col is up dir, 1st col is right dir.
 };

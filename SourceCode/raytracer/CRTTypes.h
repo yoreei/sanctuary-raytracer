@@ -6,6 +6,7 @@
 #include <cmath>
 #include <numbers>
 #include <iostream>
+#include <string>
 
 struct Color
 {
@@ -75,15 +76,15 @@ struct Vec3 {
 
 };
 
-std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
     os << vec.toString();
     return os;
 }
 
-float dot(const Vec3& a, const Vec3& b) {
+inline float dot(const Vec3& a, const Vec3& b) {
     return a.dot(b);
 }
-Vec3 cross(const Vec3& a, const Vec3& b) {
+inline Vec3 cross(const Vec3& a, const Vec3& b) {
     return a.cross(b);
 }
 

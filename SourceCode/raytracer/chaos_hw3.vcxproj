@@ -129,9 +129,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="Animator.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CRTTypes.h" />
     <ClInclude Include="Image.h" />
@@ -142,6 +145,7 @@
     <ClInclude Include="hw4.h" />
     <ClInclude Include="RendererMetrics.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Triangle.h" />
   </ItemGroup>

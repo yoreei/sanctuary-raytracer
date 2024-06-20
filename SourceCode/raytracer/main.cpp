@@ -3,12 +3,14 @@
 #include <memory>
 #include <string>
 
-#include "CRTTypes.h"
-#include "Renderer.h"
-#include "Scene.h"
-#include "hw4.h"
-#include "Triangle.h"
+#include "Animator.h"
 #include "Image.h"
+#include "CRTTypes.h"
+#include "Triangle.h"
+#include "Camera.h"
+#include "Scene.h"
+#include "Renderer.h"
+#include "hw4.h"
 
 void loadScene(Scene& scene)
 {
@@ -23,7 +25,7 @@ void loadScene(Scene& scene)
 
     Matrix3x3 camMat = Matrix3x3::fromCols(right, up, dir);
     scene.camera = Camera{fov, camPos, camMat};
-    scene.camera.dolly(2.f);
+    scene.camera.addAnimation<RotateAnimation>(Matrix3x3::roll(360), 72);
 
     std::vector<Triangle> task1 =
     { {
@@ -114,10 +116,11 @@ void writeFile(const std::string& filename, const std::string& data) {
 int main()
 {
     Image image = {800, 600};
-    Scene scene;
+    Scene scene {};
     loadScene(scene);
-    Renderer renderer = Renderer{&scene};
-    renderer.renderScene(image);
+    Animator animator = Animator{scene};
+    Renderer renderer{};
+    renderer.renderScene(scene, image);
     std::cout << renderer.metrics.toString();
     writeFile("crt_output_image.ppm", image.toPpmString());
 
