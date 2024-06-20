@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <numbers>
+#include <iostream>
 
 struct Color
 {
@@ -20,9 +21,11 @@ struct Color
 };
 
 struct Vec3 {
-    float x, y, z;
+    float x = 0.f;
+    float y = 0.f;
+    float z = 0.f;
 
-    Vec3() : x{.0f}, y{.0f}, z{.0f} {}
+    Vec3() = default;
 
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
@@ -67,9 +70,15 @@ struct Vec3 {
 
     std::string toString() const
     {
-        return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
+        return "{ " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z) + " }";
     }
+
 };
+
+std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+    os << vec.toString();
+    return os;
+}
 
 float dot(const Vec3& a, const Vec3& b) {
     return a.dot(b);
@@ -102,6 +111,14 @@ public:
         for (int i = 0; i < 9; ++i) {
             data[i] = values[i];
         }
+    }
+
+    static Matrix3x3 fromCols(const Vec3& c0, const Vec3& c1, const Vec3& c2) {
+        return Matrix3x3 {{
+            c0.x, c1.x, c2.x,
+            c0.y, c1.y, c2.y,
+            c0.z, c1.z, c2.z,
+            }};
     }
 
     float& operator()(int row, int col) {
@@ -175,6 +192,7 @@ public:
         return result;
     }
 
+    /* Rotate around X. pitch */
     static Matrix3x3 tilt(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);
@@ -187,6 +205,7 @@ public:
         }};
     }
 
+    /* Rotate around Y. yaw */
     static Matrix3x3 pan(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);
@@ -199,6 +218,9 @@ public:
         }};
     }
 
+    /*
+    * Rotate around Z
+    */
     static Matrix3x3 roll(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);

@@ -13,20 +13,24 @@
 void loadScene(Scene& scene)
 {
     float fov = 90.f;
-    Vec3 camPos = {0.f,0.f,0.f};
-    Matrix3x3 camMat = Matrix3x3{ {
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, -1
-    } };
-    scene.camera = Camera{fov, camPos, camMat};
+    Vec3 camPos = { 0.f,0.f,0.f };
+    Vec3 dir = { 0.f, 0.f, -1.f };
+    dir = dir.normalize();
+    Vec3 right = Matrix3x3::pan(90.f) * dir;
+    Vec3 up = Matrix3x3:: tilt(90.f) * dir;
 
-    Triangle tri_task1
-    {
+    std::cout << "Cam: [ " << right << " " << up << " " << dir << " ] " << std::endl;
+
+    Matrix3x3 camMat = Matrix3x3::fromCols(right, up, dir);
+    scene.camera = Camera{fov, camPos, camMat};
+    scene.camera.dolly(2.f);
+
+    std::vector<Triangle> task1 =
+    { {
         Vec3{-1.75f, -1.75f, -3.f},
         Vec3{1.75f, -1.75f, -3.f},
         Vec3{0.f, 1.75f, -3.f},
-    };
+    } };
 
     // Triangles for hw5 task2
     // alls vertices even with the image plane
@@ -95,7 +99,7 @@ void loadScene(Scene& scene)
         },
     };
 
-    scene.triangles = foxShape;
+    scene.triangles = task1;
     std::cout << "0: " << foxShape[0].normal().toString() << std::endl
         << "1: " << foxShape[1].normal().toString() << std::endl
         << "2: " << foxShape[2].normal().toString() << std::endl;

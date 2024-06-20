@@ -60,8 +60,12 @@ private:
     /* hw3. For debugging camera Ray generation */
     Color traceImagePlane(const Ray& ray) const
     {
+        float imagePlaneDist = 1.f;
         Vec3 p = ray.origin + ray.direction;
-        float scale = -1.f / p.z; // TODO: ray.direction.z / p.z
+        Vec3 ortho = ray.origin + scene->camera.getDir(); // shortest vect. to img plane
+        float rayProj = dot(ortho, p);
+
+        float scale = imagePlaneDist / rayProj;
         p = p * scale;
         Triangle::IntersectionData xData;
         xData.p = p;

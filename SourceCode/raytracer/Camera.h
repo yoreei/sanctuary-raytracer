@@ -8,7 +8,10 @@ class Camera
 public:
     Camera() = default;
     Camera(float _fov, Vec3 _pos, Matrix3x3 _mat)
-        : fov(_fov), pos(_pos), mat(_mat) {}
+        : fov(_fov), pos(_pos), mat(_mat)
+    {
+        // TODO assert _mat is orthonormal
+    }
     auto getFov() const { return fov; }
     auto getPos() const { return pos; }
     auto getDir() const { return mat.col(2); }
@@ -29,60 +32,6 @@ public:
         raydir = raydir.normalize();
 
         return Ray{this->pos, raydir};
-    }
-
-    /*
-    * Move forwards/ backwards
-    */
-    void dolly(float dist)
-    {
-        // 3rd col is forward direction
-        Vec3 dir = mat.col(2);
-        pos = pos + dir * dist;
-    }
-
-    /*
-    * Raise upwards or sink downwards
-    */ 
-    void pedestal(float dist)
-    {
-        // 2nd col is up direction
-        Vec3 up = mat.col(1);
-        pos = pos + up * dist;
-    }
-
-    /*
-    * Stafe left or right
-    */
-    void truck(float dist)
-    {
-        // 1st col is right direction
-        Vec3 right = mat.col(0);
-        pos = pos + right * dist;
-    }
-
-    /*
-    * Rotate around camera's Y axis
-    */
-    void pan(float deg)
-    {
-        mat = Matrix3x3::pan(deg) * mat;
-    }
-
-    /*
-    * Rotate up/down around camera's X axis
-    */
-    void tilt(float deg)
-    {
-        mat = Matrix3x3::tilt(deg) * mat;
-    }
-
-    /*
-    * Rotate around camera's Z axis
-    */
-    void roll(float deg)
-    {
-        mat = Matrix3x3::roll(deg) * mat;
     }
 
 protected:
