@@ -194,7 +194,7 @@ public:
     }
 
     /* Rotate around X. pitch */
-    static Matrix3x3 tilt(float deg) {
+    static Matrix3x3 Tilt(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);
         float sinv = sin(rad);
@@ -207,7 +207,7 @@ public:
     }
 
     /* Rotate around Y. yaw */
-    static Matrix3x3 pan(float deg) {
+    static Matrix3x3 Pan(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);
         float sinv = sin(rad);
@@ -222,7 +222,7 @@ public:
     /*
     * Rotate around Z
     */
-    static Matrix3x3 roll(float deg) {
+    static Matrix3x3 Roll(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);
         float sinv = sin(rad);

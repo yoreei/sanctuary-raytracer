@@ -2,6 +2,7 @@
 
 #include<memory>
 #include "CRTTypes.h"
+#include "stb_image_write.h"
 
 struct Image {
     Image(int _width, int _height): width(_width), height(_height)
@@ -59,5 +60,18 @@ struct Image {
         }
 
         return result;
+    }
+
+    void writeToPng(const std::string& filename) const {
+        std::vector<uint8_t> pngData(width * height * 3);
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                const Color& color = data[y * width + x];
+                pngData[3 * (y * width + x) + 0] = color.r;
+                pngData[3 * (y * width + x) + 1] = color.g;
+                pngData[3 * (y * width + x) + 2] = color.b;
+            }
+        }
+        stbi_write_png(filename.c_str(), width, height, 3, pngData.data(), width * 3);
     }
 };

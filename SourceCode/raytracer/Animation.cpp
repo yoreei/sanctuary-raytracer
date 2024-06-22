@@ -1,9 +1,12 @@
 #include "Animation.h"
 #include "SceneObject.h"
 
+
 void MoveAnimation::apply(SceneObject& obj)
 {
-    obj.pos = obj.pos + delta;
+    // TODO: cache animDir for performance?
+    Vec3 animDir = obj.mat * delta;
+    obj.pos = obj.pos + animDir;
 }
 
 void RotateAnimation::apply(SceneObject& obj)
