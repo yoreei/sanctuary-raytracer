@@ -12,7 +12,7 @@ public:
     */
     bool update()
     {
-        // TODO: Implementation not optimal
+        // TODO: Improve implementation, not optimal
 
         for (auto& animation : scene.camera.animations) {
             if (currentFrame >= animation->getStartFrame() && currentFrame < animation->getEndFrame()) {

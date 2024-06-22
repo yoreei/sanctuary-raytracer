@@ -7,9 +7,6 @@ struct SceneObject;
 class Animation
 {
 public:
-    /*
-    * return false if animation is done
-    */
     virtual void apply(SceneObject& obj) = 0;
     auto getStartFrame() const { return startFrame; }
     auto getEndFrame() const { return endFrame; }
@@ -37,7 +34,7 @@ public:
     MoveAnimation(const Vec3 delta, int startFrame, int endFrame) : Animation(startFrame, endFrame), delta(delta) {}
 
     /*
-    * Will distribute movement over `totalFrames` frames
+    * Will distribute movement over `endFrame - startFrame` frames
     */
     static std::shared_ptr<Animation> Make(MoveType type, float distance, int startFrame, int endFrame)
     {
@@ -82,7 +79,7 @@ public:
     RotateAnimation(Matrix3x3 mat, int startFrame, int endFrame) : Animation(startFrame, endFrame), mat(mat) {}
 
     /*
-    * Will distribute rotation over `totalFrames` frames
+    * Will distribute rotation over `endFrame - startFrame` frames
     */
     static std::shared_ptr<Animation> Make(RotateType type, float angle, int startFrame, int endFrame)
     {

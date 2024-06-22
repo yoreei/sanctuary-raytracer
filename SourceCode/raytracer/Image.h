@@ -1,7 +1,9 @@
 #pragma once
 
 #include<memory>
+
 #include "CRTTypes.h"
+
 #include "stb_image_write.h"
 
 struct Image {
@@ -15,7 +17,7 @@ struct Image {
     {
         if (x >= width || y >= height)
         {
-            throw std::out_of_range("Buffer2D::operator(): Index out of range");
+            throw std::out_of_range("Image::operator(): Index out of range");
         }
         return data[y * width + x];
     }
