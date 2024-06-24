@@ -41,7 +41,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -130,7 +130,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Raytracer.cpp" />
     <ClCompile Include="MeshObject.h" />
     <ClCompile Include="stb_image_write.cpp" />
   </ItemGroup>
@@ -143,6 +143,7 @@
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="perlin-noise.h" />
+    <ClInclude Include="Raytracer.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RendererMetrics.h" />
     <ClInclude Include="Scene.h" />

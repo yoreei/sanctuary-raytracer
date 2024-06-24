@@ -4,6 +4,7 @@
 #include <string>
 #include <filesystem>
 
+#include "Raytracer.h"
 #include "Animator.h"
 #include "Image.h"
 #include "CRTTypes.h"
@@ -14,13 +15,13 @@
 
 namespace fs = std::filesystem;
 
-void writeFile(const std::string& filename, const std::string& data) {
+void Raytracer::writeFile(const std::string& filename, const std::string& data) {
     std::ofstream ppmFileStream(filename, std::ios::out | std::ios::binary);
     ppmFileStream.write(data.c_str(), data.size());
     ppmFileStream.close();
 }
 
-void runScene(const std::string& sceneName)
+void Raytracer::runScene(const std::string& sceneName)
 {
     Image image {};
     Scene scene {};
@@ -43,7 +44,7 @@ void runScene(const std::string& sceneName)
     } while (animator.update());
 }
 
-int main()
+int Raytracer::run()
 {
     for (const auto& entry : fs::directory_iterator("scenes")) {
         if (auto ext = entry.path().extension(); ext != ".crtscene") {

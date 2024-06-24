@@ -37,8 +37,6 @@ namespace RendererIntegrationTests {
             Renderer renderer{};
             renderer.renderScene(scene, image);
 
-            image.writeToPpm("out/" + name + ".ppm");
-
             if (fs::exists("ref/")) {
                 std::string sRef = loadFile("ref/" + name + ".ppm");
                 std::string sOut = image.toPpmString();
@@ -47,7 +45,7 @@ namespace RendererIntegrationTests {
             else {
                 std::cout << "Reference image directory not found. Generating new references." << std::endl;
                 fs::create_directories("ref/");
-                image.writeToPpm("ref/scene1.ppm");
+                image.writeToPpm("ref/" + name + ".ppm");
             }
         }
     }
