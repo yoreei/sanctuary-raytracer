@@ -8,6 +8,10 @@
 #include <iostream>
 #include <string>
 
+inline bool fequal(float a, float b, float epsilon = 0.0001f) {
+    return std::abs(a - b) < epsilon;
+}
+
 struct Color
 {
     uint8_t r = 0;
@@ -19,7 +23,22 @@ struct Color
     }
 
     static const int maxColorComponent = 255;
+
+    /* Create Color from RGB values in the range [0, 1] */
+    static Color fromUnit(float fr, float fg, float fb) {
+        return Color {
+            static_cast<uint8_t>(std::round(fr * maxColorComponent)),
+            static_cast<uint8_t>(std::round(fg * maxColorComponent)),
+            static_cast<uint8_t>(std::round(fb * maxColorComponent))
+        };
+    }
+
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Color& color) {
+    os << color.toString();
+    return os;
+}
 
 struct Vec3 {
     float x = 0.f;
@@ -29,6 +48,10 @@ struct Vec3 {
     Vec3() = default;
 
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
+
+    bool equal(const Vec3& other, float epsilon = 0.0001f) const {
+        return fequal(this->x, other.x, epsilon) && fequal(this->y, other.y, epsilon) && fequal(this->z, other.z, epsilon);
+    }
 
     Vec3 operator+(const Vec3& other) const {
         return Vec3(x + other.x, y + other.y, z + other.z);
@@ -51,16 +74,21 @@ struct Vec3 {
         return x * other.x + y * other.y + z * other.z;
     }
 
-    [[nodiscard]] Vec3 cross(const Vec3& other) const {
-        return Vec3(
-            y * other.z - z * other.y,
-            z * other.x - x * other.z,
-            x * other.y - y * other.x
-        );
+    void cross(const Vec3& other, Vec3& out) const {
+        out.x = y * other.z - z * other.y;
+        out.y = z * other.x - x * other.z;
+        out.z = x * other.y - y * other.x;
     }
 
     float length() const {
         return std::sqrt(x * x + y * y + z * z);
+    }
+
+    float crossLength(const Vec3& other) const {
+        float cx = y * other.z - z * other.y;
+        float cy = z * other.x - x * other.z;
+        float cz = x * other.y - y * other.x;
+        return std::sqrt(cx * cx + cy * cy + cz * cz);
     }
 
     [[nodiscard]] Vec3 normalize() const {
@@ -76,16 +104,19 @@ struct Vec3 {
 
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
-    os << vec.toString();
-    return os;
+inline Vec3 cross(const Vec3& a, const Vec3& b) {
+    Vec3 result;
+    a.cross(b, result);
+    return result;
 }
 
 inline float dot(const Vec3& a, const Vec3& b) {
     return a.dot(b);
 }
-inline Vec3 cross(const Vec3& a, const Vec3& b) {
-    return a.cross(b);
+
+inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+    os << vec.toString();
+    return os;
 }
 
 /*

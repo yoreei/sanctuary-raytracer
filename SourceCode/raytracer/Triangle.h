@@ -5,69 +5,55 @@
 // hw4 Task 1
 class Triangle {
 public:
-    Vec3 v[3] = {Vec3(), Vec3(), Vec3()};
+    size_t v[3]; // indices into the vertex array
 
-    Triangle() = default;
-
-    Triangle(const Vec3& _v0, const Vec3& _v1, const Vec3& _v2) : v{_v0, _v1, _v2} {}
-
-    Vec3 normal() const {
-        Vec3 e1 = v[1] - v[0];
-        Vec3 e2 = v[2] - v[0];
-        return e1.cross(e2).normalize();
+    Triangle(size_t v0, size_t v1, size_t v2)
+    {
+        v[0] = v0;
+        v[1] = v1;
+        v[2] = v2;
     }
 
-    float area() const {
-        Vec3 e1 = v[1] - v[0];
-        Vec3 e2 = v[2] - v[0];
-        return e1.cross(e2).length() * 0.5f;
+    static Triangle fromVertices(const Vec3& v0, const Vec3& v1, const Vec3& v2, std::vector<Vec3>& vertices) {
+        size_t i0 = vertices.size();
+        size_t i1 = i0 + 1;
+        size_t i2 = i1 + 1;
+
+        vertices.push_back(v0);
+        vertices.push_back(v1);
+        vertices.push_back(v2);
+
+        return Triangle(i0, i1, i2);
     }
 
-    Triangle transform(const Matrix3x3& mat) const {
-        Vec3 newV0 = mat * v[0];
-        Vec3 newV1 = mat * v[1];
-        Vec3 newV2 = mat * v[2];
-        return Triangle(newV0, newV1, newV2);
+    void normal(const std::vector<Vec3>& vertices, Vec3& out) const {
+        const Vec3& v0 = vertices[v[0]];
+        const Vec3& v1 = vertices[v[1]];
+        const Vec3& v2 = vertices[v[2]];
+
+        Vec3 e1 = v1 - v0;
+        Vec3 e2 = v2 - v0;
+
+        e1.cross(e2, out);
+        out = out.normalize();
     }
 
-    std::string toString() const {
-        return "Triangle: {" + v[0].toString() + ", " + v[1].toString() + ", " + v[2].toString() + "}";
+    float area(const std::vector<Vec3>& vertices) const {
+        const Vec3& v0 = vertices[v[0]];
+        const Vec3& v1 = vertices[v[1]];
+        const Vec3& v2 = vertices[v[2]];
+
+        Vec3 e1 = v1 - v0;
+        Vec3 e2 = v2 - v0;
+        return e1.crossLength(e2) * 0.5f;
     }
 
-    /*
-    * Input: ray, rayProj
-    * Input: rayProj: projection of ray.direction onto camera direction
-    * Output: t: distance from ray.origin to the intersection point
-    * Output: p: intersection point
-    * return: true if the ray intersects the triangle
-    */
-    bool intersect_simple(const Ray& ray, float& t, Vec3& p) const {
-        // Here assuming counter-clockwise order
-        Vec3 e0 = v[1] - v[0];
-        Vec3 e1 = v[2] - v[0];
-        Vec3 tri_normal = cross(e0, e1).normalize();
+    std::string toString(const std::vector<Vec3>& vertices) const {
+        const Vec3& v0 = vertices[v[0]];
+        const Vec3& v1 = vertices[v[1]];
+        const Vec3& v2 = vertices[v[2]];
 
-        float rayProj = dot(ray.direction, tri_normal);
-
-        // if triangle is facing the ray, compute ray-plane intersection
-        if (rayProj < -1e-6) {
-            float rpDist = dot(tri_normal, v[0] - ray.origin); // was  ray.origin - v[0]
-            t = rpDist / rayProj;
-            p = ray.origin + ray.direction * t;
-
-            // check if `p` is inside triangle
-            Vec3 c0 = cross(e0, p - v[0]);
-            Vec3 c1 = cross(v[2] - v[1], p - v[1]);
-            Vec3 c2 = cross(v[0] - v[2], p - v[2]);
-
-            return dot(tri_normal, c0) > 1e-6 &&
-                   dot(tri_normal, c1) > 1e-6 &&
-                   dot(tri_normal, c2) > 1e-6;
-        }
-        else {
-            std::cout << "Back-culling triggered for triangle: " << toString() << std::endl;
-        }
-        return false;
+        return "Triangle: {" + v0.toString() + ", " + v1.toString() + ", " + v2.toString() + "}";
     }
 
     struct IntersectionData {
@@ -89,18 +75,22 @@ public:
     * return: true if the ray intersects the triangle
     */
 
-    Intersection intersect(const Ray& ray, IntersectionData& out) const {
+    Intersection intersect(const std::vector<Vec3>& vertices, const Ray& ray, IntersectionData& out) const {
+        const Vec3& v0 = vertices[v[0]];
+        const Vec3& v1 = vertices[v[1]];
+        const Vec3& v2 = vertices[v[2]];
+
         // Here assuming counter-clockwise order
-        Vec3 e0 = v[1] - v[0];
-        Vec3 e1 = v[2] - v[0];
+        Vec3 e0 = v1 - v0;
+        Vec3 e1 = v2 - v0;
         Vec3 plane_ortho = cross(e0, e1);
         out.n = plane_ortho.normalize();
 
-        float rayProj = dot(ray.direction, out.n);
+        float rayProj = ray.direction.dot(out.n);
 
         // if triangle facing ray
         if (rayProj < -1e-6) {
-            float rpDist = dot(out.n, v[0] - ray.origin);
+            float rpDist = dot(out.n, v0 - ray.origin);
             out.t = rpDist / rayProj;
             if (out.t < -1e-6) {
                 return Intersection::BEHIND_RAY_ORIGIN; // Not reachable?
@@ -108,11 +98,11 @@ public:
             out.p = ray.origin + ray.direction * out.t;
 
             // check if `p` is inside triangle
-            Vec3 v0p = out.p - v[0];
-            Vec3 e2 = v[2] - v[1];
+            Vec3 v0p = out.p - v0;
+            Vec3 e2 = v2 - v1;
             Vec3 c0 = cross(e0, v0p);
             Vec3 c1 = cross(v0p, e1);
-            Vec3 c2 = cross(e2, out.p - v[1]);
+            Vec3 c2 = cross(e2, out.p - v1);
 
             bool inside = dot(out.n, c0) > 1e-6 &&
                    dot(out.n, c1) > 1e-6 &&
@@ -137,43 +127,25 @@ public:
         }
     }
 
-    bool intersect_plane(const Ray& ray, float& t, Vec3& p) const {
+    bool intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray, float& t, Vec3& p) const {
+        const Vec3& v0 = vertices[v[0]];
+        const Vec3& v1 = vertices[v[1]];
+        const Vec3& v2 = vertices[v[2]];
+
         // Here assuming counter-clockwise order
-        Vec3 e0 = v[1] - v[0];
-        Vec3 e1 = v[2] - v[0];
+        Vec3 e0 = v1 - v0;
+        Vec3 e1 = v2 - v0;
         Vec3 tri_normal = cross(e0, e1).normalize();
 
         float rayProj = dot(ray.direction, tri_normal);
 
         // if triangle is facing the ray, compute ray-plane intersection
         if (rayProj < -1e-6) {
-            float rpDist = dot(tri_normal, v[0] - ray.origin);
+            float rpDist = dot(tri_normal, v0 - ray.origin);
             t = rpDist / rayProj;
             p = ray.origin + ray.direction * t;
             return true;
         }
-        return false;
-    }
-
-    /* From scratchapixel */
-    bool intersect_plane2(const Ray& ray, float& t, Vec3& p) const
-    {
-        Vec3 e0 = v[1] - v[0];
-        Vec3 e1 = v[2] - v[0];
-        Vec3 n = cross(e0, e1).normalize();
-        Vec3 p0 = v[0];
-        Vec3 l0 = ray.origin;
-        Vec3 l = ray.direction;
-
-        // Assuming vectors are all normalized
-        float denom = dot(n, l);
-        if (denom < -1e-6) {
-            Vec3 p0l0 = p0 - l0;
-            t = dot(p0l0, n) / denom; 
-            p = l0 + l * t;
-            return (t >= 0);
-        }
-
         return false;
     }
 };

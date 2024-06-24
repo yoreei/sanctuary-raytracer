@@ -20,7 +20,7 @@ public:
     auto getRight() const { return mat.col(0); }
 
     /*
-    * return ray in world space, originating from pixel (x,y) on the screen
+    * return unit ray in world space, originating from pixel (x,y) on the screen
     */
     Ray generateRay(const Image& image, int x, int y) const
     {
@@ -49,8 +49,8 @@ protected:
         x += 0.5f;
         y += 0.5f;
 
-        x /= image.width;
-        y /= image.height;
+        x /= image.getWidth();
+        y /= image.getHeight();
     }
 
     //void screenFromNdc(Vec3& coordinates) const
@@ -85,7 +85,7 @@ protected:
         x -= 1;
         y += 1;
 
-        x *= image.aspectRatio;
+        x *= image.getAspectRatio();
     }
 
 private:

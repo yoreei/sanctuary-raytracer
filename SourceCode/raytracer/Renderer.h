@@ -18,8 +18,8 @@ public:
     void renderScene(const Scene& scene, Image& image)
     {
         metrics.startTimer();
-        for (int y = 0; y < image.height; ++y) {
-            for (int x = 0; x < image.width; ++x) {
+        for (int y = 0; y < image.getHeight(); ++y) {
+            for (int x = 0; x < image.getWidth(); ++x) {
                 Ray ray = scene.camera.generateRay(image, x, y);
                 image(x, y) = traceScene(scene, ray);
                 //traceImagePlane(ray) // to debug camera
@@ -42,10 +42,11 @@ private:
 
     Color traceScene(const Scene& scene, const Ray& ray)
     {
+        auto& vs = scene.vertices;
         Triangle::IntersectionData xData, xDataBest;
         bool bSuccess = false;
         for (const Triangle& tri : scene.triangles) {
-            Intersection x = tri.intersect(ray, xData); // TODO: Separate plane intersection & triangle uv intersection tests for perf.
+            Intersection x = tri.intersect(vs, ray, xData); // TODO: Separate plane intersection & triangle uv intersection tests for perf.
             if ( xData.t < xDataBest.t && x == Intersection::SUCCESS) {
                 xDataBest = xData;
                 bSuccess = true;

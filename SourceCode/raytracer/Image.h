@@ -6,12 +6,19 @@
 
 #include "stb_image_write.h"
 
-struct Image {
+class Image {
+public:
+    Image() = default;
+
     Image(int _width, int _height): width(_width), height(_height)
     {
         data = std::make_unique<Color[]>(width * height);
         aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     }
+
+    auto getWidth() const { return width; }
+    auto getHeight() const { return height; }
+    auto getAspectRatio() const { return aspectRatio; }
 
     Color& operator()(uint16_t x, uint16_t y)
     {
@@ -24,25 +31,29 @@ struct Image {
 
     std::unique_ptr<Color[]> data;
 
-    uint16_t width = 0;
-    uint16_t height = 0;
-    float aspectRatio = 0.f;
-
-    std::string toPpm(const Image& buf)
+    void writeToPpm(const std::string& filename)
     {
-        std::ofstream ppmFileStream("crt_output_image.ppm", std::ios::out | std::ios::binary);
-        ppmFileStream << "P3\n"; ppmFileStream << buf.width << " " << buf.height << "\n";
+        std::ofstream ppmFileStream(filename, std::ios::out | std::ios::binary);
+        if (!ppmFileStream.is_open()) {
+            std::cerr << "Failed to open file: " << filename << std::endl;
+            return;
+        }
+
+        ppmFileStream << "P3\n"; ppmFileStream << width << " " << height << "\n";
         ppmFileStream << Color::maxColorComponent << "\n";
 
-        for (int rowIdx = 0; rowIdx < buf.height; ++rowIdx) {
-            for (int colIdx = 0; colIdx < buf.width; ++colIdx) {
-                const Color& Color = buf.data[rowIdx * buf.width + colIdx];
-                ppmFileStream << (int)Color.r << " " << (int)Color.g << " " << (int)Color.b << "\t";
+        for (int rowIdx = 0; rowIdx < height; ++rowIdx) {
+            for (int colIdx = 0; colIdx < width; ++colIdx) {
+                const Color& color = data[rowIdx * width + colIdx];
+                ppmFileStream << (int)color.r << " " << (int)color.g << " " << (int)color.b << "\t";
             }
             ppmFileStream << "\n";
         }
 
         ppmFileStream.close();
+        if (ppmFileStream.fail()) {
+            std::cerr << "Failed to write to file: " << filename << std::endl;
+        }
     }
 
     std::string toPpmString() {
@@ -76,4 +87,9 @@ struct Image {
         }
         stbi_write_png(filename.c_str(), width, height, 3, pngData.data(), width * 3);
     }
+
+private:
+    uint16_t width = 1;
+    uint16_t height = 1;
+    float aspectRatio = 1.f;
 };

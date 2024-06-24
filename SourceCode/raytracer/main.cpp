@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <filesystem>
 
 #include "Animator.h"
 #include "Image.h"
@@ -10,8 +11,8 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Renderer.h"
-#include "hw4.h"
-#include "HardCodedScenes.h"
+
+namespace fs = std::filesystem;
 
 void writeFile(const std::string& filename, const std::string& data) {
     std::ofstream ppmFileStream(filename, std::ios::out | std::ios::binary);
@@ -19,24 +20,40 @@ void writeFile(const std::string& filename, const std::string& data) {
     ppmFileStream.close();
 }
 
-int main()
+void runScene(const std::string& sceneName)
 {
-    Image image = {800, 600};
+    Image image {};
     Scene scene {};
     Animator animator {scene, 0};
-    Scenes::loadHw6task3and4(scene, animator);
+    
+    scene.loadCrtscene("scenes/" + sceneName + ".crtscene", image) ? void() : exit(1);
+    fs::create_directories("out/" + sceneName);
+    image = Image(300, 200);
 
     do {
         Renderer renderer{}; // reset metrics
         renderer.renderScene(scene, image);
 
-        std::string filename = "out/" + std::to_string(animator.getCurrentFrame()) + ".png";
+        std::string filename = "out/" + sceneName + "/" + std::to_string(animator.getCurrentFrame()) + ".png";
+
         std::cout << filename << std::endl << renderer.metrics.toString() << std::endl;
         std::cout << "---" << std::endl;
 
         image.writeToPng(filename);
-        // writeFile(filename, image.toPpmString());
     } while (animator.update());
+}
+
+int main()
+{
+    for (const auto& entry : fs::directory_iterator("scenes")) {
+        if (auto ext = entry.path().extension(); ext != ".crtscene") {
+            continue;
+        }
+
+        std::string sceneName = entry.path().filename().string();
+        sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
+        runScene(sceneName);
+    }
 
     return 0;
 }
