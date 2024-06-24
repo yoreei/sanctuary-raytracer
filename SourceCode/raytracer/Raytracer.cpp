@@ -29,10 +29,10 @@ void Raytracer::runScene(const std::string& sceneName)
     
     scene.loadCrtscene("scenes/" + sceneName + ".crtscene", image) ? void() : exit(1);
     fs::create_directories("out/" + sceneName);
-    image = Image(300, 200);
+    image = Image(300, 200); // Make rendering time shorter. Scene4 is quite slow
 
     do {
-        Renderer renderer{}; // reset metrics
+        Renderer renderer{}; // reset Renderer metrics
         renderer.renderScene(scene, image);
 
         std::string filename = "out/" + sceneName + "/" + std::to_string(animator.getCurrentFrame()) + ".png";
