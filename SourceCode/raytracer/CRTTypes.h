@@ -4,6 +4,9 @@
 #include <vector>
 #include <stdexcept>
 #include <cmath>
+#include <numbers>
+#include <iostream>
+#include <string>
 
 struct Color
 {
@@ -14,37 +17,16 @@ struct Color
     {
         return std::to_string(r) + " " + std::to_string(g) + " " + std::to_string(b) + "\t";
     }
-};
 
-/*
-* For holding Color data.
-*/
-struct Buffer2D
-{
-    Buffer2D(uint16_t _width, uint16_t _height) : width(_width), height(_height)
-    {
-        data = std::make_unique<Color[]>(width * height);
-    }
-
-    Color& operator()(uint16_t x, uint16_t y)
-    {
-        if (x >= width || y >= height)
-        {
-            throw std::out_of_range("Buffer2D::operator(): Index out of range");
-        }
-        return data[y * width + x];
-    }
-
-    std::unique_ptr<Color[]> data;
-
-    const uint16_t width;
-    const uint16_t height;
+    static const int maxColorComponent = 255;
 };
 
 struct Vec3 {
-    float x, y, z;
+    float x = 0.f;
+    float y = 0.f;
+    float z = 0.f;
 
-    Vec3() : x{.0f}, y{.0f}, z{.0f} {}
+    Vec3() = default;
 
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
@@ -89,14 +71,20 @@ struct Vec3 {
 
     std::string toString() const
     {
-        return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
+        return "{ " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z) + " }";
     }
+
 };
 
-float dot(const Vec3& a, const Vec3& b) {
+inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+    os << vec.toString();
+    return os;
+}
+
+inline float dot(const Vec3& a, const Vec3& b) {
     return a.dot(b);
 }
-Vec3 cross(const Vec3& a, const Vec3& b) {
+inline Vec3 cross(const Vec3& a, const Vec3& b) {
     return a.cross(b);
 }
 
@@ -124,6 +112,14 @@ public:
         for (int i = 0; i < 9; ++i) {
             data[i] = values[i];
         }
+    }
+
+    static Matrix3x3 fromCols(const Vec3& c0, const Vec3& c1, const Vec3& c2) {
+        return Matrix3x3 {{
+            c0.x, c1.x, c2.x,
+            c0.y, c1.y, c2.y,
+            c0.z, c1.z, c2.z,
+            }};
     }
 
     float& operator()(int row, int col) {
@@ -160,6 +156,14 @@ public:
         return *this;
     }
 
+    Vec3 col(uint8_t num) const
+    {
+        if (num > 2) {
+            throw std::out_of_range("Matrix3x3::col: Index out of range: " + num);
+        }
+        return Vec3{ data[num], data[num + 3], data[num + 6] };
+    }
+
     static Matrix3x3 identity() {
         return Matrix3x3();
     }
@@ -178,7 +182,7 @@ public:
         return result;
     }
 
-    static Matrix3x3 rotation(float angle) {
+    static Matrix3x3 rotation2D(float angle) {
         Matrix3x3 result = identity();
         float c = std::cos(angle);
         float s = std::sin(angle);
@@ -189,11 +193,54 @@ public:
         return result;
     }
 
+    /* Rotate around X. pitch */
+    static Matrix3x3 Tilt(float deg) {
+        float rad = radFromDeg * deg;
+        float cosv = cos(rad);
+        float sinv = sin(rad);
+
+        return Matrix3x3 {{
+        1.f, 0.f, 0.f,
+        0.f, cosv, -sinv,
+        0.f, sinv, cosv
+        }};
+    }
+
+    /* Rotate around Y. yaw */
+    static Matrix3x3 Pan(float deg) {
+        float rad = radFromDeg * deg;
+        float cosv = cos(rad);
+        float sinv = sin(rad);
+
+        return Matrix3x3 {{
+        cosv, 0, sinv,
+        0, 1, 0,
+        -sinv, 0, cosv
+        }};
+    }
+
+    /*
+    * Rotate around Z
+    */
+    static Matrix3x3 Roll(float deg) {
+        float rad = radFromDeg * deg;
+        float cosv = cos(rad);
+        float sinv = sin(rad);
+
+        return Matrix3x3 {{
+        cosv, -sinv, 0,
+        sinv, cosv, 0,
+        0,0, 1
+        }};
+    }
+
+
+
     void toString() const {
         std::string result = "";
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 3; ++col) {
-                result += (*this)(row, col);
+                result += std::to_string((*this)(row, col));
                 result += " ";
             }
             result += "\n";
@@ -202,6 +249,7 @@ public:
 
 private:
     float data[9];
+    static constexpr float radFromDeg = static_cast<float>(std::numbers::pi) / 180.0f;
 };
 
 struct Ray {

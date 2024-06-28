@@ -1,38 +1,35 @@
 #pragma once
 #include <tuple>
 #include "CRTTypes.h"
+#include "Image.h"
+#include "SceneObject.h"
 
-/*
-* Transform from Color resolution to Normalized Device Coordinates [0, 1]
-* example: x [0, 1979] -> x [0, 1]
-*/
-
-class Camera
+class Camera: public SceneObject
 {
 public:
     Camera() = default;
-    Camera(uint16_t width, uint16_t height, float fov, Vec3 pos, Vec3 dir, Vec3 up)
-        : width(width), height(height), fov(fov), pos(pos), dir(dir), up(up)
+    Camera(float _fov, Vec3 _pos, Matrix3x3 _mat)
+        : SceneObject(_pos, _mat), fov(_fov)
     {
-        aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
+        // TODO assert _mat is orthonormal
     }
-    auto getHeight() const { return height; }
-    auto getWidth() const { return width; }
     auto getFov() const { return fov; }
     auto getPos() const { return pos; }
-    auto getDir() const { return dir; }
-    auto getUp() const { return up; }
-    auto getAspectRatio() const { return aspect_ratio; }
+    auto getDir() const { return mat.col(2); }
+    auto getUp() const { return mat.col(1); }
+    auto getRight() const { return mat.col(0); }
 
     /*
     * return ray in world space, originating from pixel (x,y) on the screen
     */
-    Ray generateRay(int x, int y) const
+    Ray generateRay(const Image& image, int x, int y) const
     {
-        Vec3 raydir {static_cast<float>(x), static_cast<float>(y), dir.z};
-        ndcFromRaster(raydir);
-        screenFromNdc(raydir);
+        Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
+        ndcFromRaster(image, coords);
+        screenFromNdc(image, coords);
 
+        // coords = coords.normalize(); skip this
+        Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
         raydir = raydir.normalize();
 
         return Ray{this->pos, raydir};
@@ -43,7 +40,7 @@ protected:
     /*
     * x, y [0, width] [0, height] -> x, y [0, 1.0] [0, 1.0]
     */
-    void ndcFromRaster(Vec3& coordinates) const
+    void ndcFromRaster(const Image& image, Vec3& coordinates) const
     {
         float& x = coordinates.x;
         float& y = coordinates.y;
@@ -52,8 +49,8 @@ protected:
         x += 0.5f;
         y += 0.5f;
 
-        x /= width;
-        y /= height;
+        x /= image.width;
+        y /= image.height;
     }
 
     //void screenFromNdc(Vec3& coordinates) const
@@ -73,7 +70,7 @@ protected:
     //    x *= aspect_ratio;
     //}
 
-    void screenFromNdc(Vec3& coordinates) const
+    void screenFromNdc(const Image& image, Vec3& coordinates) const
     {
         float& x = coordinates.x;
         float& y = coordinates.y;
@@ -88,23 +85,9 @@ protected:
         x -= 1;
         y += 1;
 
-        x *= aspect_ratio;
+        x *= image.aspectRatio;
     }
 
 private:
-    /* Resolution of the camera */
-    uint16_t width = 800;
-    uint16_t height = 600;
-    // Assuming horizontal screen orientation
-    float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
     float fov = 90.0f; // Field of view in degrees
-
-    /* Position. World Space */
-    Vec3 pos {0.f, 0.f, 0.f};
-
-    /* Direction to look at. World Space */
-    Vec3 dir {0.f, 0.f, -1.f};
-
-    /* Up vector used for camera rotations. World Space */
-    Vec3 up {0.f, 1.f, 0.f};
 };

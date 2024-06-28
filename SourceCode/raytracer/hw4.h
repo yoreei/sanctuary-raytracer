@@ -4,30 +4,30 @@ void hw4()
 {
     using namespace std;
     cout << "Task 2" << endl;
-    Vec3 A = {3.5, 0, 0};
-    Vec3 B = {1.75, 3.5, 0};
+    Vec3 A = {3.5f, 0.f, 0.f};
+    Vec3 B = {1.75f, 3.5f, 0.f};
     cout << A.toString() << " cross " << B.toString() << " = " << A.cross(B).toString() << endl;
 
-    A = {3,-3,1};
-    B = {4, 9, 2};
+    A = {3.f,-3.f,1.f};
+    B = {4.f, 9.f, 2.f};
     cout << A.toString() << " cross " << B.toString() << " = " << A.cross(B).toString() << endl;
 
     cout << A.toString() << " parallelogram " << B.toString() << " = " << A.cross(B).length() << endl;
 
-    A = {3,-3,1};
-    B = {-12, 12, -4};
+    A = {3.f,-3.f,1.f};
+    B = {-12.f, 12.f, -4.f};
     cout << A.toString() << " parallelogram " << B.toString() << " = " << A.cross(B).length() << endl;
 
     cout << endl << "Task 3" << endl;
-    Triangle t = Triangle{{-1.75, -1.75, -3}, {1.75, -1.75, -3}, {0, 1.75, -3}};
+    Triangle t = Triangle{{-1.75f, -1.75f, -3.f}, {1.75f, -1.75f, -3.f}, {0.f, 1.75f, -3.f}};
     cout << t.toString() << " normal: " << t.normal().toString() << endl;
     cout << t.toString() << " area: " << t.area() << endl;
 
-    t = Triangle{{0, 0, -1},{1, 0, 1},{-1, 0, 1}};
+    t = Triangle{{0.f, 0.f, -1.f},{1.f, 0.f, 1.f},{-1.f, 0.f, 1.f}};
     cout << t.toString() << " normal: " << t.normal().toString() << endl;
     cout << t.toString() << " area: " << t.area() << endl;
 
-    t = Triangle{{0.56, 1.11, 1.23},{0.44, -2.368, -0.54},{-1.56, 0.15, -1.92}};
+    t = Triangle{{0.56f, 1.11f, 1.23f},{0.44f, -2.368f, -0.54f},{-1.56f, 0.15f, -1.92f}};
     cout << t.toString() << " normal: " << t.normal().toString() << endl;
     cout << t.toString() << " area: " << t.area() << endl;
 
