@@ -44,6 +44,7 @@ public:
     RendererMetrics metrics {};
     std::queue<PixelRay> primaryQueue {};
     std::queue<ShadowRay> shadowQueue {};
+    bool bProcessShadows = false;
 private:
 
     void processPrimaryQueue(const Scene& scene, Image& image)
@@ -62,12 +63,15 @@ private:
                 metrics.record(toString(x));
             }
 
-            if (xDataBest.intersectionSuccessful()) {
+            if (xDataBest.intersectionSuccessful() && bProcessShadows) {
                 for (const Light& light : scene.lights) {
                     Vec3 point = xDataBest.p + xDataBest.n * 0.001f;
                     ShadowRay shadowRay {ray.origin, point, xDataBest.n, ray.pixelX, ray.pixelY};
                     shadowQueue.push(shadowRay);
                 }
+            }
+            else if (xDataBest.intersectionSuccessful()) {
+                image(ray.pixelX, ray.pixelY) = shade_normal(xDataBest);
             }
             else {
                 image(ray.pixelX, ray.pixelY) = scene.bgColor;

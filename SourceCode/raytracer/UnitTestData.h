@@ -15,7 +15,7 @@ namespace UnitTestData {
         Vec3 camPos = { 0.f,0.f,0.f };
         Vec3 dir = { 0.f, 0.f, -1.f };
         dir = dir.normalize();
-        Vec3 right = Matrix3x3::Pan(90.f) * dir;
+        Vec3 right = Matrix3x3::Pan(-90.f) * dir;
         Vec3 up = Matrix3x3::Tilt(90.f) * dir;
 
         Matrix3x3 camMat = Matrix3x3::fromCols(right, up, dir);

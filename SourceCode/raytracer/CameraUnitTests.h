@@ -19,31 +19,31 @@ namespace CameraUnitTests
 
         ray = cam.generateRay(img, 0, 0);
         assert(ray.origin.equal({ 0.f, 0.f, 0.f }));
-        assert(ray.direction.equal({ 0.485071242f, -0.485071242f, -0.727606893f }));
+        assert(ray.direction.equal({ -0.485071242f, 0.485071242f, -0.727606893f }));
 
         ray = cam.generateRay(img, 1, 0);
-        assert(ray.direction.equal({ 0.00000000f, -0.554700196f, -0.832050323f }));
+        assert(ray.direction.equal({ 0.00000000f, 0.554700196f, -0.832050323f }));
 
         ray = cam.generateRay(img, 2, 0);
-        assert(ray.direction.equal({ -0.485071242f, -0.485071242f, -0.727606893f }));
+        assert(ray.direction.equal({ 0.485071242f, 0.485071242f, -0.727606893f }));
 
         ray = cam.generateRay(img, 0, 1);
-        assert(ray.direction.equal({ 0.554700196f, 0.00000000f, -0.832050323f }));
+        assert(ray.direction.equal({ -0.554700196f, 0.00000000f, -0.832050323f }));
 
         ray = cam.generateRay(img, 1, 1);
         assert(ray.direction.equal({ 0.00000000f, 0.00000000f, -1.00000000f }));
 
         ray = cam.generateRay(img, 2, 1);
-        assert(ray.direction.equal({ -0.554700196f, 0.00000000f, -0.832050323f }));
+        assert(ray.direction.equal({ 0.554700196f, 0.00000000f, -0.832050323f }));
 
         ray = cam.generateRay(img, 0, 2);
-        assert(ray.direction.equal({ 0.485071242f, 0.485071242f, -0.727606893f }));
+        assert(ray.direction.equal({ -0.485071242f, -0.485071242f, -0.727606893f }));
 
         ray = cam.generateRay(img, 1, 2);
-        assert(ray.direction.equal({ 0.00000000f, 0.554700196f, -0.832050323f }));
+        assert(ray.direction.equal({ 0.00000000f, -0.554700196f, -0.832050323f }));
 
         ray = cam.generateRay(img, 2, 2);
-        assert(ray.direction.equal({ -0.485071242f, 0.485071242f, -0.727606893f }));
+        assert(ray.direction.equal({ 0.485071242f, -0.485071242f, -0.727606893f }));
 
         // 16:9 aspect ratio
         img = Image{16, 9};

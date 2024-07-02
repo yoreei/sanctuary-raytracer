@@ -100,8 +100,11 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
         const auto& jCamPos = j.at("camera").at("position");
         Vec3 camPos{ jCamPos.at(0), jCamPos.at(1), jCamPos.at(2) };
 
-        const auto& jCamMat = j.at("camera").at("matrix");
-        Matrix3x3 camMat{ jCamMat.get<std::vector<float>>() };
+        const auto& jRotateMat = j.at("camera").at("matrix");
+        Matrix3x3 rotateMat{ jRotateMat.get<std::vector<float>>() };
+        Matrix3x3 camMat = rotateMat * Camera::DefaultMatrix;
+        //Matrix3x3 camMat = rotateMat;
+        
 
         scene.camera = Camera{ 90.f, camPos, camMat };
         return true;
@@ -154,7 +157,8 @@ inline bool CRTSceneLoader::parseVertices(const json& jObj, Scene& scene) {
         }
 
         for (size_t i = 0; i < jVertices.size(); i += 3) {
-            vertices.emplace_back(jVertices[i], jVertices[i + 1], jVertices[i + 2]);
+            float y = static_cast<float>(jVertices[i + 1]);
+            vertices.emplace_back(jVertices[i], y, jVertices[i + 2]);
         }
     }
     catch (const json::exception& e) {

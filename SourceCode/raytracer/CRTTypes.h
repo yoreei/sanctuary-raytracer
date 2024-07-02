@@ -250,8 +250,8 @@ public:
         float sinv = sin(rad);
 
         return Matrix3x3 {{
-        cosv, 0, sinv,
-        0, 1, 0,
+        cosv,  0, sinv,
+        0,     1, 0,
         -sinv, 0, cosv
         }};
     }

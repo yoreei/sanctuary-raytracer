@@ -21,11 +21,14 @@ public:
     auto getRight() const { return mat.col(0); }
 
 
+    /*
+    * return unit ray in world space, originating from pixel (x,y) on the screen
+    */
     void emplacePrimaryRay(const Image& image, int x, int y, std::queue<PixelRay>& queue) const
     {
         Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
         ndcFromRaster(image, coords);
-        screenFromNdc(image, coords);
+        imageFromNdc(image, coords);
 
         // coords = coords.normalize(); skip this
         Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
@@ -34,26 +37,25 @@ public:
         queue.emplace(this->pos, raydir, x, y);
     }
 
-    /*
-    * return unit ray in world space, originating from pixel (x,y) on the screen
-    */
-    Ray generateRay(const Image& image, int x, int y) const
-    {
-        Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
-        ndcFromRaster(image, coords);
-        screenFromNdc(image, coords);
+    //Ray generateRay(const Image& image, int x, int y) const
+    //{
+    //    Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
+    //    ndcFromRaster(image, coords);
+    //    imageFromNdc(image, coords);
 
-        // coords = coords.normalize(); skip this
-        Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
-        raydir = raydir.normalize();
+    //    // coords = coords.normalize(); skip this
+    //    Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
+    //    raydir = raydir.normalize();
 
-        return Ray{this->pos, raydir};
-    }
+    //    return Ray{this->pos, raydir};
+    //}
 
 protected:
 
     /*
     * x, y [0, width] [0, height] -> x, y [0, 1.0] [0, 1.0]
+    * example: top left raster pixel (0,0) -> (0, 0)
+    * example: bottom right raster pixel (width, height) -> (1, 1)
     */
     void ndcFromRaster(const Image& image, Vec3& coordinates) const
     {
@@ -85,16 +87,20 @@ protected:
     //    x *= aspect_ratio;
     //}
 
-    void screenFromNdc(const Image& image, Vec3& coordinates) const
+    /*
+    * returns image plane coordinates. Positive y is up, positive x is right
+    * example: top left NDC (0,0) -> (-1, 1)
+    * example: bottom right NDC (1,1) -> (1, -1)
+    */
+    void imageFromNdc(const Image& image, Vec3& coordinates) const
     {
         float& x = coordinates.x;
         float& y = coordinates.y;
 
         // x[0, 1] -> x[0, 2]
         // y[0, 1] -> y[-2, 0]
-        y -= 1.0f;
         x *= 2.0f;
-        y *= 2.0f;
+        y *= -2.0f;
 
         // x[0, 2] y[0, -2] -> xy[-1, 1]
         x -= 1;
