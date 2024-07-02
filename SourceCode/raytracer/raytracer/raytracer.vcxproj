@@ -151,7 +151,7 @@
     <ClInclude Include="perlin-noise.h" />
     <ClInclude Include="Raytracer.h" />
     <ClInclude Include="Renderer.h" />
-    <ClInclude Include="RendererMetrics.h" />
+    <ClInclude Include="Metrics.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Settings.h" />

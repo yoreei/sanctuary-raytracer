@@ -11,9 +11,11 @@ Vec3 Light::lightContrib(const Scene& scene, const Vec3& point, const Vec3& norm
     float sa = 4 * PI * sr * sr; // Sphere Area
 
     if (scene.isOccluded(point, lightDir)) {
+        scene.metrics.record("LIGHT_OCCLUDED");
         return Vec3{ 0.f, 0.f, 0.f };
     }
 
+    scene.metrics.record("LIGHT_SUCCESS");
     float contrib = this->intensity * cosLaw / sa;
     return Vec3{ contrib, contrib, contrib };
 }

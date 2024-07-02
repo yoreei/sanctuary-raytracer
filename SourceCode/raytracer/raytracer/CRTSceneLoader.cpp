@@ -121,20 +121,20 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
     try {
         const auto& jObjects = j.at("objects");
         for (const auto& jObj : jObjects) {
-            Scene scene{};
+            Scene objScene{};
 
-            if (!parseVertices(jObj, scene)) {
+            if (!parseVertices(jObj, objScene)) {
                 return false;
             }
-            if (!parseTriangles(jObj, scene)) {
-                return false;
-            }
-
-            if (!scene.bakeObject()) {
+            if (!parseTriangles(jObj, objScene)) {
                 return false;
             }
 
-            scenes.push_back(scene);
+            if (!objScene.bakeObject()) {
+                return false;
+            }
+
+            scenes.push_back(objScene);
         }
 
     }

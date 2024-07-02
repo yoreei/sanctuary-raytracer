@@ -8,6 +8,7 @@
 #include "Triangle.h"
 #include "Animation.h"
 #include "MeshObject.h"
+#include "Metrics.h"
 #include "Image.h"
 #include "Light.h"
 
@@ -20,6 +21,7 @@ class Scene
 public:
     Camera camera {};
     Settings settings {};
+    mutable Metrics metrics {};
 
     /* meshObjects reference trinagles. Triangles reference vertices */
     std::vector<Vec3> vertices {};

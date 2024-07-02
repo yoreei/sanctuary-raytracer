@@ -8,7 +8,7 @@
 using ordered_json = nlohmann::ordered_json;
 
 /* Helps for debugging the Renderer */
-class RendererMetrics {
+class Metrics {
 public:
 
     void startTimer() {

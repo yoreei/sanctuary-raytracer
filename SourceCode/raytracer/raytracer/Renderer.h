@@ -6,7 +6,6 @@
 #include "Camera.h"
 #include "CRTTypes.h"
 #include "Image.h"
-#include "RendererMetrics.h"
 #include "Scene.h"
 #include "Triangle.h"
 
@@ -19,7 +18,7 @@ public:
     void renderScene(const Scene& scene, Image& image)
     {
         // Prepare Primary Queue
-        metrics.startTimer();
+        scene.metrics.startTimer();
         Ray ray;
         for (int y = 0; y < image.getHeight(); ++y) {
             for (int x = 0; x < image.getWidth(); ++x) {
@@ -29,7 +28,7 @@ public:
 
         processPrimaryQueue(scene, image);
         processShadowQueue(scene, image);
-        metrics.stopTimer();
+        scene.metrics.stopTimer();
     }
 
     ///*
@@ -41,7 +40,6 @@ public:
     //        traceScene(scene, ray);
     //}
 
-    RendererMetrics metrics {};
     std::queue<PixelRay> primaryQueue {};
     std::queue<ShadowRay> shadowQueue {};
     bool bProcessShadows = false;
@@ -60,7 +58,7 @@ private:
                     xDataBest = xData;
                 }
 
-                metrics.record(toString(x));
+                scene.metrics.record(toString(x));
             }
 
             if (xDataBest.intersectionSuccessful() && bProcessShadows) {
@@ -138,7 +136,6 @@ private:
 
     Color shade_uv(const Triangle::IntersectionData& xData)
     {
-        metrics.record("normal: " + xData.n.toString());
         static const siv::PerlinNoise::seed_type seed = 123456u;
 	    static const siv::PerlinNoise perlin{ seed };
 	
