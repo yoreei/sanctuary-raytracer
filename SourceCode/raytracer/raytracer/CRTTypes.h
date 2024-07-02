@@ -300,9 +300,10 @@ struct Ray {
 
 struct PixelRay : public Ray {
     // Pixel coordinates
-    int pixelX = 0;
-    int pixelY = 0;
+    int pixelX {0};
+    int pixelY {0};
 
+    PixelRay() : Ray(), pixelX(0), pixelY(0) {}
     PixelRay(const Vec3& origin, const Vec3& direction, int pixelX, int pixelY) 
         : Ray(origin,direction), pixelX(pixelX), pixelY(pixelY) {}
 };

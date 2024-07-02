@@ -105,12 +105,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer\raytracer</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer\x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>raytracer.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -123,14 +123,14 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer\raytracer</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\oddnecessity\git\my\chaos-ray-tracing-course-assignment-yoreei\SourceCode\raytracer\x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>raytracer.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
