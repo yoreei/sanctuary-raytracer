@@ -9,6 +9,7 @@
 #include "Animation.h"
 #include "MeshObject.h"
 #include "Image.h"
+#include "Light.h"
 
 #include "json.hpp"
 
@@ -24,32 +25,21 @@ public:
     std::vector<Vec3> vertices {};
     std::vector<Triangle> triangles {};
     std::vector<MeshObject> meshObjects {};
+    std::vector<Light> lights {};
     
     Color bgColor = Color{0, 0, 0};
 
-    [[nodiscard]] bool loadCrtscene(const std::string& filename, Image& image){
-        std::ifstream file(filename);
-        if (!file) {
-            std::cerr << "Unable to open file: " << filename << '\n';
-            return false;
+    bool isOccluded(const Vec3& start, const Vec3& end) const {
+        Triangle::IntersectionData xData {};
+        float t = end.length();
+        Ray ray = { start, end.normalize() };
+        for (const Triangle& tri : triangles) {
+            Intersection x = tri.intersect(vertices, ray, xData);
+            if (x == Intersection::SUCCESS && flower(xData.t, t)) {
+                return true;
+            }
         }
-
-        json j;
-        try {
-            file >> j;
-        } catch (const json::exception& e) {
-            std::cerr << "Error parsing JSON file: " << e.what() << '\n';
-            return false;
-        }
-
-        if (!parseBackgroundColor(j) ||
-            !parseImageSettings(j, image) ||
-            !parseCameraSettings(j) ||
-            !parseObjects(j)) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     /* Compiles all vertices and triangles into a single mesh object */
@@ -98,123 +88,4 @@ public:
 
 private:
 
-    bool parseBackgroundColor(const json& j) {
-        try {
-            const auto& jBgColor = j.at("settings").at("background_color");
-
-            if (!jBgColor.is_array() || jBgColor.size() != 3) {
-                std::cerr << "Error loading background_color: background_color is not an array or not of size 3\n";
-                return false;
-            }
-
-            this->bgColor = Color::fromUnit(jBgColor[0], jBgColor[1], jBgColor[2]);
-            return true;
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error loading background_color: " << e.what() << '\n';
-            return false;
-        }
-    }
-
-    bool parseImageSettings(const json& j, Image& image) {
-        try {
-            const auto& jImgSettings = j.at("settings").at("image_settings");
-            image = Image(jImgSettings.at("width"), jImgSettings.at("height"));
-            return true;
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error loading image_settings: " << e.what() << '\n';
-            return false;
-        }
-    }
-
-    bool parseCameraSettings(const json& j) {
-        try {
-            const auto& jCamPos = j.at("camera").at("position");
-            Vec3 camPos{ jCamPos.at(0), jCamPos.at(1), jCamPos.at(2) };
-
-            const auto& jCamMat = j.at("camera").at("matrix");
-            Matrix3x3 camMat{ jCamMat.get<std::vector<float>>() };
-
-            this->camera = Camera{ 90.f, camPos, camMat };
-            return true;
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error loading camera settings: " << e.what() << '\n';
-            return false;
-        }
-    }
-
-    bool parseObjects(const json& j) {
-        std::vector<Scene> scenes {};
-
-        try {
-            const auto& jObjects = j.at("objects");
-            for (const auto& jObj : jObjects) {
-                Scene scene {};
-
-                if (!Scene::parseVertices(jObj, scene.vertices)) {
-                    return false;
-                }
-                if (!Scene::parseTriangles(jObj, scene.triangles)) {
-                    return false;
-                }
-
-                if(!scene.bakeObject()) {
-                    return false;
-                }
-
-                scenes.push_back(scene);
-            }
-
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error loading objects: " << e.what() << '\n';
-            return false;
-        }
-        addObjects(scenes);
-        return true;
-    }
-
-    static bool parseVertices(const json& jObj, std::vector<Vec3>& vertices) {
-        try {
-            const auto& jVertices = jObj.at("vertices");
-
-            if (!jVertices.is_array() || jVertices.size() % 3 != 0) {
-                std::cerr << "Error loading vertices: vertices is not an array or not divisible by 3\n";
-                return false;
-            }
-
-            for (size_t i = 0; i < jVertices.size(); i += 3) {
-                vertices.emplace_back(jVertices[i], jVertices[i + 1], jVertices[i + 2]);
-            }
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error loading vertices: " << e.what() << '\n';
-            return false;
-        }
-
-        return true;
-    }
-
-    static bool parseTriangles(const json& jObj, std::vector<Triangle>& triangles) {
-        try {
-            const auto& jTriangles = jObj.at("triangles");
-
-            if (!jTriangles.is_array() || jTriangles.size() % 3 != 0) {
-                std::cerr << "Error loading triangles: triangles is not an array or not divisible by 3\n";
-                return false;
-            }
-
-            for (size_t i = 0; i < jTriangles.size(); i += 3) {
-                triangles.emplace_back(jTriangles[i], jTriangles[i + 1], jTriangles[i + 2]);
-            }
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error loading triangles: " << e.what() << '\n';
-            return false;
-        }
-
-        return true;
-    }
 };

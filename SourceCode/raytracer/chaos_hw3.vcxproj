@@ -130,6 +130,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="CRTSceneLoader.cpp" />
+    <ClCompile Include="Intersection.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="Raytracer.cpp" />
     <ClCompile Include="MeshObject.h" />
     <ClCompile Include="stb_image_write.cpp" />
@@ -138,10 +141,12 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Animator.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CRTSceneLoader.h" />
     <ClInclude Include="CRTTypes.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="perlin-noise.h" />
     <ClInclude Include="Raytracer.h" />
     <ClInclude Include="Renderer.h" />

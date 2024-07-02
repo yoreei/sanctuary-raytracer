@@ -10,6 +10,11 @@
 
 inline bool fequal(float a, float b, float epsilon = 0.0001f) {
     return std::abs(a - b) < epsilon;
+
+}
+
+inline bool flower(float a, float b, float epsilon = 0.0001f) {
+    return a - b < -epsilon;
 }
 
 struct Color
@@ -40,7 +45,8 @@ inline std::ostream& operator<<(std::ostream& os, const Color& color) {
     return os;
 }
 
-struct Vec3 {
+class Vec3 {
+public:
     float x = 0.f;
     float y = 0.f;
     float z = 0.f;
@@ -48,10 +54,6 @@ struct Vec3 {
     Vec3() = default;
 
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
-
-    bool equal(const Vec3& other, float epsilon = 0.0001f) const {
-        return fequal(this->x, other.x, epsilon) && fequal(this->y, other.y, epsilon) && fequal(this->z, other.z, epsilon);
-    }
 
     Vec3 operator+(const Vec3& other) const {
         return Vec3(x + other.x, y + other.y, z + other.z);
@@ -63,6 +65,10 @@ struct Vec3 {
 
     Vec3 operator*(float scalar) const {
         return Vec3(x * scalar, y * scalar, z * scalar);
+    }
+
+    bool equal(const Vec3& other, float epsilon = 0.0001f) const {
+        return fequal(this->x, other.x, epsilon) && fequal(this->y, other.y, epsilon) && fequal(this->z, other.z, epsilon);
     }
 
     Vec3 operator/(float scalar) const {
@@ -290,4 +296,24 @@ struct Ray {
     Ray() : origin(Vec3()), direction(Vec3()) {}
 
     Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction) {}
+};
+
+struct PixelRay : public Ray {
+    // Pixel coordinates
+    int pixelX = 0;
+    int pixelY = 0;
+
+    PixelRay(const Vec3& origin, const Vec3& direction, int pixelX, int pixelY) 
+        : Ray(origin,direction), pixelX(pixelX), pixelY(pixelY) {}
+};
+
+struct ShadowRay {
+    Vec3 origin;
+    Vec3 point;
+    Vec3 normal;
+    int pixelX = 0;
+    int pixelY = 0;
+
+    ShadowRay(const Vec3& origin, const Vec3& point, const Vec3& normal, int pixelX, int pixelY)
+        : origin(origin), point(point), normal(normal), pixelX(pixelX), pixelY(pixelY) {}
 };

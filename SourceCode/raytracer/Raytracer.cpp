@@ -11,6 +11,7 @@
 #include "Triangle.h"
 #include "Camera.h"
 #include "Scene.h"
+#include "CRTSceneLoader.h"
 #include "Renderer.h"
 
 namespace fs = std::filesystem;
@@ -27,7 +28,7 @@ void Raytracer::runScene(const std::string& sceneName)
     Scene scene {};
     Animator animator {scene, 0};
     
-    scene.loadCrtscene("scenes/" + sceneName + ".crtscene", image) ? void() : exit(1);
+    CRTSceneLoader::loadCrtscene("scenes/" + sceneName + ".crtscene", scene, image) ? void() : exit(1);
     fs::create_directories("out/" + sceneName);
     image = Image(300, 200); // Make rendering time shorter. Scene4 is quite slow
 

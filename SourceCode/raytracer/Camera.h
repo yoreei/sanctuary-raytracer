@@ -1,5 +1,6 @@
 #pragma once
 #include <tuple>
+#include <queue>
 #include "CRTTypes.h"
 #include "Image.h"
 #include "SceneObject.h"
@@ -18,6 +19,20 @@ public:
     auto getDir() const { return mat.col(2); }
     auto getUp() const { return mat.col(1); }
     auto getRight() const { return mat.col(0); }
+
+
+    void emplacePrimaryRay(const Image& image, int x, int y, std::queue<PixelRay>& queue) const
+    {
+        Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
+        ndcFromRaster(image, coords);
+        screenFromNdc(image, coords);
+
+        // coords = coords.normalize(); skip this
+        Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
+        raydir = raydir.normalize();
+
+        queue.emplace(this->pos, raydir, x, y);
+    }
 
     /*
     * return unit ray in world space, originating from pixel (x,y) on the screen

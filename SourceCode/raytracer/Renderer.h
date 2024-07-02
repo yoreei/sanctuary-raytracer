@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <tuple>
+#include <queue>
 
 #include "Camera.h"
 #include "CRTTypes.h"
@@ -17,45 +18,72 @@ public:
 
     void renderScene(const Scene& scene, Image& image)
     {
+        // Prepare Primary Queue
         metrics.startTimer();
+        Ray ray;
         for (int y = 0; y < image.getHeight(); ++y) {
             for (int x = 0; x < image.getWidth(); ++x) {
-                Ray ray = scene.camera.generateRay(image, x, y);
-                image(x, y) = traceScene(scene, ray);
-                //traceImagePlane(ray) // to debug camera
+                scene.camera.emplacePrimaryRay(image, x, y, primaryQueue);
             }
         }
+
+        processPrimaryQueue(scene, image);
+        processShadowQueue(scene, image);
         metrics.stopTimer();
     }
 
-    /*
-    * Fires a single ray. For Debugging traceRay
-    */
-    void _renderSingle(const Scene& scene, Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
-    {
-            ray.direction = ray.direction.normalize();
-            traceScene(scene, ray);
-    }
+    ///*
+    //* Fires a single ray. For Debugging traceRay
+    //*/
+    //void _renderSingle(const Scene& scene, Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
+    //{
+    //        ray.direction = ray.direction.normalize();
+    //        traceScene(scene, ray);
+    //}
 
     RendererMetrics metrics {};
+    std::queue<PixelRay> primaryQueue {};
+    std::queue<ShadowRay> shadowQueue {};
 private:
 
-    Color traceScene(const Scene& scene, const Ray& ray)
+    void processPrimaryQueue(const Scene& scene, Image& image)
     {
-        auto& vs = scene.vertices;
-        Triangle::IntersectionData xData, xDataBest;
-        bool bSuccess = false;
-        for (const Triangle& tri : scene.triangles) {
-            Intersection x = tri.intersect(vs, ray, xData); // TODO: Separate plane intersection & triangle uv intersection tests for perf.
-            if ( xData.t < xDataBest.t && x == Intersection::SUCCESS) {
-                xDataBest = xData;
-                bSuccess = true;
+        while (!primaryQueue.empty()) {
+            PixelRay ray = primaryQueue.front();
+            primaryQueue.pop();
+            Triangle::IntersectionData xData, xDataBest;
+            for (const Triangle& tri : scene.triangles) {
+                // TODO: Separate plane intersection & triangle uv intersection tests for perf.
+                Intersection x = tri.intersect(scene.vertices, ray, xData); 
+                if ( xData.t < xDataBest.t && x == Intersection::SUCCESS) {
+                    xDataBest = xData;
+                }
+
+                metrics.record(toString(x));
             }
 
-            metrics.record(toString(x));
+            if (xDataBest.intersectionSuccessful()) {
+                for (const Light& light : scene.lights) {
+                    Vec3 point = xDataBest.p + xDataBest.n * 0.001f;
+                    ShadowRay shadowRay {ray.origin, point, xDataBest.n, ray.pixelX, ray.pixelY};
+                    shadowQueue.push(shadowRay);
+                }
+            }
+            else {
+                image(ray.pixelX, ray.pixelY) = scene.bgColor;
+            }
         }
+    }
 
-        return bSuccess ? shade_normal(xDataBest) : scene.bgColor;
+    void processShadowQueue(const Scene& scene, Image& image)
+    {
+        while (!shadowQueue.empty()) {
+            ShadowRay shadowRay = shadowQueue.front();
+            shadowQueue.pop();
+            for (const Light& light : scene.lights) {
+                light.lightContrib(scene, shadowRay.point, shadowRay.normal);
+            }
+        }
     }
 
     /* hw3. For debugging camera Ray generation */

@@ -30,6 +30,15 @@
     <ClCompile Include="MeshObject.h">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CRTSceneLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Intersection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="perlin-noise.h">
@@ -78,6 +87,12 @@
       <Filter>Source Files\third-party</Filter>
     </ClInclude>
     <ClInclude Include="Raytracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CRTSceneLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

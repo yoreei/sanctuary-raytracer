@@ -62,6 +62,10 @@ public:
         Vec3 n = {0, 0, 0};     // Normal at Point
         float u = 0.f;    // First Barycentric Base
         float v = 0.f;    // Second Barycentric Base
+
+        bool intersectionSuccessful() const {
+            return t < FLT_MAX;
+        }
     };
 
     /*
