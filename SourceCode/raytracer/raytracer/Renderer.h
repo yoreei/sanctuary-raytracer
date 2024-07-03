@@ -42,7 +42,7 @@ public:
 
     std::queue<PixelRay> primaryQueue {};
     std::queue<ShadowRay> shadowQueue {};
-    bool bProcessShadows = false;
+    bool bProcessShadows = true;
 private:
 
     void processPrimaryQueue(const Scene& scene, Image& image)
@@ -68,7 +68,7 @@ private:
                     shadowQueue.push(shadowRay);
                 }
             }
-            else if (xDataBest.intersectionSuccessful()) {
+            else if (xDataBest.intersectionSuccessful() && !bProcessShadows) {
                 image(ray.pixelX, ray.pixelY) = shade_normal(xDataBest);
             }
             else {
@@ -82,9 +82,13 @@ private:
         while (!shadowQueue.empty()) {
             ShadowRay shadowRay = shadowQueue.front();
             shadowQueue.pop();
+            Vec3 contrib {0.f, 0.f, 0.f};
             for (const Light& light : scene.lights) {
-                light.lightContrib(scene, shadowRay.point, shadowRay.normal);
+                contrib = contrib + light.lightContrib(scene, shadowRay.point, shadowRay.normal);
             }
+
+            contrib.clamp(0.f, 1.f);
+            image(shadowRay.pixelX, shadowRay.pixelY) = Color::fromUnit(contrib);
         }
     }
 

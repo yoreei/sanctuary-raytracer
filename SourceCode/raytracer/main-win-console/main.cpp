@@ -2,6 +2,6 @@
 
 int main() {
     Raytracer::run();
-    //Raytracer::runScene("scene0");
+    //Raytracer::runScene("scene3");
     return 0;
 }

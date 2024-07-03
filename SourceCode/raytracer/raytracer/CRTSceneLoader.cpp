@@ -102,9 +102,8 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
 
         const auto& jRotateMat = j.at("camera").at("matrix");
         Matrix3x3 rotateMat{ jRotateMat.get<std::vector<float>>() };
-        Matrix3x3 camMat = rotateMat * Camera::DefaultMatrix;
-        //Matrix3x3 camMat = rotateMat;
-        
+        // NB: CRTScene format gives us the inverse direction of the camera.
+        Matrix3x3 camMat = Camera::DefaultMatrix * rotateMat;        
 
         scene.camera = Camera{ 90.f, camPos, camMat };
         return true;

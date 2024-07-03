@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <stdexcept>
@@ -7,6 +8,9 @@
 #include <numbers>
 #include <iostream>
 #include <string>
+#include <cassert>
+
+#include "Utils.h"
 
 inline bool fequal(float a, float b, float epsilon = 0.0001f) {
     return std::abs(a - b) < epsilon;
@@ -15,34 +19,6 @@ inline bool fequal(float a, float b, float epsilon = 0.0001f) {
 
 inline bool flower(float a, float b, float epsilon = 0.0001f) {
     return a - b < -epsilon;
-}
-
-struct Color
-{
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    std::string toString() const
-    {
-        return std::to_string(r) + " " + std::to_string(g) + " " + std::to_string(b) + "\t";
-    }
-
-    static const int maxColorComponent = 255;
-
-    /* Create Color from RGB values in the range [0, 1] */
-    static Color fromUnit(float fr, float fg, float fb) {
-        return Color {
-            static_cast<uint8_t>(std::round(fr * maxColorComponent)),
-            static_cast<uint8_t>(std::round(fg * maxColorComponent)),
-            static_cast<uint8_t>(std::round(fb * maxColorComponent))
-        };
-    }
-
-};
-
-inline std::ostream& operator<<(std::ostream& os, const Color& color) {
-    os << color.toString();
-    return os;
 }
 
 class Vec3 {
@@ -106,6 +82,12 @@ public:
     std::string toString() const
     {
         return "{ " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z) + " }";
+    }
+
+    void clamp(float min, float max) {
+        x = std::clamp(x, min, max);
+        y = std::clamp(y, min, max);
+        z = std::clamp(z, min, max);
     }
 
 };
@@ -318,3 +300,36 @@ struct ShadowRay {
     ShadowRay(const Vec3& origin, const Vec3& point, const Vec3& normal, int pixelX, int pixelY)
         : origin(origin), point(point), normal(normal), pixelX(pixelX), pixelY(pixelY) {}
 };
+
+struct Color
+{
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    std::string toString() const
+    {
+        return std::to_string(r) + " " + std::to_string(g) + " " + std::to_string(b) + "\t";
+    }
+
+    static const uint8_t maxColorComponent = 255;
+
+    /* Create Color from RGB values in the range [0, 1] */
+    static Color fromUnit(float fr, float fg, float fb) {
+        auto r = static_cast<uint8_t>(std::round(fr * maxColorComponent));
+        auto g = static_cast<uint8_t>(std::round(fg * maxColorComponent));
+        auto b = static_cast<uint8_t>(std::round(fb * maxColorComponent));
+        CHECK(r <= maxColorComponent && g <= maxColorComponent && b <= maxColorComponent);
+        return Color{ r, g, b };
+    }
+
+    static Color fromUnit(const Vec3& vec) {
+        return fromUnit(vec.x, vec.y, vec.z);
+    }
+
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Color& color) {
+    os << color.toString();
+    return os;
+}
+
