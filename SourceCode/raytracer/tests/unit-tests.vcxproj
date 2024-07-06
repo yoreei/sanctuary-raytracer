@@ -203,11 +203,12 @@
     <ClCompile Include="MainUnitTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\raytracer\UnitTestData.h" />
     <ClInclude Include="CameraUnitTests.h" />
     <ClInclude Include="CRTTypesUnitTests.h" />
     <ClInclude Include="RendererIntegrationTests.h" />
+    <ClInclude Include="TestUtils.h" />
     <ClInclude Include="TriangleUnitTests.h" />
+    <ClInclude Include="UnitTestData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

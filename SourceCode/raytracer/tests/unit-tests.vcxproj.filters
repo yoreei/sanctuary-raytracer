@@ -21,13 +21,16 @@
     <ClInclude Include="TriangleUnitTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\raytracer\UnitTestData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CameraUnitTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RendererIntegrationTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnitTestData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

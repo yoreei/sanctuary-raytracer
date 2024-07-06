@@ -15,6 +15,7 @@
 
 class Renderer {
 public:
+    size_t maxDepth = 3;
     Renderer() {}
 
     void renderScene(const Scene& scene, Image& image)
@@ -56,14 +57,12 @@ private:
             bool success = scene.intersect(ray, xData);
  
             if (success) {
-                for (const Light& light : scene.lights) {
-                    xData.p = xData.p + xData.n * SHADOW_BIAS;
-                    ShaderTask shaderTask{ xData, ray.pixelX, ray.pixelY };
-                    shadowQueue.push(shaderTask);
-                }
+                xData.p = xData.p + xData.n * SHADOW_BIAS;
+                ShaderTask shaderTask{ xData, ray.pixelX, ray.pixelY };
+                shadowQueue.push(shaderTask);
             }
             else {
-                image(ray.pixelX, ray.pixelY) = scene.bgColor;
+                image(ray.pixelX, ray.pixelY) = Color::fromUnit(scene.bgColor);
             }
         }
     }
@@ -74,16 +73,30 @@ private:
             ShaderTask task = shadowQueue.front();
             auto& x = task.intersectionData;
             shadowQueue.pop();
-            Vec3 shade {0.f, 0.f, 0.f};
-            for (const Light& light : scene.lights) {
-                shade = shade + light.lightContrib(scene, x.p, x.n);
-            }
-
-            shade.clamp(0.f, 1.f);
             auto& albedo = scene.materials[x.materialIndex].albedo;
-            shade = {shade.x * albedo.x, shade.y * albedo.y, shade.z * albedo.z};
-            image(task.pixelX, task.pixelY) = Color::fromUnit(shade);
+            auto& material = scene.materials[x.materialIndex];
+
+            if (material.type == Material::Type::DIFFUSE || task.depth >= maxDepth) {
+                Vec3 shade {0.f, 0.f, 0.f};
+                for (const Light& light : scene.lights) {
+                    shade = shade + light.lightContrib(scene, x.p, x.n);
+                }
+
+                shade.clamp(0.f, 1.f);
+                shade = {shade.x * albedo.x, shade.y * albedo.y, shade.z * albedo.z};
+                image(task.pixelX, task.pixelY) = Color::fromUnit(shade);
+            }
         }
+    }
+
+    Vec3 hitLight(const Scene& scene, const Vec3& p, const Vec3& n) const
+    {
+        Vec3 shade {0.f, 0.f, 0.f};
+        for (const Light& light : scene.lights) {
+            shade = shade + light.lightContrib(scene, p, n);
+        }
+        shade.clamp(0.f, 1.f);
+        return shade;
     }
 
     /* hw3. For debugging camera Ray generation */

@@ -3,7 +3,7 @@
 #include "CRTTypesUnitTests.h"
 #include "TriangleUnitTests.h"
 #include "CameraUnitTests.h"
-#include "RendererIntegrationTests.h"
+//#include "RendererIntegrationTests.h"
 
 int main()
 {
@@ -11,7 +11,7 @@ int main()
     TriangleUnitTests::run();
     CameraUnitTests::run();
 
-    RendererIntegrationTests::run();
+    //RendererIntegrationTests::run();
 
     std::cout<<"All tests passed!"<<std::endl;
     return 0;

@@ -21,6 +21,7 @@ using json = nlohmann::json;
 class Scene
 {
 public:
+    std::string fileName = "";
     Camera camera {};
     Settings settings {};
     mutable Metrics metrics {};
@@ -33,7 +34,7 @@ public:
     std::vector<Material> materials {};
     std::vector<Light> lights {};
     
-    Color bgColor = Color{0, 0, 0};
+    Vec3 bgColor = { 0.0f, 0.0f, 0.0f };
 
     bool isOccluded(const Vec3& start, const Vec3& end) const {
         IntersectionData xData {};

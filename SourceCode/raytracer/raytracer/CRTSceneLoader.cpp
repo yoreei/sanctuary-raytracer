@@ -136,7 +136,7 @@ inline bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
             return false;
         }
 
-        scene.bgColor = Color::fromUnit(jBgColor[0], jBgColor[1], jBgColor[2]);
+        scene.bgColor = { jBgColor[0], jBgColor[1], jBgColor[2] };
         return true;
     }
     catch (const json::exception& e) {
@@ -177,14 +177,11 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
 }
 
 inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
-    std::vector<std::string> types = { "diffuse", "reflective" };
-    std::vector<std::string> smooth_shading = { "true", "false" };
-
     for (auto& jMaterial : j.at("materials")) {
         auto type = Material::TypeFromString(jMaterial.at("type"));
         Vec3 albedo = Vec3FromJson(jMaterial.at("albedo"));
-        bool smooth_shading = boolFromJson(jMaterial.at("smooth_shading"));
-        scene.materials.emplace_back(albedo, smooth_shading, type);
+        bool smoothShading = boolFromJson(jMaterial.at("smooth_shading"));
+        scene.materials.emplace_back(albedo, smoothShading, type);
     }
 
     return true;

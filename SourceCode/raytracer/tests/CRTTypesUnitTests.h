@@ -1,7 +1,8 @@
 #pragma once
 
-#include "CRTTypes.h"
 #include <cassert>
+
+#include "CRTTypes.h"
 
 namespace CRTTypesUnitTests
 {
