@@ -23,9 +23,9 @@ inline bool flower(float a, float b, float epsilon = 0.0001f) {
 
 class Vec3 {
 public:
-    float x = 0.f;
-    float y = 0.f;
-    float z = 0.f;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
 
     Vec3() = default;
 
@@ -33,6 +33,13 @@ public:
 
     Vec3 operator+(const Vec3& other) const {
         return Vec3(x + other.x, y + other.y, z + other.z);
+    }
+
+    Vec3& operator+=(const Vec3& other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
     }
 
     Vec3 operator-(const Vec3& other) const {
@@ -73,10 +80,18 @@ public:
         return std::sqrt(cx * cx + cy * cy + cz * cz);
     }
 
-    [[nodiscard]] Vec3 normalize() const {
+    [[nodiscard]] Vec3 getUnit() const {
+        Vec3 result = *this;
+        result.normalize();
+        return result;
+    }
+
+    void normalize() {
         float len = length();
         float divCache = 1.f/len; // division optimization
-        return Vec3(x * divCache, y * divCache, z * divCache);
+        x = x * divCache;
+        y = y * divCache;
+        z = z * divCache;
     }
 
     std::string toString() const

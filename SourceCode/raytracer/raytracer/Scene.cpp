@@ -7,7 +7,7 @@ bool Scene::intersect(const Ray& ray, IntersectionData& out) const {
     IntersectionData xData {};
     for (const Triangle& tri : triangles) {
         // TODO: Separate plane intersection & triangle uv intersection tests for perf.
-        Intersection x = tri.intersect(vertices, ray, xData);
+        Intersection x = tri.intersect(*this, ray, xData);
         if (xData.t < out.t && x == Intersection::SUCCESS) {
             out = xData;
             result = true;

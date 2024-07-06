@@ -38,7 +38,7 @@ public:
     //*/
     //void _renderSingle(const Scene& scene, Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
     //{
-    //        ray.direction = ray.direction.normalize();
+    //        ray.direction.normalize();
     //        traceScene(scene, ray);
     //}
 

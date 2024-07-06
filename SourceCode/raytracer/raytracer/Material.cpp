@@ -42,6 +42,6 @@ std::string Material::StringFromType(const Material::Type& type)
 
 std::string Material::toString() const
 {
-    return "Material{ albedo=" + albedo.toString() + " + smooth_shading=" + stringFromBool(smooth_shading) + " + type=" + StringFromType(type) + " }";
+    return "Material{ albedo=" + albedo.toString() + " + smooth_shading=" + stringFromBool(smoothShading) + " + type=" + StringFromType(type) + " }";
 
 }

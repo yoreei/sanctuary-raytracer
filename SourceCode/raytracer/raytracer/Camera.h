@@ -30,9 +30,8 @@ public:
         ndcFromRaster(image, coords);
         imageFromNdc(image, coords);
 
-        // coords = coords.normalize(); skip this
         Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
-        raydir = raydir.normalize();
+        raydir.normalize();
 
         queue.emplace(this->pos, raydir, x, y);
     }
@@ -43,9 +42,8 @@ public:
     //    ndcFromRaster(image, coords);
     //    imageFromNdc(image, coords);
 
-    //    // coords = coords.normalize(); skip this
     //    Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
-    //    raydir = raydir.normalize();
+    //    raydir.normalize();
 
     //    return Ray{this->pos, raydir};
     //}

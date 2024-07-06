@@ -27,5 +27,7 @@ private:
     static bool parseObjects(const json& j, Scene& scene);
     static bool parseVertices(const json& jObj, Scene& scene);
     static bool parseTriangles(const json& jObj, Scene& scene);
+    static void genVertexNormals(Scene& scene);
+    static void genAttachedTriangles(const Scene& scene, size_t vertexIndex, std::vector<size_t>& attachedTriangles);
 };
 
