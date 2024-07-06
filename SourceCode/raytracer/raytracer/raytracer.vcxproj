@@ -195,9 +195,12 @@
     <ClCompile Include="CRTSceneLoader.cpp" />
     <ClCompile Include="Intersection.cpp" />
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Raytracer.cpp" />
     <ClCompile Include="MeshObject.h" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stb_image_write.cpp" />
+    <ClCompile Include="Tasks.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
@@ -209,6 +212,7 @@
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="perlin-noise.h" />
     <ClInclude Include="Raytracer.h" />
     <ClInclude Include="Renderer.h" />
@@ -217,6 +221,7 @@
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="stb_image_write.h" />
+    <ClInclude Include="Tasks.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

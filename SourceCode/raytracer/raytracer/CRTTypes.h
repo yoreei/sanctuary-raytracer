@@ -290,16 +290,6 @@ struct PixelRay : public Ray {
         : Ray(origin,direction), pixelX(pixelX), pixelY(pixelY) {}
 };
 
-struct ShadowRay {
-    Vec3 origin;
-    Vec3 point;
-    Vec3 normal;
-    int pixelX = 0;
-    int pixelY = 0;
-
-    ShadowRay(const Vec3& origin, const Vec3& point, const Vec3& normal, int pixelX, int pixelY)
-        : origin(origin), point(point), normal(normal), pixelX(pixelX), pixelY(pixelY) {}
-};
 
 struct Color
 {

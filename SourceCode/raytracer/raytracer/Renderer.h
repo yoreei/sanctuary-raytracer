@@ -8,6 +8,8 @@
 #include "Image.h"
 #include "Scene.h"
 #include "Triangle.h"
+#include "Tasks.h"
+#include "Intersection.h"
 
 #include "perlin-noise.h"
 
@@ -41,8 +43,8 @@ public:
     //}
 
     std::queue<PixelRay> primaryQueue {};
-    std::queue<ShadowRay> shadowQueue {};
-    bool bProcessShadows = true;
+    std::queue<ShaderTask> shadowQueue {};
+    float SHADOW_BIAS = 0.001f; // TODO experiment with this value
 private:
 
     void processPrimaryQueue(const Scene& scene, Image& image)
@@ -50,26 +52,15 @@ private:
         while (!primaryQueue.empty()) {
             PixelRay ray = primaryQueue.front();
             primaryQueue.pop();
-            Triangle::IntersectionData xData, xDataBest;
-            for (const Triangle& tri : scene.triangles) {
-                // TODO: Separate plane intersection & triangle uv intersection tests for perf.
-                Intersection x = tri.intersect(scene.vertices, ray, xData); 
-                if ( xData.t < xDataBest.t && x == Intersection::SUCCESS) {
-                    xDataBest = xData;
-                }
-
-                scene.metrics.record(toString(x));
-            }
-
-            if (xDataBest.intersectionSuccessful() && bProcessShadows) {
+            IntersectionData xData {}; // TODO refactor Intersection & IntersectionData classes
+            bool success = scene.intersect(ray, xData);
+ 
+            if (success) {
                 for (const Light& light : scene.lights) {
-                    Vec3 point = xDataBest.p + xDataBest.n * 0.001f;
-                    ShadowRay shadowRay {ray.origin, point, xDataBest.n, ray.pixelX, ray.pixelY};
-                    shadowQueue.push(shadowRay);
+                    xData.p = xData.p + xData.n * SHADOW_BIAS;
+                    ShaderTask shaderTask{ xData, ray.pixelX, ray.pixelY };
+                    shadowQueue.push(shaderTask);
                 }
-            }
-            else if (xDataBest.intersectionSuccessful() && !bProcessShadows) {
-                image(ray.pixelX, ray.pixelY) = shade_normal(xDataBest);
             }
             else {
                 image(ray.pixelX, ray.pixelY) = scene.bgColor;
@@ -80,15 +71,18 @@ private:
     void processShadowQueue(const Scene& scene, Image& image)
     {
         while (!shadowQueue.empty()) {
-            ShadowRay shadowRay = shadowQueue.front();
+            ShaderTask task = shadowQueue.front();
+            auto& x = task.intersectionData;
             shadowQueue.pop();
-            Vec3 contrib {0.f, 0.f, 0.f};
+            Vec3 shade {0.f, 0.f, 0.f};
             for (const Light& light : scene.lights) {
-                contrib = contrib + light.lightContrib(scene, shadowRay.point, shadowRay.normal);
+                shade = shade + light.lightContrib(scene, x.p, x.n);
             }
 
-            contrib.clamp(0.f, 1.f);
-            image(shadowRay.pixelX, shadowRay.pixelY) = Color::fromUnit(contrib);
+            shade.clamp(0.f, 1.f);
+            auto& albedo = scene.materials[x.materialIndex].albedo;
+            shade = {shade.x * albedo.x, shade.y * albedo.y, shade.z * albedo.z};
+            image(task.pixelX, task.pixelY) = Color::fromUnit(shade);
         }
     }
 
@@ -102,7 +96,7 @@ private:
 
         float scale = imagePlaneDist / rayProj;
         p = p * scale;
-        Triangle::IntersectionData xData;
+        IntersectionData xData;
         xData.p = p;
         return shade_abs(xData);
     }
@@ -112,7 +106,7 @@ private:
         return Color{ 5,5 , b };
     }
 
-    Color shade_abs(const Triangle::IntersectionData& xData) const {
+    Color shade_abs(const IntersectionData& xData) const {
         uint8_t r = static_cast<uint8_t>(fabs(xData.p.x * 100.f));
         uint8_t g = static_cast<uint8_t>(fabs(xData.p.y * 100.f));
         uint8_t b = static_cast<uint8_t>(fabs(xData.p.z * 100.f));
@@ -120,7 +114,7 @@ private:
         return Color{ r, g, b };
     }
 
-    Color shade_normal(const Triangle::IntersectionData& xData) const {
+    Color shade_normal(const IntersectionData& xData) const {
         uint8_t r = static_cast<uint8_t>(fabs(xData.n.x + 1.f) * 127.5f);
         uint8_t g = static_cast<uint8_t>(fabs(xData.n.y + 1.f) * 127.5f);
         uint8_t b = static_cast<uint8_t>(fabs(xData.n.z + 1.f) * 127.5f);
@@ -138,7 +132,7 @@ private:
         return Color{ color, color, color };
     }
 
-    Color shade_uv(const Triangle::IntersectionData& xData)
+    Color shade_uv(const IntersectionData& xData)
     {
         static const siv::PerlinNoise::seed_type seed = 123456u;
 	    static const siv::PerlinNoise perlin{ seed };

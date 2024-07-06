@@ -6,24 +6,15 @@
 class Triangle {
 public:
     size_t v[3]; // indices into the vertex array
+    // TODO Vec3 normal;
+    size_t materialIndex = 0;
 
-    Triangle(size_t v0, size_t v1, size_t v2)
+    Triangle(size_t v0, size_t v1, size_t v2, size_t _materialIndex)
     {
         v[0] = v0;
         v[1] = v1;
         v[2] = v2;
-    }
-
-    static Triangle fromVertices(const Vec3& v0, const Vec3& v1, const Vec3& v2, std::vector<Vec3>& vertices) {
-        size_t i0 = vertices.size();
-        size_t i1 = i0 + 1;
-        size_t i2 = i1 + 1;
-
-        vertices.push_back(v0);
-        vertices.push_back(v1);
-        vertices.push_back(v2);
-
-        return Triangle(i0, i1, i2);
+        materialIndex = _materialIndex;
     }
 
     void normal(const std::vector<Vec3>& vertices, Vec3& out) const {
@@ -56,17 +47,6 @@ public:
         return "Triangle: {" + v0.toString() + ", " + v1.toString() + ", " + v2.toString() + "}";
     }
 
-    struct IntersectionData {
-        float t = FLT_MAX;    // Distance
-        Vec3 p = {0, 0, 0};     // Intersection Point
-        Vec3 n = {0, 0, 0};     // Normal at Point
-        float u = 0.f;    // First Barycentric Base
-        float v = 0.f;    // Second Barycentric Base
-
-        bool intersectionSuccessful() const {
-            return t < FLT_MAX;
-        }
-    };
 
     /*
     * @Danny search OneNote 'Triangle Intersect'
@@ -75,10 +55,10 @@ public:
     * Output: t: distance from ray.origin to the intersection point
     * Output: p: intersection point
     * Output: n: triangle normal (unit)
-    * OUtput: u, v: triangle-space coordinates of intersection for UV mapping
+    * Output: u, v: triangle-space coordinates of intersection for UV mapping
     * return: true if the ray intersects the triangle
     */
-
+    // TODO return bool
     Intersection intersect(const std::vector<Vec3>& vertices, const Ray& ray, IntersectionData& out) const {
         const Vec3& v0 = vertices[v[0]];
         const Vec3& v1 = vertices[v[1]];
@@ -116,6 +96,7 @@ public:
                 float area_inv = 1.f / plane_ortho.length();
                 out.u = c0.length() * area_inv;
                 out.v = c1.length() * area_inv;
+                out.materialIndex = this->materialIndex;
                 return Intersection::SUCCESS;
             }
             else {

@@ -11,6 +11,8 @@
 #include "Metrics.h"
 #include "Image.h"
 #include "Light.h"
+#include "Material.h"
+#include "Intersection.h"
 
 #include "json.hpp"
 
@@ -27,12 +29,13 @@ public:
     std::vector<Vec3> vertices {};
     std::vector<Triangle> triangles {};
     std::vector<MeshObject> meshObjects {};
+    std::vector<Material> materials {};
     std::vector<Light> lights {};
     
     Color bgColor = Color{0, 0, 0};
 
     bool isOccluded(const Vec3& start, const Vec3& end) const {
-        Triangle::IntersectionData xData {};
+        IntersectionData xData {};
         float t = end.length();
         Ray ray = { start, end.normalize() };
         for (const Triangle& tri : triangles) {
@@ -43,6 +46,8 @@ public:
         }
         return false;
     }
+
+    bool intersect(const Ray& ray, IntersectionData& out) const;
 
     /* Compiles all vertices and triangles into a single mesh object */
     [[nodiscard]] bool bakeObject() {
