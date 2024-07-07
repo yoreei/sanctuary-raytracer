@@ -117,6 +117,29 @@ inline float dot(const Vec3& a, const Vec3& b) {
     return a.dot(b);
 }
 
+inline Vec3 operator*(float scalar, const Vec3& vec) {
+    return vec * scalar;
+}
+
+/**
+ * Multiply two vectors component-wise.
+ */
+inline Vec3 multiply(const Vec3& a, const Vec3& b) {
+    return {a.x * b.x, a.y * b.y, a.z * b.z};
+}
+
+/**
+* @brief Linear interpolation between two vectors.
+* @param t: weight of the second vector.
+*/
+inline Vec3 lerp(const Vec3& a, const Vec3& b, float t) {
+    return {
+        a.x * (1 - t) + b.x * t,
+        a.y * (1 - t) + b.y * t,
+        a.z * (1 - t) + b.z * t
+    };
+}
+
 inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
     os << vec.toString();
     return os;
@@ -295,14 +318,30 @@ struct Ray {
     Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction) {}
 };
 
-struct PixelRay : public Ray {
-    // Pixel coordinates
+struct TraceTask {
+    Ray ray;
     int pixelX {0};
     int pixelY {0};
+    uint32_t depth {0};
+    Vec3 unitColor {1.f, 1.f, 1.f};
+    // [0, 1]. Higher values give more weight to intersection color.
+    float reflectivity {1.f};
 
-    PixelRay() : Ray(), pixelX(0), pixelY(0) {}
-    PixelRay(const Vec3& origin, const Vec3& direction, int pixelX, int pixelY) 
-        : Ray(origin,direction), pixelX(pixelX), pixelY(pixelY) {}
+    TraceTask(const Ray& ray, int pixelX, int pixelY) 
+        : ray(ray), pixelX(pixelX), pixelY(pixelY) {}
+
+    /**
+    * @brief Reflect the ray off the surface.
+    * @param hitColor: Diffuse component of the surface hit.
+    * @param hitReflectivity: Reflectivity of the surface hit.
+    */
+    void reflect(const Vec3& point, const Vec3& normal, const Vec3& hitColor, float hitReflectivity) {
+        ray.origin = point;
+        ray.direction = ray.direction - 2 * dot(ray.direction, normal) * normal;
+        unitColor = lerp(unitColor, hitColor, reflectivity);
+        reflectivity *= hitReflectivity;
+        ++depth; 
+    }
 };
 
 

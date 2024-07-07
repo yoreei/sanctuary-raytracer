@@ -34,7 +34,8 @@ public:
     std::vector<Material> materials {};
     std::vector<Light> lights {};
     
-    Vec3 bgColor = { 0.0f, 0.0f, 0.0f };
+    //Material bgMaterial = {};
+    Vec3 bgColor = {0.f, 0.f, 0.f};
 
     bool isOccluded(const Vec3& start, const Vec3& end) const {
         IntersectionData xData {};

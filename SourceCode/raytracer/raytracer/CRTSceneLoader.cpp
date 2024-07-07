@@ -136,7 +136,7 @@ inline bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
             return false;
         }
 
-        scene.bgColor = { jBgColor[0], jBgColor[1], jBgColor[2] };
+        scene.bgColor = Vec3{ jBgColor[0], jBgColor[1], jBgColor[2] };
         return true;
     }
     catch (const json::exception& e) {

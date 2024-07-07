@@ -25,12 +25,12 @@ public:
         Ray ray;
         for (int y = 0; y < image.getHeight(); ++y) {
             for (int x = 0; x < image.getWidth(); ++x) {
-                scene.camera.emplacePrimaryRay(image, x, y, primaryQueue);
+                scene.camera.emplaceTasks(image, x, y, traceQueue);
             }
         }
 
         processPrimaryQueue(scene, image);
-        processShadowQueue(scene, image);
+        //processShadowQueue(scene, image);
         scene.metrics.stopTimer();
     }
 
@@ -43,51 +43,50 @@ public:
     //        traceScene(scene, ray);
     //}
 
-    std::queue<PixelRay> primaryQueue {};
-    std::queue<ShaderTask> shadowQueue {};
-    float SHADOW_BIAS = 0.001f; // TODO experiment with this value
+    std::queue<TraceTask> traceQueue {};
+    float shadowBias = 0.001f; // TODO experiment with this value
 private:
 
     void processPrimaryQueue(const Scene& scene, Image& image)
     {
-        while (!primaryQueue.empty()) {
-            PixelRay ray = primaryQueue.front();
-            primaryQueue.pop();
+        while (!traceQueue.empty()) {
+            TraceTask task = traceQueue.front();
+            Ray& ray = task.ray;
+            traceQueue.pop();
             IntersectionData xData {}; // TODO refactor Intersection & IntersectionData classes
-            bool success = scene.intersect(ray, xData);
- 
-            if (success) {
-                xData.p = xData.p + xData.n * SHADOW_BIAS;
-                ShaderTask shaderTask{ xData, ray.pixelX, ray.pixelY };
-                shadowQueue.push(shaderTask);
+            if (task.depth >= maxDepth) {
+                Vec3 unitColor = multiply(task.unitColor, scene.bgColor);
+                image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
             }
             else {
-                image(ray.pixelX, ray.pixelY) = Color::fromUnit(scene.bgColor);
-            }
-        }
-    }
-
-    void processShadowQueue(const Scene& scene, Image& image)
-    {
-        while (!shadowQueue.empty()) {
-            ShaderTask task = shadowQueue.front();
-            auto& x = task.intersectionData;
-            shadowQueue.pop();
-            auto& albedo = scene.materials[x.materialIndex].albedo;
-            auto& material = scene.materials[x.materialIndex];
-
-            if (material.type == Material::Type::DIFFUSE || task.depth >= maxDepth) {
-                Vec3 shade {0.f, 0.f, 0.f};
-                for (const Light& light : scene.lights) {
-                    shade = shade + light.lightContrib(scene, x.p, x.n);
+                bool success = scene.intersect(ray, xData);
+                xData.p = xData.p + xData.n * shadowBias;
+                if (success) {
+                    Vec3 light = hitLight(scene, xData.p, xData.n);
+                    auto& material = scene.materials[xData.materialIndex];
+                    Vec3 diffuseColor = multiply(light, material.albedo);
+                    if (material.type == Material::Type::REFLECTIVE) {
+                        task.reflect(xData.p, xData.n, diffuseColor, material.reflectivity);
+                        traceQueue.push(task);
+                    }
+                    else if (material.type == Material::Type::DIFFUSE) {
+                        Vec3 unitColor = lerp(task.unitColor, diffuseColor, task.reflectivity);
+                        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+                    }
+                    
                 }
-
-                shade.clamp(0.f, 1.f);
-                shade = {shade.x * albedo.x, shade.y * albedo.y, shade.z * albedo.z};
-                image(task.pixelX, task.pixelY) = Color::fromUnit(shade);
+                else {
+                    Vec3 unitColor = multiply(task.unitColor, scene.bgColor);
+                    image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+                }
             }
         }
     }
+
+    //void processShadowQueue(const Scene& scene, Image& image)
+    //{
+    //    //TODO
+    //}
 
     Vec3 hitLight(const Scene& scene, const Vec3& p, const Vec3& n) const
     {
