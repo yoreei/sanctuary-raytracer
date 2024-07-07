@@ -38,19 +38,19 @@ public:
     Vec3 bgColor = {0.f, 0.f, 0.f};
 
     bool isOccluded(const Vec3& start, const Vec3& end) const {
-        IntersectionData xData {};
+        Intersection xData {};
         float t = end.length();
         Ray ray = { start, end.getUnit() };
         for (const Triangle& tri : triangles) {
-            Intersection x = tri.intersect(*this, ray, xData);
-            if (x == Intersection::SUCCESS && flower(xData.t, t)) {
+            tri.intersect(*this, ray, xData);
+            if (xData.successful() && flower(xData.t, t)) {
                 return true;
             }
         }
         return false;
     }
 
-    bool intersect(const Ray& ray, IntersectionData& out) const;
+    void intersect(const Ray& ray, Intersection& out) const;
 
     /* Compiles all vertices and triangles into a single mesh object */
     [[nodiscard]] bool bakeObject() {

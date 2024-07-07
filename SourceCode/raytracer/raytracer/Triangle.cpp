@@ -13,7 +13,7 @@
 */
 // TODO return bool
 
-Intersection Triangle::intersect(const Scene& scene, const Ray& ray, IntersectionData& out) const {
+void Triangle::intersect(const Scene& scene, const Ray& ray, Intersection& out) const {
     const Vec3& v0 = scene.vertices[v[0]];
     const Vec3& v1 = scene.vertices[v[1]];
     const Vec3& v2 = scene.vertices[v[2]];
@@ -29,7 +29,8 @@ Intersection Triangle::intersect(const Scene& scene, const Ray& ray, Intersectio
         float rpDist = dot(normal, v0 - ray.origin);
         out.t = rpDist / rayProj;
         if (out.t < -1e-6) {
-            return Intersection::BEHIND_RAY_ORIGIN; // Not reachable?
+            out.type = IntersectionType::BEHIND_RAY_ORIGIN; // Not reachable?
+            return;
         }
         out.p = ray.origin + ray.direction * out.t;
 
@@ -50,19 +51,22 @@ Intersection Triangle::intersect(const Scene& scene, const Ray& ray, Intersectio
             out.v = c1.length() * area_inv;
             out.materialIndex = this->materialIndex;
             out.n = intersectionNormal(scene, out.u, out.v);
-
-            return Intersection::SUCCESS;
+            out.type = IntersectionType::SUCCESS;
+            return;
         }
         else {
-            return Intersection::OUT_OF_BOUNDS;
+            out.type = IntersectionType::OUT_OF_BOUNDS;
+            return;
         }
 
     }
     else if (rayProj > 1e-6) {
-        return Intersection::BACKFACE; // reported instead of BEHIND_RAY_ORIGIN
+        out.type = IntersectionType::BACKFACE; // reported instead of BEHIND_RAY_ORIGIN
+        return;
     }
     else {
-        return Intersection::PARALLEL;
+        out.type = IntersectionType::PARALLEL;
+        return;
     }
 }
 

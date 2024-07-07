@@ -32,8 +32,8 @@ void Raytracer::runScene(const std::string& sceneName)
     
     CRTSceneLoader::loadCrtscene("scenes/" + sceneName + ".crtscene", scene, image) ? void() : exit(1);
     fs::create_directories("out/" + sceneName);
-    image = Image(1280, 720); // Make rendering time shorter for quick testing
-    //image = Image(300, 200); // Make rendering time shorter for quick testing
+    //image = Image(1280, 720); // Make rendering time shorter for quick testing
+    image = Image(300, 200); // Make rendering time shorter for quick testing
 
     do {
         scene.metrics = Metrics {}; // reset

@@ -323,7 +323,8 @@ struct TraceTask {
     int pixelX {0};
     int pixelY {0};
     uint32_t depth {0};
-    Vec3 unitColor {1.f, 1.f, 1.f};
+    // [0, 1]. RGB
+    Vec3 color {1.f, 1.f, 1.f};
     // [0, 1]. Higher values give more weight to intersection color.
     float reflectivity {1.f};
 
@@ -338,7 +339,7 @@ struct TraceTask {
     void reflect(const Vec3& point, const Vec3& normal, const Vec3& hitColor, float hitReflectivity) {
         ray.origin = point;
         ray.direction = ray.direction - 2 * dot(ray.direction, normal) * normal;
-        unitColor = lerp(unitColor, hitColor, reflectivity);
+        color = lerp(color, hitColor, reflectivity);
         reflectivity *= hitReflectivity;
         ++depth; 
     }

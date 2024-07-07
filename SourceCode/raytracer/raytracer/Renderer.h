@@ -22,14 +22,15 @@ public:
     {
         // Prepare Primary Queue
         scene.metrics.startTimer();
+        // TODO reserve space for the queue
         Ray ray;
         for (int y = 0; y < image.getHeight(); ++y) {
             for (int x = 0; x < image.getWidth(); ++x) {
-                scene.camera.emplaceTasks(image, x, y, traceQueue);
+                scene.camera.emplaceTask(image, x, y, traceQueue);
             }
         }
 
-        processPrimaryQueue(scene, image);
+        processTraceQueue(scene, image);
         //processShadowQueue(scene, image);
         scene.metrics.stopTimer();
     }
@@ -47,50 +48,86 @@ public:
     float shadowBias = 0.001f; // TODO experiment with this value
 private:
 
-    void processPrimaryQueue(const Scene& scene, Image& image)
+    void processTraceQueue(const Scene& scene, Image& image)
     {
         while (!traceQueue.empty()) {
             TraceTask task = traceQueue.front();
             Ray& ray = task.ray;
             traceQueue.pop();
-            IntersectionData xData {}; // TODO refactor Intersection & IntersectionData classes
-            if (task.depth >= maxDepth) {
-                Vec3 unitColor = multiply(task.unitColor, scene.bgColor);
-                image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
-            }
-            else {
-                bool success = scene.intersect(ray, xData);
-                xData.p = xData.p + xData.n * shadowBias;
-                if (success) {
-                    Vec3 light = hitLight(scene, xData.p, xData.n);
-                    auto& material = scene.materials[xData.materialIndex];
-                    Vec3 diffuseColor = multiply(light, material.albedo);
-                    if (material.type == Material::Type::REFLECTIVE) {
-                        task.reflect(xData.p, xData.n, diffuseColor, material.reflectivity);
-                        traceQueue.push(task);
-                    }
-                    else if (material.type == Material::Type::DIFFUSE) {
-                        Vec3 unitColor = lerp(task.unitColor, diffuseColor, task.reflectivity);
-                        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
-                    }
-                    
-                }
-                else {
-                    Vec3 unitColor = multiply(task.unitColor, scene.bgColor);
-                    image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
-                }
-            }
+            Intersection xData{};
+            scene.intersect(ray, xData);
+            processXData(scene, image, task, xData);
         }
     }
 
-    //void processShadowQueue(const Scene& scene, Image& image)
-    //{
-    //    //TODO
-    //}
+    void processXData(const Scene& scene, Image& image, TraceTask& task, Intersection& xData) {
+        if (!xData.successful()) {
+            shadeVoid(scene, image, task);
+            return;
+        }
+        if (task.depth >= maxDepth) {
+            shadeDiffuse(scene, image, task, xData);
+        }
+
+        const auto& material = scene.materials[xData.materialIndex];
+        switch (material.type) {
+        case Material::Type::DIFFUSE:
+            shadeDiffuse(scene, image, task, xData);
+            break;
+        case Material::Type::REFLECTIVE:
+            shadeReflective(scene, task, xData);
+            break;
+        case Material::Type::REFRACTIVE:
+            shadeRefractive(); // TODO
+            break;
+        case Material::Type::DEBUG:
+            shadeNormal(image, task, xData);
+            break;
+        }
+    }
+
+    void shadeVoid(const Scene& scene, Image& image, const TraceTask& task) const
+    {
+        Vec3 unitColor = multiply(task.color, scene.bgColor);
+        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+    }
+
+    void shadeReflective(const Scene& scene, TraceTask& task, Intersection& xData)
+    {
+        auto& material = scene.materials[xData.materialIndex];
+        xData.p = xData.p + xData.n * shadowBias;
+        Vec3 light = hitLight(scene, xData.p, xData.n);
+        Vec3 diffuseComponent = multiply(light, material.albedo);
+        task.reflect(xData.p, xData.n, diffuseComponent, material.reflectivity);
+        traceQueue.push(task);
+    }
+
+    void shadeDiffuse(const Scene& scene, Image& image, TraceTask& task, Intersection& xData)
+    {
+        auto& material = scene.materials[xData.materialIndex];
+        xData.p = xData.p + xData.n * shadowBias;
+        Vec3 light = hitLight(scene, xData.p, xData.n);
+        Vec3 diffuseComponent = multiply(light, material.albedo);
+        Vec3 unitColor = lerp(task.color, diffuseComponent, task.reflectivity);
+        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+
+    }
+
+    void shadeRefractive()
+    {
+        //TODO
+        throw std::runtime_error("Not implemented yet");
+    }
+
+    void shadeNormal(Image& image, TraceTask& task, const Intersection& xData)
+    {
+        Vec3 unitColor = xData.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
+        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+    }
 
     Vec3 hitLight(const Scene& scene, const Vec3& p, const Vec3& n) const
     {
-        Vec3 shade {0.f, 0.f, 0.f};
+        Vec3 shade{ 0.f, 0.f, 0.f };
         for (const Light& light : scene.lights) {
             shade = shade + light.lightContrib(scene, p, n);
         }
@@ -108,7 +145,7 @@ private:
 
         float scale = imagePlaneDist / rayProj;
         p = p * scale;
-        IntersectionData xData;
+        Intersection xData;
         xData.p = p;
         return shade_abs(xData);
     }
@@ -118,7 +155,7 @@ private:
         return Color{ 5,5 , b };
     }
 
-    Color shade_abs(const IntersectionData& xData) const {
+    Color shade_abs(const Intersection& xData) const {
         uint8_t r = static_cast<uint8_t>(fabs(xData.p.x * 100.f));
         uint8_t g = static_cast<uint8_t>(fabs(xData.p.y * 100.f));
         uint8_t b = static_cast<uint8_t>(fabs(xData.p.z * 100.f));
@@ -126,30 +163,30 @@ private:
         return Color{ r, g, b };
     }
 
-    Color shade_normal(const IntersectionData& xData) const {
-        uint8_t r = static_cast<uint8_t>(fabs(xData.n.x + 1.f) * 127.5f);
-        uint8_t g = static_cast<uint8_t>(fabs(xData.n.y + 1.f) * 127.5f);
-        uint8_t b = static_cast<uint8_t>(fabs(xData.n.z + 1.f) * 127.5f);
+    //Color shade_normal(const Intersection& xData) const {
+    //    uint8_t r = static_cast<uint8_t>(fabs(xData.n.x + 1.f) * 127.5f);
+    //    uint8_t g = static_cast<uint8_t>(fabs(xData.n.y + 1.f) * 127.5f);
+    //    uint8_t b = static_cast<uint8_t>(fabs(xData.n.z + 1.f) * 127.5f);
 
-        return Color{ r, g, b };
-    }
+    //    return Color{ r, g, b };
+    //}
 
     Color shade_perlin(Vec3 p) const
     {
         static const siv::PerlinNoise::seed_type seed = 123456u;
-	    static const siv::PerlinNoise perlin{ seed };
-	
-		const double noise = perlin.octave2D_01(p.x, p.y, 4);
+        static const siv::PerlinNoise perlin{ seed };
+
+        const double noise = perlin.octave2D_01(p.x, p.y, 4);
         const uint8_t color = static_cast<uint8_t>(noise * 255);
         return Color{ color, color, color };
     }
 
-    Color shade_uv(const IntersectionData& xData)
+    Color shade_uv(const Intersection& xData)
     {
         static const siv::PerlinNoise::seed_type seed = 123456u;
-	    static const siv::PerlinNoise perlin{ seed };
-	
-		const double noise = perlin.octave2D_01(xData.u, xData.v, 8, 0.8);
+        static const siv::PerlinNoise perlin{ seed };
+
+        const double noise = perlin.octave2D_01(xData.u, xData.v, 8, 0.8);
         float brightness = static_cast<uint8_t>(noise * 255);
         const uint8_t r = static_cast<uint8_t>(brightness * xData.n.x);
         const uint8_t g = static_cast<uint8_t>(brightness * xData.n.y);

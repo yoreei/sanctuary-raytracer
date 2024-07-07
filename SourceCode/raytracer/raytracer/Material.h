@@ -7,9 +7,11 @@ class Material
 public:
     enum Type
     {
+        VOID, // No material
         DIFFUSE,
         REFLECTIVE,
-        REFRACTIVE
+        REFRACTIVE,
+        DEBUG
     };
 
     Material() = default;

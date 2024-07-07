@@ -24,7 +24,7 @@ public:
     /*
     * return unit ray in world space, originating from pixel (x,y) on the screen
     */
-    void emplaceTasks(const Image& image, int x, int y, std::queue<TraceTask>& queue) const
+    void emplaceTask(const Image& image, int x, int y, std::queue<TraceTask>& queue) const
     {
         Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
         ndcFromRaster(image, coords);

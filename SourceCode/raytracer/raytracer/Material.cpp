@@ -2,7 +2,11 @@
 
 Material::Type Material::TypeFromString(const std::string& type)
 {
-    if (type == "diffuse")
+    if (type == "void")
+    {
+        return Type::VOID;
+    }
+    else if (type == "diffuse")
     {
         return Type::DIFFUSE;
     }
@@ -14,6 +18,10 @@ Material::Type Material::TypeFromString(const std::string& type)
     {
         return Type::REFRACTIVE;
     }
+    else if (type == "debug")
+    {
+        return Type::DEBUG;
+    }
     else
     {
         throw std::runtime_error("Unknown material type: " + type);
@@ -22,7 +30,11 @@ Material::Type Material::TypeFromString(const std::string& type)
 
 std::string Material::StringFromType(const Material::Type& type)
 {
-    if (type == Type::DIFFUSE)
+    if (type == Type::VOID)
+    {
+        return "void";
+    }
+    else if (type == Type::DIFFUSE)
     {
         return "diffuse";
     }
@@ -33,6 +45,10 @@ std::string Material::StringFromType(const Material::Type& type)
     else if (type == Type::REFRACTIVE)
     {
         return "refractive";
+    }
+    else if (type == Type::DEBUG)
+    {
+        return "debug";
     }
     else
     {

@@ -68,7 +68,7 @@ public:
     * return: true if the ray intersects the triangle
     */
     // TODO return bool
-    Intersection intersect(const Scene& scene, const Ray& ray, IntersectionData& out) const;
+    void intersect(const Scene& scene, const Ray& ray, Intersection& out) const;
 
     bool intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray, float& t, Vec3& p) const;
 
