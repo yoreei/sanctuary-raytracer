@@ -9,6 +9,7 @@ public:
     {
         VOID, // No material
         DIFFUSE,
+        CONSTANT,
         REFLECTIVE,
         REFRACTIVE,
         DEBUG

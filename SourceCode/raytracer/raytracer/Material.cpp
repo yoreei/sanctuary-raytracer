@@ -10,6 +10,10 @@ Material::Type Material::TypeFromString(const std::string& type)
     {
         return Type::DIFFUSE;
     }
+    else if (type == "constant")
+    {
+        return Type::CONSTANT;
+    }
     else if (type == "reflective")
     {
         return Type::REFLECTIVE;

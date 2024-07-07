@@ -74,6 +74,9 @@ private:
         case Material::Type::DIFFUSE:
             shadeDiffuse(scene, image, task, xData);
             break;
+        case Material::Type::CONSTANT:
+            shadeConstant(scene, image, task, xData);
+            break;
         case Material::Type::REFLECTIVE:
             shadeReflective(scene, task, xData);
             break;
@@ -86,9 +89,17 @@ private:
         }
     }
 
+    // TODO: abstract lerp away
     void shadeVoid(const Scene& scene, Image& image, const TraceTask& task) const
     {
-        Vec3 unitColor = multiply(task.color, scene.bgColor);
+        Vec3 unitColor = lerp(task.color, scene.bgColor, task.reflectivity);
+        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+    }
+
+    void shadeConstant(const Scene& scene, Image& image, TraceTask& task, const Intersection& xData)
+    {
+        auto& material = scene.materials[xData.materialIndex];
+        Vec3 unitColor = lerp(task.color, material.albedo, task.reflectivity);
         image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
     }
 
@@ -98,7 +109,10 @@ private:
         xData.p = xData.p + xData.n * shadowBias;
         Vec3 light = hitLight(scene, xData.p, xData.n);
         Vec3 diffuseComponent = multiply(light, material.albedo);
-        task.reflect(xData.p, xData.n, diffuseComponent, material.reflectivity);
+        task.ray.reflect(xData.p, xData.n);
+        task.color = lerp(task.color, diffuseComponent, task.reflectivity);
+        task.reflectivity *= material.reflectivity;
+        ++task.depth; 
         traceQueue.push(task);
     }
 
@@ -110,7 +124,6 @@ private:
         Vec3 diffuseComponent = multiply(light, material.albedo);
         Vec3 unitColor = lerp(task.color, diffuseComponent, task.reflectivity);
         image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
-
     }
 
     void shadeRefractive()

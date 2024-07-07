@@ -316,6 +316,11 @@ struct Ray {
     Ray() : origin(Vec3()), direction(Vec3()) {}
 
     Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction) {}
+
+    void reflect(const Vec3& point, const Vec3& normal) {
+        origin = point;
+        direction = direction - 2 * dot(direction, normal) * normal;
+    }
 };
 
 struct TraceTask {
@@ -331,18 +336,6 @@ struct TraceTask {
     TraceTask(const Ray& ray, int pixelX, int pixelY) 
         : ray(ray), pixelX(pixelX), pixelY(pixelY) {}
 
-    /**
-    * @brief Reflect the ray off the surface.
-    * @param hitColor: Diffuse component of the surface hit.
-    * @param hitReflectivity: Reflectivity of the surface hit.
-    */
-    void reflect(const Vec3& point, const Vec3& normal, const Vec3& hitColor, float hitReflectivity) {
-        ray.origin = point;
-        ray.direction = ray.direction - 2 * dot(ray.direction, normal) * normal;
-        color = lerp(color, hitColor, reflectivity);
-        reflectivity *= hitReflectivity;
-        ++depth; 
-    }
 };
 
 
