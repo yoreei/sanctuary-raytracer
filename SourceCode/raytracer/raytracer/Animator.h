@@ -1,33 +1,22 @@
 #pragma once
-#include "Scene.h"
-#include "Animation.h"
+#include <memory>
 
+class Animation;
+class SceneObject;
+class Scene;
 class Animator
 {
 public:
-    Animator(Scene& scene, int endFrame) : scene(scene), endFrame(endFrame) {}
+    Animator(Scene& scene) : scene(scene) {}
 
     /*
     * Return true until all animations are finished
     */
-    bool update()
-    {
-        // TODO: Improve implementation, not optimal
+    bool update();
 
-        for (auto& animation : scene.camera.animations) {
-            if (currentFrame >= animation->getStartFrame() && currentFrame < animation->getEndFrame()) {
-               animation->apply(scene.camera);
-            }
-        }
+    int getCurrentFrame() const;
 
-        ++currentFrame;
-        return currentFrame < endFrame;
-    }
-
-    auto getCurrentFrame() const
-    {
-        return currentFrame;
-    }
+    void addAnimation(SceneObject& object, const std::shared_ptr<Animation>& animation);
 
     int currentFrame = 0;
     int endFrame = 0;

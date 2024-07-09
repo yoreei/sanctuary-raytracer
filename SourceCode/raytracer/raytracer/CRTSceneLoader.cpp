@@ -1,7 +1,9 @@
 #include <fstream>
 
+#include <memory>
 #include "json.hpp"
 
+#include "Animation.h"
 #include "CRTSceneLoader.h"
 #include "Scene.h"
 #include "Image.h"
@@ -39,6 +41,7 @@ bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Ima
         return false;
     }
     genVertexNormals(scene);
+    std::cout << "camera has " << scene.camera.animations.size() << " animations\n";
     return true;
 }
 
@@ -90,6 +93,27 @@ bool CRTSceneLoader::validateCrtscene(const json& j) {
                 return false;
             }
         }
+        else if (key == "animations") {
+            //	"animations": [{
+            //	"type": "truck",
+            //	"start_frame": 0,
+            //	"end_frame": 10,
+            //	"delta": 5
+            //}],
+            if(!val.is_array()) {
+                std::cerr << "Error loading animations: animations is not an array\n";
+                return false;
+            }
+            for (const auto& jAnim : val) {
+                if (!jAnim.contains("type") ||
+                    !jAnim.contains("start_frame") ||
+                    !jAnim.contains("end_frame")
+                    ) {
+                    std::cerr << "Error loading animation: type or start_frame or end_frame not found\n";
+                    return false;
+                }
+            }
+        }
         else {
             std::cerr << "Error loading CRTScene: unknown key: " << key << '\n';
             return false;
@@ -128,7 +152,26 @@ bool CRTSceneLoader::parseLight(const json& j, Scene& scene)
     return true;
 }
 
-inline bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
+std::shared_ptr<Animation> CRTSceneLoader::parseAnimation(const json& j, size_t idx) {
+    assert(j.is_object());
+    assert(j.contains("animations"));
+    const auto& jAnims = j.at("animations");
+    const auto& jAnim = jAnims[idx];
+    int startFrame = jAnim.at("start_frame");
+    int endFrame = jAnim.at("end_frame");
+    std::string type = jAnim.at("type");
+    if (type == "truck") {
+        float delta = jAnim.at("delta");
+        auto truckAnim = MoveAnimation::Make(MoveType::Truck, delta, startFrame, endFrame);
+        return truckAnim;
+    }
+    else {
+       std::cerr << "Error loading animation: unknown type: " << type << '\n';
+       return nullptr;
+    }
+}
+
+bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
     try {
         const auto& jBgColor = j.at("settings").at("background_color");
 
@@ -159,22 +202,27 @@ inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image) {
 }
 
 inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
-    try {
-        const auto& jCamPos = j.at("camera").at("position");
+        const auto& jCam = j.at("camera");
+        const auto& jCamPos = jCam.at("position");
         Vec3 camPos{ jCamPos.at(0), jCamPos.at(1), jCamPos.at(2) };
 
-        const auto& jRotateMat = j.at("camera").at("matrix");
+        const auto& jRotateMat = jCam.at("matrix");
         Matrix3x3 rotateMat{ jRotateMat.get<std::vector<float>>() };
         // NB: CRTScene format gives us the inverse direction of the camera.
         Matrix3x3 camMat = Camera::DefaultMatrix * rotateMat;        
 
         scene.camera = Camera{ 90.f, camPos, camMat };
+
+        if (jCam.contains("animation_indexes")) {
+            const auto& animation_indexes = jCam.at("animation_indexes");
+            for (size_t i = 0; i < animation_indexes.size(); ++i) {
+                int animationIdx = animation_indexes[i];
+                auto anim = parseAnimation(j, animationIdx);
+                scene.animator.addAnimation(scene.camera, anim);
+            }
+        }
+
         return true;
-    }
-    catch (const json::exception& e) {
-        std::cerr << "Error loading camera settings: " << e.what() << '\n';
-        return false;
-    }
 }
 
 inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
@@ -193,8 +241,8 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
             material.albedo = Vec3FromJson(jMaterial.at("albedo"));
         }
         if (material.type == Material::Type::REFRACTIVE) {
-            material.albedo = Vec3{ 0.f, 0.f, 1.f };
-            material.transparency = 0.5f;
+            material.albedo = Vec3{ 1.f, 1.f, 1.f };
+            material.transparency = 1.f;
         }
     }
 

@@ -138,18 +138,22 @@ private:
         #ifndef NDEBUG
         auto oldRay = task.ray;
         #endif
+        auto& material = scene.materials[xData.materialIndex];
+        float enteringIor = material.ior; // the IOR of the material we're entering
         Vec3 facingN = xData.n; //todo make reference
         if (xData.type == IntersectionType::INSIDE_REFRACTIVE) {
             facingN = -xData.n;
+            //  (simplification) exiting a refractive object means we're back to air
+            enteringIor = 1.f; // todo: implement nested refractive objects
         }
         assert(dot(facingN, task.ray.direction) < -1e-6);
 
-        auto& material = scene.materials[xData.materialIndex];
         auto diffuseP = xData.p + facingN * shadowBias;
         auto refractP = xData.p - facingN * refractionBias;
         Vec3 light = hitLight(scene, diffuseP, xData.n);
         Vec3 diffuseComponent = multiply(light, material.albedo);
-        task.ray.refract(refractP, facingN, task.ior, material.ior);
+        task.ray.refract(refractP, facingN, task.ior, enteringIor);
+        task.ior = enteringIor;
         task.color = lerp(task.color, diffuseComponent, task.attenuation);
         task.attenuation *= material.transparency;
         ++task.depth; 

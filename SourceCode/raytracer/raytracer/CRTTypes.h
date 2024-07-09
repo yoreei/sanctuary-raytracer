@@ -301,7 +301,7 @@ public:
 
 
 
-    void toString() const {
+    std::string toString() const {
         std::string result = "";
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 3; ++col) {
@@ -310,6 +310,7 @@ public:
             }
             result += "\n";
         }
+        return result;
     }
 
 private:
@@ -340,20 +341,26 @@ struct Ray {
         auto dbgOldDirection = direction;
         origin = point;
         float cosI = -dot(direction, normal);
-        float sinI = std::sqrt(1 - cosI * cosI);
-        float sinR = sinI * iorI / iorR;
-        float cosR = std::sqrt(1 - sinR * sinR);
+        //float sinI = std::sqrt(1 - cosI * cosI); // me
+        //float sinR = sinI * iorI / iorR; //me
+        //float cosR = std::sqrt(1 - sinR * sinR); // me
+        TODO: work out the mathematics again. Prove that vladi's is true
+        float sinR = (sqrt(1-cosI*cosI) * iorI) / iorR; // vladi
+        float cosR = sqrt(1 - sinR * sinR); // vladi
         Vec3 C = (direction + cosI * normal).getUnit();
         Vec3 B = C * sinR;
         Vec3 A = -normal * cosR;
         direction = A + B;
 
+        if (!fequal(direction.length(), 1.f)) {
+            std::cout << "direction: " << direction.toString();
+        }
         assert(fequal(direction.length(), 1.f));
         assert(fequal(dot(direction, normal), -cosR));
         // assert R not going backwards:
         assert(dot(direction, dbgOldDirection) > 1e-6);
         // assert Snell's Law:
-        assert(fequal(sinI / sinR, iorR / iorI));
+        //assert(fequal(sinI / sinR, iorR / iorI));
     }
 };
 

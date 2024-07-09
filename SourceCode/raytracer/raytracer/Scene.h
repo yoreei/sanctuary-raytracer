@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "Animator.h"
 #include "CRTTypes.h"
 #include "Camera.h"
 #include "Settings.h"
@@ -21,11 +22,12 @@ using json = nlohmann::json;
 class Scene
 {
 public:
-    Scene (const std::string& name) : fileName(name), metrics(name) {}
+    Scene (const std::string& name) : fileName(name), metrics(name), animator(*this) {}
     std::string fileName = "";
     Camera camera {};
     Settings settings {};
     mutable Metrics metrics;
+    Animator animator;
 
     /* meshObjects reference trinagles. Triangles reference vertices */
     std::vector<Vec3> vertices {};

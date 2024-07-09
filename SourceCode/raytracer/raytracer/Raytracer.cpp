@@ -29,10 +29,11 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
     std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
     Scene scene {sceneName};
-    Animator animator {scene, 0};
     Renderer renderer {};
     
     CRTSceneLoader::loadCrtscene(INPUT_DIR + sceneName + ".crtscene", scene, image) ? void() : exit(1);
+    auto truck = MoveAnimation::Make(MoveType::Truck, 3, 0, 24);
+    //scene.animator.addAnimation(scene.camera, truck);
     fs::create_directories("out/" + sceneName);
     //image = Image(1280, 720); // Make rendering time shorter for quick testing
     image = Image(300, 200); // Make rendering time shorter for quick testing
@@ -40,14 +41,14 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
     do {
         renderer.renderScene(scene, image);
 
-        std::string filename = "out/" + sceneName + "/" + std::to_string(animator.getCurrentFrame());
+        std::string filename = "out/" + sceneName + "/" + std::to_string(scene.animator.getCurrentFrame());
 
         std::cout << filename << std::endl << scene.metrics.toString() << std::endl;
         std::cout << scene.materials[0] << std::endl;
         std::cout << "---" << std::endl;
 
         image.writeImage(filename);
-    } while (animator.update());
+    } while (scene.animator.update());
     metrics = scene.metrics;
 }
 

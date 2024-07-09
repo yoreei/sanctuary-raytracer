@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "json.hpp"
 
@@ -22,6 +23,7 @@ private:
     static bool parseImageSettings(const json& j, Image& image);
     static bool parseCameraSettings(const json& j, Scene& scene);
     static bool parseMaterials(const json& j, Scene& scene);
+    static std::shared_ptr<Animation> parseAnimation(const json& j, size_t idx);
     static Vec3 Vec3FromJson(const json& j);
     static bool boolFromJson(const json& j);
     static bool parseObjects(const json& j, Scene& scene);

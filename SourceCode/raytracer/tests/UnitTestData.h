@@ -52,13 +52,12 @@ namespace UnitTestData {
         loadCamera1(camera);
         scene.camera = camera;
 
-        animator.endFrame = 7;
-        scene.camera.animations.push_back(RotateAnimation::Make(RotateType::Pan, 10.f, 0, 1));
-        scene.camera.animations.push_back(RotateAnimation::Make(RotateType::Roll, 10.f, 1, 2));
-        scene.camera.animations.push_back(RotateAnimation::Make(RotateType::Tilt, 10.f, 2, 3));  
-        scene.camera.animations.push_back(MoveAnimation::Make(MoveType::Dolly, 0.5f, 3, 4));
-        scene.camera.animations.push_back(MoveAnimation::Make(MoveType::Pedestal, 0.5f, 4, 5));
-        scene.camera.animations.push_back(MoveAnimation::Make(MoveType::Truck, 0.5f, 5, animator.endFrame - 1));
+        animator.addAnimation(scene.camera, RotateAnimation::Make(RotateType::Pan, 10.f, 0, 1));
+        animator.addAnimation(scene.camera, RotateAnimation::Make(RotateType::Roll, 10.f, 1, 2));
+        animator.addAnimation(scene.camera, RotateAnimation::Make(RotateType::Tilt, 10.f, 2, 3));
+        animator.addAnimation(scene.camera, MoveAnimation::Make(MoveType::Dolly, 0.5f, 3, 4));
+        animator.addAnimation(scene.camera, MoveAnimation::Make(MoveType::Pedestal, 0.5f, 4, 5));
+        animator.addAnimation(scene.camera, MoveAnimation::Make(MoveType::Truck, 0.5f, 5, 6));
 
         scene.vertices = {
             {-1.75f, -1.75f, -3.f},

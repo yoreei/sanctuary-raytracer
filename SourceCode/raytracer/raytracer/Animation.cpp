@@ -9,7 +9,17 @@ void MoveAnimation::apply(SceneObject& obj)
     obj.pos = obj.pos + animDir;
 }
 
+std::string MoveAnimation::toString() const
+{
+    return "MoveAnimation { delta: " + delta.toString();
+}
+
 void RotateAnimation::apply(SceneObject& obj)
 {
     obj.mat = mat * obj.mat;
+}
+
+std::string RotateAnimation::toString() const
+{
+    return "RotateAnimation { mat: " + mat.toString();
 }

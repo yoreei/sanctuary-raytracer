@@ -2,7 +2,7 @@
 #include "CRTTypes.h"
 #include <memory>
 
-struct SceneObject;
+class SceneObject;
 
 class Animation
 {
@@ -10,6 +10,7 @@ public:
     virtual void apply(SceneObject& obj) = 0;
     auto getStartFrame() const { return startFrame; }
     auto getEndFrame() const { return endFrame; }
+    virtual std::string toString() const = 0;
 
 protected:
     int startFrame = 0;
@@ -57,6 +58,7 @@ public:
     }
 
     virtual void apply(SceneObject& obj) override;
+    virtual std::string toString() const override;
 
 private:
         Vec3 delta = { 0.f, 0.f, 0.f };
@@ -103,6 +105,7 @@ public:
     }
 
     virtual void apply(SceneObject& obj) override;
+    virtual std::string toString() const override;
 
 private:
     Matrix3x3 mat;

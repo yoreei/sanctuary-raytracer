@@ -4,7 +4,8 @@
 #include "CRTTypes.h"
 #include "Animation.h"
 
-struct SceneObject {
+class SceneObject {
+public:
     SceneObject() = default;
     SceneObject(const Vec3& pos, const Matrix3x3& mat) : pos(pos), mat(mat) {
     }

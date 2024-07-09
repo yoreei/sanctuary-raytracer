@@ -67,7 +67,7 @@ void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, Int
     Vec3 c1 = cross(v0p, e1);
     Vec3 c2 = cross(e2, xData.p - v1);
 
-    bool inside = dot(n, c0) > -1e-6 &&
+    bool inside = dot(n, c0) > -1e-6 && // TODO: optimize dot away
         dot(n, c1) > -1e-6 &&
         dot(n, c2) > -1e-6;
 
