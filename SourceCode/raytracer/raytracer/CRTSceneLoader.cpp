@@ -64,9 +64,10 @@ bool CRTSceneLoader::validateCrtscene(const json& j) {
                 std::cerr << "Error loading materials: materials is not an array\n";
                 return false;
             }
-            for (const auto& jMaterial : val) {
-                if (!jMaterial.contains("type") || !jMaterial.contains("albedo") || !jMaterial.contains("smooth_shading")) {
-                    std::cerr << "Error loading material: type, albedo or smooth_shading not found\n";
+            for (size_t i = 0; i < val.size(); ++i) {
+                const auto& jMaterial = val[i];
+                if (!jMaterial.contains("type")) {
+                    std::cerr << "Error loading material[" << i << "]: type not found\n";
                     return false;
                 }
             }
@@ -178,10 +179,23 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
 
 inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
     for (auto& jMaterial : j.at("materials")) {
-        auto type = Material::TypeFromString(jMaterial.at("type"));
-        Vec3 albedo = Vec3FromJson(jMaterial.at("albedo"));
-        bool smoothShading = boolFromJson(jMaterial.at("smooth_shading"));
-        scene.materials.emplace_back(albedo, smoothShading, type);
+        scene.materials.emplace_back();
+        auto& material = scene.materials.back();
+        material.reflectivity = 0.5f;
+        material.smoothShading = boolFromJson(jMaterial.at("smooth_shading"));
+        material.type = Material::TypeFromString(jMaterial.at("type"));
+        material.ior = 1.f;
+        material.albedo = Vec3{ 1.f, 1.f, 1.f };
+        if (jMaterial.contains("ior")) {
+            material.ior = jMaterial.at("ior");
+        }
+        if (jMaterial.contains("albedo")) {
+            material.albedo = Vec3FromJson(jMaterial.at("albedo"));
+        }
+        if (material.type == Material::Type::REFRACTIVE) {
+            material.albedo = Vec3{ 0.f, 0.f, 1.f };
+            material.transparency = 0.5f;
+        }
     }
 
     return true;

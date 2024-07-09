@@ -25,8 +25,10 @@ void Raytracer::writeFile(const std::string& filename, const std::string& data) 
 
 void Raytracer::runScene(const std::string& sceneName)
 {
+    std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
     Scene scene {};
+    scene.fileName = sceneName;
     Animator animator {scene, 0};
     Renderer renderer {};
     
@@ -39,13 +41,13 @@ void Raytracer::runScene(const std::string& sceneName)
         scene.metrics = Metrics {}; // reset
         renderer.renderScene(scene, image);
 
-        std::string filename = "out/" + sceneName + "/" + std::to_string(animator.getCurrentFrame()) + ".png";
+        std::string filename = "out/" + sceneName + "/" + std::to_string(animator.getCurrentFrame());
 
         std::cout << filename << std::endl << scene.metrics.toString() << std::endl;
         std::cout << scene.materials[0] << std::endl;
         std::cout << "---" << std::endl;
 
-        image.writeToPng(filename);
+        image.writeImage(filename);
     } while (animator.update());
 }
 

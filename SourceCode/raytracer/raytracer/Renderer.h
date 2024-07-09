@@ -35,17 +35,23 @@ public:
         scene.metrics.stopTimer();
     }
 
-    ///*
-    //* Fires a single ray. For Debugging traceRay
-    //*/
-    //void _renderSingle(const Scene& scene, Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
-    //{
-    //        ray.direction.normalize();
-    //        traceScene(scene, ray);
-    //}
+    /*
+    * DEBUGGING
+    * Fires a single ray.
+    */
+    void _DBGrenderScene(const Scene& scene, Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
+    {
+        //ray.direction.normalize();
+        ray.origin = { 0.f, 0.f, 0.f };
+        ray.direction = { -0.310658336f, -0.208651125f, -0.927338243f };
+        TraceTask task = { ray, 0, 0,};
+        traceQueue.push(task);
+        processTraceQueue(scene, image);
+    }
 
     std::queue<TraceTask> traceQueue {};
-    float shadowBias = 0.001f; // TODO experiment with this value
+    float shadowBias = 0.001f;
+    float refractionBias = 0.001f;
 private:
 
     void processTraceQueue(const Scene& scene, Image& image)
@@ -67,6 +73,7 @@ private:
         }
         if (task.depth >= maxDepth) {
             shadeDiffuse(scene, image, task, xData);
+            scene.metrics.record("maxDepth");
         }
 
         const auto& material = scene.materials[xData.materialIndex];
@@ -81,7 +88,7 @@ private:
             shadeReflective(scene, task, xData);
             break;
         case Material::Type::REFRACTIVE:
-            shadeRefractive(); // TODO
+            shadeRefractive(scene, task, xData);
             break;
         case Material::Type::DEBUG:
             shadeNormal(image, task, xData);
@@ -92,14 +99,14 @@ private:
     // TODO: abstract lerp away
     void shadeVoid(const Scene& scene, Image& image, const TraceTask& task) const
     {
-        Vec3 unitColor = lerp(task.color, scene.bgColor, task.reflectivity);
+        Vec3 unitColor = lerp(task.color, scene.bgColor, task.attenuation);
         image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
     }
 
     void shadeConstant(const Scene& scene, Image& image, TraceTask& task, const Intersection& xData)
     {
         auto& material = scene.materials[xData.materialIndex];
-        Vec3 unitColor = lerp(task.color, material.albedo, task.reflectivity);
+        Vec3 unitColor = lerp(task.color, material.albedo, task.attenuation);
         image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
     }
 
@@ -110,8 +117,8 @@ private:
         Vec3 light = hitLight(scene, xData.p, xData.n);
         Vec3 diffuseComponent = multiply(light, material.albedo);
         task.ray.reflect(xData.p, xData.n);
-        task.color = lerp(task.color, diffuseComponent, task.reflectivity);
-        task.reflectivity *= material.reflectivity;
+        task.color = lerp(task.color, diffuseComponent, task.attenuation);
+        task.attenuation *= material.reflectivity;
         ++task.depth; 
         traceQueue.push(task);
     }
@@ -122,14 +129,34 @@ private:
         xData.p = xData.p + xData.n * shadowBias;
         Vec3 light = hitLight(scene, xData.p, xData.n);
         Vec3 diffuseComponent = multiply(light, material.albedo);
-        Vec3 unitColor = lerp(task.color, diffuseComponent, task.reflectivity);
+        Vec3 unitColor = lerp(task.color, diffuseComponent, task.attenuation);
         image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
     }
 
-    void shadeRefractive()
+    void shadeRefractive(const Scene& scene, TraceTask& task, Intersection& xData)
     {
-        //TODO
-        throw std::runtime_error("Not implemented yet");
+        #ifndef NDEBUG
+        auto oldRay = task.ray;
+        #endif
+        Vec3 facingN = xData.n; //todo make reference
+        if (xData.type == IntersectionType::INSIDE_REFRACTIVE) {
+            facingN = -xData.n;
+        }
+        assert(dot(facingN, task.ray.direction) < -1e-6);
+
+        auto& material = scene.materials[xData.materialIndex];
+        auto diffuseP = xData.p + facingN * shadowBias;
+        auto refractP = xData.p - facingN * refractionBias;
+        Vec3 light = hitLight(scene, diffuseP, xData.n);
+        Vec3 diffuseComponent = multiply(light, material.albedo);
+        task.ray.refract(refractP, facingN, task.ior, material.ior);
+        task.color = lerp(task.color, diffuseComponent, task.attenuation);
+        task.attenuation *= material.transparency;
+        ++task.depth; 
+        traceQueue.push(task);
+
+        // assert refractP is farther away from ray.origin than xData.p
+        assert((refractP - oldRay.origin).lengthSquared() > (xData.p - oldRay.origin).lengthSquared());
     }
 
     void shadeNormal(Image& image, TraceTask& task, const Intersection& xData)

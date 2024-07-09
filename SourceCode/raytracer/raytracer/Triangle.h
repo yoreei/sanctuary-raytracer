@@ -18,7 +18,7 @@ public:
     }
 
     Vec3 calculateNormal(const std::vector<Vec3>& vertices) const {
-        Vec3 out {};
+        Vec3 out{};
         const Vec3& v0 = vertices[v[0]];
         const Vec3& v1 = vertices[v[1]];
         const Vec3& v2 = vertices[v[2]];
@@ -68,12 +68,20 @@ public:
     * return: true if the ray intersects the triangle
     */
     // TODO return bool
-    void intersect(const Scene& scene, const Ray& ray, Intersection& out) const;
+
+    void intersect(const Scene& scene, const Ray& ray, Intersection& xData) const;
+
+    void computeXData(const Scene& scene, const Ray& ray, float rProj, Intersection& xData) const;
+
+    Triangle swappedTriangle() const;
+
+    void swapFace();
 
     bool intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray, float& t, Vec3& p) const;
 
     Vec3 intersectionNormal(const Scene& scene, float uCoord, float vCoord) const;
 
 private:
-    Vec3 normal {};
+    Vec3 normal{};
 };
+

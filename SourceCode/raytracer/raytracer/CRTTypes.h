@@ -46,6 +46,10 @@ public:
         return Vec3(x - other.x, y - other.y, z - other.z);
     }
 
+    Vec3 operator-() const {
+        return Vec3(-x, -y, -z);
+    }
+
     Vec3 operator*(float scalar) const {
         return Vec3(x * scalar, y * scalar, z * scalar);
     }
@@ -55,7 +59,7 @@ public:
     }
 
     Vec3 operator/(float scalar) const {
-        float divCache = 1.f/scalar; // division optimization
+        float divCache = 1.f / scalar; // division optimization
         return Vec3(x * divCache, y * divCache, z * divCache);
     }
 
@@ -73,6 +77,10 @@ public:
         return std::sqrt(x * x + y * y + z * z);
     }
 
+    float lengthSquared() const {
+        return x * x + y * y + z * z;
+    }
+
     float crossLength(const Vec3& other) const {
         float cx = y * other.z - z * other.y;
         float cy = z * other.x - x * other.z;
@@ -88,7 +96,7 @@ public:
 
     void normalize() {
         float len = length();
-        float divCache = 1.f/len; // division optimization
+        float divCache = 1.f / len; // division optimization
         x = x * divCache;
         y = y * divCache;
         z = z * divCache;
@@ -125,7 +133,7 @@ inline Vec3 operator*(float scalar, const Vec3& vec) {
  * Multiply two vectors component-wise.
  */
 inline Vec3 multiply(const Vec3& a, const Vec3& b) {
-    return {a.x * b.x, a.y * b.y, a.z * b.z};
+    return { a.x * b.x, a.y * b.y, a.z * b.z };
 }
 
 /**
@@ -148,7 +156,7 @@ inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
 /*
 * Linear Algebra Square Matrix in R^3
 * Cost: 9 floats
-* 
+*
 * Example usage:
 * auto mat = Matrix3x3.identity()
 * mat(col, row) = 1.0f; // Column-major data access.
@@ -172,11 +180,11 @@ public:
     }
 
     static Matrix3x3 fromCols(const Vec3& c0, const Vec3& c1, const Vec3& c2) {
-        return Matrix3x3 {{
+        return Matrix3x3{ {
             c0.x, c1.x, c2.x,
             c0.y, c1.y, c2.y,
             c0.z, c1.z, c2.z,
-            }};
+            } };
     }
 
     float& operator()(int row, int col) {
@@ -256,11 +264,11 @@ public:
         float cosv = cos(rad);
         float sinv = sin(rad);
 
-        return Matrix3x3 {{
+        return Matrix3x3{ {
         1.f, 0.f, 0.f,
         0.f, cosv, -sinv,
         0.f, sinv, cosv
-        }};
+        } };
     }
 
     /* Rotate around Y. yaw */
@@ -269,11 +277,11 @@ public:
         float cosv = cos(rad);
         float sinv = sin(rad);
 
-        return Matrix3x3 {{
+        return Matrix3x3{ {
         cosv,  0, sinv,
         0,     1, 0,
         -sinv, 0, cosv
-        }};
+        } };
     }
 
     /*
@@ -284,11 +292,11 @@ public:
         float cosv = cos(rad);
         float sinv = sin(rad);
 
-        return Matrix3x3 {{
+        return Matrix3x3{ {
         cosv, -sinv, 0,
         sinv, cosv, 0,
         0,0, 1
-        }};
+        } };
     }
 
 
@@ -320,20 +328,47 @@ struct Ray {
     void reflect(const Vec3& point, const Vec3& normal) {
         origin = point;
         direction = direction - 2 * dot(direction, normal) * normal;
+        assert(fequal(direction.length(), 1.f));
+    }
+
+    /**
+    * @param normal: expected to face the ray.
+    **/
+    void refract(const Vec3& point, Vec3 normal, float iorI, float iorR) {
+        assert(dot(direction,normal) < -1e-6); // usage req: normal should face the ray
+
+        auto dbgOldDirection = direction;
+        origin = point;
+        float cosI = -dot(direction, normal);
+        float sinI = std::sqrt(1 - cosI * cosI);
+        float sinR = sinI * iorI / iorR;
+        float cosR = std::sqrt(1 - sinR * sinR);
+        Vec3 C = (direction + cosI * normal).getUnit();
+        Vec3 B = C * sinR;
+        Vec3 A = -normal * cosR;
+        direction = A + B;
+
+        assert(fequal(direction.length(), 1.f));
+        assert(fequal(dot(direction, normal), -cosR));
+        // assert R not going backwards:
+        assert(dot(direction, dbgOldDirection) > 1e-6);
+        // assert Snell's Law:
+        assert(fequal(sinI / sinR, iorR / iorI));
     }
 };
 
 struct TraceTask {
     Ray ray;
-    int pixelX {0};
-    int pixelY {0};
-    uint32_t depth {0};
+    int pixelX{ 0 };
+    int pixelY{ 0 };
+    uint32_t depth{ 0 };
     // [0, 1]. RGB
-    Vec3 color {1.f, 1.f, 1.f};
-    // [0, 1]. Higher values give more weight to intersection color.
-    float reflectivity {1.f};
+    Vec3 color{ 1.f, 1.f, 1.f };
+    // [0, 1]. i.e. inverseColorWeight. Higher values diminish the weight of `color` when `lerp`ing. 
+    float attenuation{ 1.f };
+    float ior{ 1.f };
 
-    TraceTask(const Ray& ray, int pixelX, int pixelY) 
+    TraceTask(const Ray& ray, int pixelX, int pixelY)
         : ray(ray), pixelX(pixelX), pixelY(pixelY) {}
 
 };

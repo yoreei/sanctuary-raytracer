@@ -75,7 +75,7 @@ public:
         return result;
     }
 
-    void writeToPng(const std::string& filename) const {
+    void writeImage(std::string filename) const {
         std::vector<uint8_t> pngData(width * height * 3);
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
@@ -86,7 +86,17 @@ public:
             }
         }
         int stride_bytes = static_cast<int>(width) * 3;
-        stbi_write_png(filename.c_str(), static_cast<int>(width), static_cast<int>(height), 3, pngData.data(), stride_bytes);
+        int channels = 3;
+        int intWidth = static_cast<int>(width);
+        int intHeight = static_cast<int>(height);
+#ifdef NDEBUG
+        filename += ".png";
+        stbi_write_png(filename.c_str(), intWidth, intHeight, channels, pngData.data(), stride_bytes);
+#else
+        filename += ".bmp";
+        stbi_write_bmp(filename.c_str(), intWidth, intHeight, channels, pngData.data());
+#endif // !NDEBUG
+
     }
 
 private:

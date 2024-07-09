@@ -22,6 +22,8 @@ public:
     bool smoothShading = false;
     Type type = Type::DIFFUSE;
     float reflectivity = REFLECTIVITY;
+    float ior = 0.f;
+    float transparency = 0.f;
 
     static Type TypeFromString(const std::string& type);
 

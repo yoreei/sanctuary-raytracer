@@ -39,14 +39,16 @@ public:
 
     bool isOccluded(const Vec3& start, const Vec3& end) const {
         Intersection xData {};
-        float t = end.length();
+        float t = end.length(); // todo: end - start ???????????????
         Ray ray = { start, end.getUnit() };
         for (const Triangle& tri : triangles) {
             tri.intersect(*this, ray, xData);
-            if (xData.successful() && flower(xData.t, t)) {
+            auto& material = materials[tri.materialIndex];
+            if (xData.successful() && material.type != Material::Type::REFRACTIVE && flower(xData.t, t)) {
                 return true;
             }
         }
+        // TODO: return dimming factor based on refractive objects intersected!!!!
         return false;
     }
 

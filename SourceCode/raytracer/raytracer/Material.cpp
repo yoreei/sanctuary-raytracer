@@ -54,6 +54,10 @@ std::string Material::StringFromType(const Material::Type& type)
     {
         return "debug";
     }
+    else if (type == Type::CONSTANT)
+    {
+        return "constant";
+    }
     else
     {
         throw std::runtime_error("Unknown material type");

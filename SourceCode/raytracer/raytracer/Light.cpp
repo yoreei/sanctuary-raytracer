@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "Light.h"
 #include "Scene.h"
 
@@ -7,14 +9,13 @@ Vec3 Light::lightContrib(const Scene& scene, const Vec3& point, const Vec3& norm
     Vec3 lightDir = (pos - point);
     float sr = lightDir.length(); // Sphere Radius
     lightDir.normalize();
-    float cosLaw = std::max(0.0f, normal.dot(lightDir));
-    float sa = 4 * PI * sr * sr; // Sphere Area
-
     if (scene.isOccluded(point, lightDir)) {
         scene.metrics.record("LIGHT_OCCLUDED");
         return Vec3{ 0.f, 0.f, 0.f };
     }
 
+    float cosLaw = std::fabs(normal.dot(lightDir)); // fabs takes care of refractive materials
+    float sa = 4 * PI * sr * sr; // Sphere Area
     scene.metrics.record("LIGHT_SUCCESS");
     float contrib = this->intensity * cosLaw / sa;
     return Vec3{ contrib, contrib, contrib };
