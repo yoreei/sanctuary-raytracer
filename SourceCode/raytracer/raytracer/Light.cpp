@@ -1,6 +1,8 @@
 #include <cmath>
 
 #include "Light.h"
+#include "CRTTypes.h"
+#include "Scene.h"
 #include "Scene.h"
 
 static constexpr float PI = static_cast<float>(std::numbers::pi);

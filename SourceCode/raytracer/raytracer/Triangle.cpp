@@ -16,12 +16,11 @@
 void Triangle::intersect(const Scene& scene, const Ray& ray, Intersection& xData) const {
 
     float rayProj = ray.direction.dot(normal);
-    bool planeFacingRay = rayProj < -1e-6;
 
-    if (planeFacingRay) {
+    if (rayProj < -1e-6) { // normal is facing ray
         computeXData(scene, ray, rayProj, xData);
     }
-    else {
+    else if (rayProj > 1e-6) { // normal is facing away from ray
         auto& material = scene.materials[materialIndex];
         if (material.type == Material::Type::REFRACTIVE) {
             Triangle swapT = swappedTriangle();
@@ -35,6 +34,9 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, Intersection& xData
         else {
             xData.type = IntersectionType::PLANE_BACKFACE;
         }
+    }
+    else {
+        xData.type = IntersectionType::PARALLEL;
     }
 }
 

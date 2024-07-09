@@ -10,6 +10,8 @@ enum class IntersectionType {
     // planeFacingRay = false:
     INSIDE_REFRACTIVE,          // rayIntersectsPlane = true, withinTriangle = true
     PLANE_BACKFACE,             // rayIntersectsPlane = [true|false], withinTriangle = [true|false]
+    // planeFacingRay = PARALLEL
+    PARALLEL,                   // rayIntersectsPlane = false, withinTriangle = false
 };
 
 std::string toString(IntersectionType intersection);
