@@ -21,10 +21,11 @@ using json = nlohmann::json;
 class Scene
 {
 public:
+    Scene (const std::string& name) : fileName(name), metrics(name) {}
     std::string fileName = "";
     Camera camera {};
     Settings settings {};
-    mutable Metrics metrics {};
+    mutable Metrics metrics;
 
     /* meshObjects reference trinagles. Triangles reference vertices */
     std::vector<Vec3> vertices {};

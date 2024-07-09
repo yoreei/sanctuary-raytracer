@@ -16,6 +16,7 @@
 #include "Renderer.h"
 
 namespace fs = std::filesystem;
+const std::string Raytracer::INPUT_DIR = "scenes/in/";
 
 void Raytracer::writeFile(const std::string& filename, const std::string& data) {
     std::ofstream ppmFileStream(filename, std::ios::out | std::ios::binary);
@@ -23,22 +24,20 @@ void Raytracer::writeFile(const std::string& filename, const std::string& data) 
     ppmFileStream.close();
 }
 
-void Raytracer::runScene(const std::string& sceneName)
+void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
 {
     std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
-    Scene scene {};
-    scene.fileName = sceneName;
+    Scene scene {sceneName};
     Animator animator {scene, 0};
     Renderer renderer {};
     
-    CRTSceneLoader::loadCrtscene("scenes/" + sceneName + ".crtscene", scene, image) ? void() : exit(1);
+    CRTSceneLoader::loadCrtscene(INPUT_DIR + sceneName + ".crtscene", scene, image) ? void() : exit(1);
     fs::create_directories("out/" + sceneName);
     //image = Image(1280, 720); // Make rendering time shorter for quick testing
     image = Image(300, 200); // Make rendering time shorter for quick testing
 
     do {
-        scene.metrics = Metrics {}; // reset
         renderer.renderScene(scene, image);
 
         std::string filename = "out/" + sceneName + "/" + std::to_string(animator.getCurrentFrame());
@@ -49,19 +48,32 @@ void Raytracer::runScene(const std::string& sceneName)
 
         image.writeImage(filename);
     } while (animator.update());
+    metrics = scene.metrics;
 }
 
 int Raytracer::run()
 {
-    for (const auto& entry : fs::directory_iterator("scenes/in")) {
+
+    std::vector<Metrics> metricsList = {};
+    for (const auto& entry : fs::directory_iterator(INPUT_DIR)) {
         if (auto ext = entry.path().extension(); ext != ".crtscene") {
             continue;
         }
 
         std::string sceneName = entry.path().filename().string();
         sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
-        runScene(sceneName);
+        Metrics metrics {};
+        runScene(sceneName, metrics);
+        metricsList.push_back(metrics);
     }
+    writeMetrics(metricsList);
 
     return 0;
+}
+
+void Raytracer::writeMetrics(const std::vector<Metrics>& metricsList) {
+    std::ofstream metricsFileStream("out/metrics.txt", std::ios::out);
+    for (const auto& metrics : metricsList) {
+        metricsFileStream << metrics.toString() << std::endl << std::endl;
+    }
 }

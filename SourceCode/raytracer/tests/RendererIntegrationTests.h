@@ -26,7 +26,7 @@ namespace RendererIntegrationTests {
     }
 
     void run() {
-        Scene scene{};
+        Scene scene{"test"};
         Image image{300, 200};
         Animator animator {scene, 0};
 

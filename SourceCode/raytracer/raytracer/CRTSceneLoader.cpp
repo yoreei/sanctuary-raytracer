@@ -235,7 +235,7 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
     try {
         const auto& jObjects = j.at("objects");
         for (const auto& jObj : jObjects) {
-            Scene objScene{};
+            Scene objScene{"tempScene"};
 
             if (!parseVertices(jObj, objScene)) {
                 return false;

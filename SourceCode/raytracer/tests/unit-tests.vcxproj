@@ -203,6 +203,7 @@
     <ClCompile Include="MainUnitTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Benchmarks.h" />
     <ClInclude Include="CameraUnitTests.h" />
     <ClInclude Include="CRTTypesUnitTests.h" />
     <ClInclude Include="RendererIntegrationTests.h" />

@@ -10,7 +10,8 @@ using ordered_json = nlohmann::ordered_json;
 /* Helps for debugging the Renderer */
 class Metrics {
 public:
-
+    Metrics() = default;
+    Metrics(const std::string& name) : name(name) {}
     void startTimer() {
         startTime = std::chrono::high_resolution_clock::now();
     }
@@ -26,6 +27,7 @@ public:
 
     ordered_json toJson() const {
         ordered_json j;
+        j["name"] = name;
         j["timer"] = duration.count();
 
         for (const auto& pair : xCounts) {
@@ -43,4 +45,5 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
     std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
     std::chrono::duration<double> duration = std::chrono::duration<double>::zero();
+    std::string name {};
 };

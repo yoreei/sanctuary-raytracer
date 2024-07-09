@@ -14,7 +14,7 @@ namespace TriangleUnitTests
     void run()
     {
         size_t materialIdx = 0;
-        Scene scene{};
+        Scene scene{"test"};
         float area;
         auto& vs = scene.vertices;
         Vec3 n;
