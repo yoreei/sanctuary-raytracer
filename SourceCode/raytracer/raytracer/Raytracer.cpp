@@ -53,7 +53,7 @@ void Raytracer::runScene(const std::string& sceneName)
 
 int Raytracer::run()
 {
-    for (const auto& entry : fs::directory_iterator("scenes")) {
+    for (const auto& entry : fs::directory_iterator("scenes/in")) {
         if (auto ext = entry.path().extension(); ext != ".crtscene") {
             continue;
         }
