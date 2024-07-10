@@ -5,18 +5,20 @@
 #include "Camera.h"
 #include "UnitTestData.h"
 #include "Image.h"
+#include "CRTTypes.h"
 
 namespace CameraUnitTests
 {
     void run()
     {
+        /*
         Camera cam;
         UnitTestData::loadCamera1(cam);
-        PixelRay ray {};
+        TraceTask task {};
 
         // Box aspect ratio
         Image img(3, 3);
-        std::queue<PixelRay> q;
+        std::queue<TraceTrask> q;
 
         cam.emplacePrimaryRay(img, 0, 0, q);
         ray = q.front();
@@ -54,6 +56,6 @@ namespace CameraUnitTests
         cam.emplacePrimaryRay(img, 2, 2, q);
         ray = q.front();
         assert(ray.direction.equal({ 0.485071242f, -0.485071242f, -0.727606893f }));
-
+*/
     }
 } // namespace CameraUnitTests

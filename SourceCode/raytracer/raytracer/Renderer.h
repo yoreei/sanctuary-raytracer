@@ -133,6 +133,7 @@ private:
         Vec3 diffuseComponent = multiply(light, material.albedo);
         Vec3 unitColor = lerp(task.color, diffuseComponent, task.attenuation);
         image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+
     }
 
     void shadeRefractive(const Scene& scene, TraceTask& task, Intersection& xData)
@@ -199,7 +200,11 @@ private:
         for (const Light& light : scene.lights) {
             shade = shade + light.lightContrib(scene, p, n);
         }
-        shade.clamp(0.f, 1.f);
+
+        if (shade.x > 1.f || shade.y > 1.f || shade.z > 1.f) {
+            scene.metrics.record("LIGHT_SHADE_GREATER_THAN_ONE");
+        }
+        // shade.clamp(0.f, 1.f); // comment out for overexposure?
         return shade;
     }
 

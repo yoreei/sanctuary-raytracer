@@ -21,4 +21,7 @@ Vec3 Light::lightContrib(const Scene& scene, const Vec3& point, const Vec3& norm
     scene.metrics.record("LIGHT_SUCCESS");
     float contrib = this->intensity * cosLaw / sa;
     return Vec3{ contrib, contrib, contrib };
+    if (contrib > 1.f) {
+        scene.metrics.record("LIGHT_CONTRIB_GREATER_THAN_ONE");
+    }
 }

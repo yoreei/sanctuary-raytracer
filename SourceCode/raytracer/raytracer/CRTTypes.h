@@ -346,7 +346,7 @@ struct Ray {
         auto dbgOldDirection = direction;
         float cosI = -dot(direction, normal);
         float sinR = sqrt(1 - cosI * cosI) * iorI / iorR;
-        if (sinR - 1.f >= -1e-6) {
+        if (sinR - 1.f >= -1e-6f) {
             // total internal reflection
             return false;
         }

@@ -11,7 +11,7 @@ int main()
     CRTTypesUnitTests::run();
     TriangleUnitTests::run();
     CameraUnitTests::run();
-    Benchmarks.run();
+    Benchmarks::run();
 
     //RendererIntegrationTests::run();
 

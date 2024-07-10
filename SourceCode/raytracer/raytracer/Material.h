@@ -3,7 +3,7 @@
 
 class Material
 {
-    const float REFLECTIVITY = 0.5f;
+    static constexpr float REFLECTIVITY = 0.5f;
 public:
     enum Type
     {
