@@ -333,24 +333,31 @@ struct Ray {
     }
 
     /**
+    * @return false if no refraction (i.e. total internal reflection)
     * @param normal: expected to face the ray.
     **/
-    void refract(const Vec3& point, Vec3 normal, float iorI, float iorR) {
-        assert(dot(direction,normal) < -1e-6); // usage req: normal should face the ray
+    bool refract(const Vec3& point, Vec3 normal, float iorI, float iorR) {
+        if (!fequal(direction.length(), 1.f)) {
+            std::cout << "direction: " << direction.toString();
+            assert(false);
+        }
+        assert(dot(direction, normal) < -1e-6); // usage req: normal should face the ray
 
         auto dbgOldDirection = direction;
-        origin = point;
         float cosI = -dot(direction, normal);
-        //float sinI = std::sqrt(1 - cosI * cosI); // me
-        //float sinR = sinI * iorI / iorR; //me
-        //float cosR = std::sqrt(1 - sinR * sinR); // me
-        TODO: work out the mathematics again. Prove that vladi's is true
-        float sinR = (sqrt(1-cosI*cosI) * iorI) / iorR; // vladi
-        float cosR = sqrt(1 - sinR * sinR); // vladi
+        float sinR = sqrt(1 - cosI * cosI) * iorI / iorR;
+        if (sinR - 1.f >= -1e-6) {
+            // total internal reflection
+            return false;
+        }
+        float cosR = sqrt(1 - sinR * sinR);
+        // bump direction to avoid 0 vector check // TODO ask in Discord
+        direction = direction * (1.f + 1e-6f);
         Vec3 C = (direction + cosI * normal).getUnit();
         Vec3 B = C * sinR;
         Vec3 A = -normal * cosR;
         direction = A + B;
+        origin = point;
 
         if (!fequal(direction.length(), 1.f)) {
             std::cout << "direction: " << direction.toString();
@@ -361,6 +368,7 @@ struct Ray {
         assert(dot(direction, dbgOldDirection) > 1e-6);
         // assert Snell's Law:
         //assert(fequal(sinI / sinR, iorR / iorI));
+        return true;
     }
 };
 
@@ -378,6 +386,9 @@ struct TraceTask {
     TraceTask(const Ray& ray, int pixelX, int pixelY)
         : ray(ray), pixelX(pixelX), pixelY(pixelY) {}
 
+    TraceTask deepCopy() {
+        return *this;
+    }
 };
 
 

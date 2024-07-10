@@ -39,14 +39,16 @@ public:
     * DEBUGGING
     * Fires a single ray.
     */
-    void _DBGrenderScene(const Scene& scene, Image& image, Ray ray = {{0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f}})
+    void DBG_renderScene(const Scene& scene, Image& image, Ray ray = { {0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f} })
     {
         //ray.direction.normalize();
         ray.origin = { 0.f, 0.f, 0.f };
-        ray.direction = { -0.310658336f, -0.208651125f, -0.927338243f };
-        TraceTask task = { ray, 0, 0,};
+        ray.direction = { 0.f, 0.f, -1.f };
+        TraceTask task = { ray, 0, 0, };
         traceQueue.push(task);
         processTraceQueue(scene, image);
+        std::cout << image(0, 0) << std::endl;
+        std::cout << std::endl;
     }
 
     std::queue<TraceTask> traceQueue {};
@@ -119,7 +121,7 @@ private:
         task.ray.reflect(xData.p, xData.n);
         task.color = lerp(task.color, diffuseComponent, task.attenuation);
         task.attenuation *= material.reflectivity;
-        ++task.depth; 
+        ++task.depth;
         traceQueue.push(task);
     }
 
@@ -135,9 +137,10 @@ private:
 
     void shadeRefractive(const Scene& scene, TraceTask& task, Intersection& xData)
     {
-        #ifndef NDEBUG
+        ++task.depth;
+#ifndef NDEBUG
         auto oldRay = task.ray;
-        #endif
+#endif
         auto& material = scene.materials[xData.materialIndex];
         float enteringIor = material.ior; // the IOR of the material we're entering
         Vec3 facingN = xData.n; //todo make reference
@@ -148,19 +151,40 @@ private:
         }
         assert(dot(facingN, task.ray.direction) < -1e-6);
 
-        auto diffuseP = xData.p + facingN * shadowBias;
+        TraceTask& refractionTask = task;
+        TraceTask reflectionTask = task.deepCopy();
+
         auto refractP = xData.p - facingN * refractionBias;
-        Vec3 light = hitLight(scene, diffuseP, xData.n);
+        bool hasRefraction = refractionTask.ray.refract(refractP, facingN, task.ior, enteringIor);
+        Vec3 light = hitLight(scene, xData.p, xData.n);             // hitLight ignores refractive objects
         Vec3 diffuseComponent = multiply(light, material.albedo);
-        task.ray.refract(refractP, facingN, task.ior, enteringIor);
-        task.ior = enteringIor;
-        task.color = lerp(task.color, diffuseComponent, task.attenuation);
-        task.attenuation *= material.transparency;
-        ++task.depth; 
-        traceQueue.push(task);
+        refractionTask.color = lerp(task.color, diffuseComponent, task.attenuation);
+        refractionTask.attenuation *= material.transparency;
+        refractionTask.ior = enteringIor;
+
+        auto reflectP = xData.p + facingN * shadowBias;
+        reflectionTask.ray.reflect(reflectP, facingN);
+        // reflectionTask.ior             same?
+        // reflectionTask.color           same?
+        // reflectionTask.attenuation     same?
+        if (hasRefraction) {
+            traceQueue.push(refractionTask);
+        }
+        else {
+            traceQueue.push(reflectionTask);
+        }
+        // traceQueue.push(reflectionTask); // TODO: fresnel
+        // TODO: optimize copying
 
         // assert refractP is farther away from ray.origin than xData.p
+#ifndef NDEBUG
+        Vec3 op = xData.p - oldRay.origin;
+        float opLen = op.lengthSquared();
+        Vec3 oR = reflectP - oldRay.origin;
+        float oRLen = oR.lengthSquared();
         assert((refractP - oldRay.origin).lengthSquared() > (xData.p - oldRay.origin).lengthSquared());
+        assert((reflectP - oldRay.origin).lengthSquared() < (xData.p - oldRay.origin).lengthSquared() + 1e6f);
+#endif
     }
 
     void shadeNormal(Image& image, TraceTask& task, const Intersection& xData)

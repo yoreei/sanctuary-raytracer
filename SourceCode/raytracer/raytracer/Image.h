@@ -29,7 +29,6 @@ public:
         return data[y * width + x];
     }
 
-    std::unique_ptr<Color[]> data;
 
     void writeToPpm(const std::string& filename)
     {
@@ -99,6 +98,7 @@ public:
 
     }
 
+    std::unique_ptr<Color[]> data;
 private:
     size_t width = 1;
     size_t height = 1;
