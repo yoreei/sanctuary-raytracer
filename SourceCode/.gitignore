@@ -262,3 +262,5 @@ __pycache__/
 *.exp
 *.lib
 *.obj
+
+enc_temp_folder/
