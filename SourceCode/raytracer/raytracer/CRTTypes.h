@@ -329,6 +329,7 @@ struct Ray {
     void reflect(const Vec3& point, const Vec3& normal) {
         origin = point;
         direction = direction - 2 * dot(direction, normal) * normal;
+        direction.normalize(); // TODO perf: can we avoid this?
         assert(fequal(direction.length(), 1.f));
     }
 
@@ -349,11 +350,12 @@ struct Ray {
         }
         float cosR = sqrt(1 - sinR * sinR);
         // bump direction to avoid 0 vector check // TODO ask in Discord
-        direction = direction * (1.f + 1e-6f);
+        direction = direction * (1.f + 1e-6f); // todo maybe leads to having to normalize?
         Vec3 C = (direction + cosI * normal).getUnit();
         Vec3 B = C * sinR;
         Vec3 A = -normal * cosR;
         direction = A + B;
+        direction.normalize(); // TODO perf: can we avoid this?
         origin = point;
 
         assert(fequal(direction.lengthSquared(), 1.f));
@@ -371,18 +373,12 @@ struct TraceTask {
     int pixelX{ 0 };
     int pixelY{ 0 };
     uint32_t depth{ 0 };
-    // [0, 1]. RGB
-    Vec3 color{ 1.f, 1.f, 1.f };
     // [0, 1]. i.e. inverseColorWeight. Higher values diminish the weight of `color` when `lerp`ing. 
     float attenuation{ 1.f };
     float ior{ 1.f };
 
     TraceTask(const Ray& ray, int pixelX, int pixelY)
         : ray(ray), pixelX(pixelX), pixelY(pixelY) {}
-
-    TraceTask deepCopy() {
-        return *this;
-    }
 };
 
 

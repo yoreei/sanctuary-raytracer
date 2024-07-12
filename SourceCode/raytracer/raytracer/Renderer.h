@@ -10,15 +10,20 @@
 #include "Triangle.h"
 #include "Tasks.h"
 #include "Intersection.h"
+#include "ImageQueue.h"
 
 #include "perlin-noise.h"
 
 class Renderer {
 public:
     size_t maxDepth = 3;
+    ImageQueue imageQueue {0, 0, {0.f, 0.f, 0.f}};
     Renderer() {}
 
-    void renderScene(const Scene& scene, Image& image)
+    /*
+    * @parameter imageComponents: depth slices of the image, useful for debugging
+    */
+    void renderScene(const Scene& scene, Image& image, std::vector<Image>& imageComponents)
     {
         // Prepare Primary Queue
         scene.metrics.startTimer();
@@ -30,7 +35,14 @@ public:
             }
         }
 
-        processTraceQueue(scene, image);
+        imageQueue = {image.getWidth(), image.getHeight(), scene.bgColor};
+        processTraceQueue(scene);
+        std::cout<<"Flattening image"<<std::endl;
+        ImageQueue imageQueueCopy = imageQueue;
+        imageQueue.flatten(image);
+        std::cout<<"imageQueue.maxDepth() = "<<imageQueue.maxDepth()<<std::endl;
+        imageQueueCopy.slice(imageComponents);
+        std::cout<<"Image flattened"<<std::endl;
         //processShadowQueue(scene, image);
         scene.metrics.stopTimer();
     }
@@ -39,24 +51,26 @@ public:
     * DEBUGGING
     * Fires a single ray.
     */
-    void DBG_renderScene(const Scene& scene, Image& image, Ray ray = { {0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f} })
-    {
-        //ray.direction.normalize();
-        ray.origin = { 0.f, 0.f, 0.f };
-        ray.direction = { 0.f, 0.f, -1.f };
-        TraceTask task = { ray, 0, 0, };
-        traceQueue.push(task);
-        processTraceQueue(scene, image);
-        std::cout << image(0, 0) << std::endl;
-        std::cout << std::endl;
-    }
+    //void DBG_renderScene(const Scene& scene, Image& image, Ray ray = { {0.f, 0.f, 0.f}, {-1.f, -1.f, -1.f} })
+    //{
+    //    //ray.direction.normalize();
+    //    ray.origin = { 0.f, 0.f, 0.f };
+    //    ray.direction = { 0.f, 0.f, -1.f };
+    //    TraceTask task = { ray, 0, 0, };
+    //    traceQueue.push(task);
+    //    imageQueue = {1, 1};
+    //    processTraceQueue(scene);
+    //    imageQueue.flatten(image);
+    //    std::cout << image(0, 0) << std::endl;
+    //    std::cout << std::endl;
+    //}
 
     std::queue<TraceTask> traceQueue {};
     float shadowBias = 0.001f;
     float refractionBias = 0.001f;
 private:
 
-    void processTraceQueue(const Scene& scene, Image& image)
+    void processTraceQueue(const Scene& scene)
     {
         while (!traceQueue.empty()) {
             TraceTask task = traceQueue.front();
@@ -64,27 +78,28 @@ private:
             traceQueue.pop();
             Intersection xData{};
             scene.intersect(ray, xData);
-            processXData(scene, image, task, xData);
+            processXData(scene, task, xData);
         }
     }
 
-    void processXData(const Scene& scene, Image& image, TraceTask& task, Intersection& xData) {
+    void processXData(const Scene& scene, TraceTask& task, Intersection& xData) {
         if (!xData.successful()) {
-            shadeVoid(scene, image, task);
             return;
         }
         if (task.depth >= maxDepth) {
-            shadeDiffuse(scene, image, task, xData);
+            //shadeDiffuse(scene, task, xData);
             scene.metrics.record("maxDepth");
+            std::cout<<"imageQueue.maxDepth() = "<<imageQueue.maxDepth()<<std::endl;
+            return;
         }
 
         const auto& material = scene.materials[xData.materialIndex];
         switch (material.type) {
         case Material::Type::DIFFUSE:
-            shadeDiffuse(scene, image, task, xData);
+            shadeDiffuse(scene, task, xData);
             break;
         case Material::Type::CONSTANT:
-            shadeConstant(scene, image, task, xData);
+            shadeConstant(scene, task, xData);
             break;
         case Material::Type::REFLECTIVE:
             shadeReflective(scene, task, xData);
@@ -93,7 +108,7 @@ private:
             shadeRefractive(scene, task, xData);
             break;
         case Material::Type::DEBUG:
-            shadeNormal(image, task, xData);
+            shadeNormal(task, xData);
             break;
         case Material::Type::VOID:
             throw std::invalid_argument("not handled");
@@ -101,51 +116,47 @@ private:
         }
     }
 
-    // TODO: abstract lerp away
-    void shadeVoid(const Scene& scene, Image& image, const TraceTask& task) const
-    {
-        Vec3 unitColor = lerp(task.color, scene.bgColor, task.attenuation);
-        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
-    }
-
-    void shadeConstant(const Scene& scene, Image& image, TraceTask& task, const Intersection& xData)
+    void shadeConstant(const Scene& scene, TraceTask& task, const Intersection& xData)
     {
         auto& material = scene.materials[xData.materialIndex];
-        Vec3 unitColor = lerp(task.color, material.albedo, task.attenuation);
-        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+        imageQueue(task.pixelX, task.pixelY).push({material.albedo, task.attenuation});
     }
 
-    void shadeReflective(const Scene& scene, TraceTask& task, Intersection& xData)
+    void shadeDiffuse(const Scene& scene, const TraceTask& task, Intersection& xData)
     {
-        auto& material = scene.materials[xData.materialIndex];
-        xData.p = xData.p + xData.n * shadowBias;
-        Vec3 light = hitLight(scene, xData.p, xData.n);
-        Vec3 diffuseComponent = multiply(light, material.albedo);
-        task.ray.reflect(xData.p, xData.n);
-        task.color = lerp(task.color, diffuseComponent, task.attenuation);
-        task.attenuation *= material.reflectivity;
-        ++task.depth;
-        traceQueue.push(task);
-    }
-
-    void shadeDiffuse(const Scene& scene, Image& image, TraceTask& task, Intersection& xData)
-    {
+#ifndef NDEBUG
+        size_t pixelDepth = imageQueue(task.pixelX, task.pixelY).size();
+#endif
         auto& material = scene.materials[xData.materialIndex];
         xData.p = xData.p + xData.n * shadowBias;
         Vec3 light = hitLight(scene, xData.p, xData.n); // overexposure x,y,z > 1.f
         Vec3 overexposedColor = multiply(light, material.albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
-        Vec3 unitColor = lerp(task.color, diffuseComponent, task.attenuation);
-        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+        imageQueue(task.pixelX, task.pixelY).push({diffuseComponent, task.attenuation});
+        assert(imageQueue(task.pixelX, task.pixelY).size() == pixelDepth + 1);
+        //assert(imageQueue(task.pixelX, task.pixelY).size() == 1);
+    }
 
+    void shadeReflective(const Scene& scene, TraceTask& task, Intersection& xData)
+    {
+        xData.p = xData.p + xData.n * shadowBias;
+        shadeDiffuse(scene, task, xData);
+
+        auto& material = scene.materials[xData.materialIndex];
+        task.ray.reflect(xData.p, xData.n);
+        task.attenuation *= material.reflectivity;
+        ++task.depth;
+        traceQueue.push(task);
     }
 
     void shadeRefractive(const Scene& scene, TraceTask& task, Intersection& xData)
     {
-        ++task.depth;
 #ifndef NDEBUG
         auto oldRay = task.ray;
 #endif
+        ++task.depth;
+        shadeDiffuse(scene, task, xData);
+
         auto& material = scene.materials[xData.materialIndex];
         float enteringIor = material.ior; // the IOR of the material we're entering
         Vec3 facingN = xData.n; //todo make reference
@@ -156,45 +167,35 @@ private:
         }
         assert(dot(facingN, task.ray.direction) < -1e-6);
 
-        TraceTask& refractionTask = task;
-        TraceTask reflectionTask = task.deepCopy();
+        Intersection xDataReflective = xData;
+        TraceTask reflectiveTask = task;
+        xDataReflective.p = xData.p + facingN * shadowBias;
+        shadeReflective(scene, reflectiveTask, xDataReflective);
 
+        TraceTask& refractionTask = task;
         Vec3 refractP = xData.p - facingN * refractionBias;
         bool hasRefraction = refractionTask.ray.refract(refractP, facingN, task.ior, enteringIor);
-        Vec3 light = hitLight(scene, xData.p, xData.n);             // hitLight ignores refractive objects
-        Vec3 diffuseComponent = multiply(light, material.albedo);
-        refractionTask.color = lerp(task.color, diffuseComponent, task.attenuation);
-        refractionTask.attenuation *= material.transparency;
-        refractionTask.ior = enteringIor;
-
-        Vec3 reflectP = xData.p + facingN * shadowBias;
-        reflectionTask.ray.reflect(reflectP, facingN);
-        // reflectionTask.ior             same?
-        // reflectionTask.color           same?
-        // reflectionTask.attenuation     same?
         if (hasRefraction) {
+            refractionTask.attenuation *= material.transparency;
+            refractionTask.ior = enteringIor;
             traceQueue.push(refractionTask);
         }
-        else {
-            traceQueue.push(reflectionTask);
-        }
-        // traceQueue.push(reflectionTask); // TODO: fresnel
         // TODO: optimize copying
 
-        // assert refractP is farther away from ray.origin than xData.p
 #ifndef NDEBUG
+        // assert refractP is farther away from ray.origin than xData.p
         Vec3 op = xData.p - oldRay.origin;
         float opLen = op.lengthSquared();
-        Vec3 oR = reflectP - oldRay.origin;
+        Vec3 oR = xDataReflective.p - oldRay.origin;
         float oRLen = oR.lengthSquared();
-        assert(oRLen < opLen + epsilon);
+        assert(oRLen < opLen + 10 * epsilon);
 #endif
     }
 
-    void shadeNormal(Image& image, TraceTask& task, const Intersection& xData)
+    void shadeNormal(TraceTask& task, const Intersection& xData)
     {
         Vec3 unitColor = xData.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
-        image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
+        imageQueue(task.pixelX, task.pixelY).push({unitColor, task.attenuation});
     }
 
     Vec3 hitLight(const Scene& scene, const Vec3& p, const Vec3& n) const
