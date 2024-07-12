@@ -95,6 +95,9 @@ private:
         case Material::Type::DEBUG:
             shadeNormal(image, task, xData);
             break;
+        case Material::Type::VOID:
+            throw std::invalid_argument("not handled");
+            break;
         }
     }
 
@@ -129,8 +132,9 @@ private:
     {
         auto& material = scene.materials[xData.materialIndex];
         xData.p = xData.p + xData.n * shadowBias;
-        Vec3 light = hitLight(scene, xData.p, xData.n);
-        Vec3 diffuseComponent = multiply(light, material.albedo);
+        Vec3 light = hitLight(scene, xData.p, xData.n); // overexposure x,y,z > 1.f
+        Vec3 overexposedColor = multiply(light, material.albedo);
+        Vec3 diffuseComponent = clampOverexposure(overexposedColor);
         Vec3 unitColor = lerp(task.color, diffuseComponent, task.attenuation);
         image(task.pixelX, task.pixelY) = Color::fromUnit(unitColor);
 
@@ -155,7 +159,7 @@ private:
         TraceTask& refractionTask = task;
         TraceTask reflectionTask = task.deepCopy();
 
-        auto refractP = xData.p - facingN * refractionBias;
+        Vec3 refractP = xData.p - facingN * refractionBias;
         bool hasRefraction = refractionTask.ray.refract(refractP, facingN, task.ior, enteringIor);
         Vec3 light = hitLight(scene, xData.p, xData.n);             // hitLight ignores refractive objects
         Vec3 diffuseComponent = multiply(light, material.albedo);
@@ -163,7 +167,7 @@ private:
         refractionTask.attenuation *= material.transparency;
         refractionTask.ior = enteringIor;
 
-        auto reflectP = xData.p + facingN * shadowBias;
+        Vec3 reflectP = xData.p + facingN * shadowBias;
         reflectionTask.ray.reflect(reflectP, facingN);
         // reflectionTask.ior             same?
         // reflectionTask.color           same?
@@ -183,8 +187,7 @@ private:
         float opLen = op.lengthSquared();
         Vec3 oR = reflectP - oldRay.origin;
         float oRLen = oR.lengthSquared();
-        assert((refractP - oldRay.origin).lengthSquared() > (xData.p - oldRay.origin).lengthSquared());
-        assert((reflectP - oldRay.origin).lengthSquared() < (xData.p - oldRay.origin).lengthSquared() + 1e6f);
+        assert(oRLen < opLen + epsilon);
 #endif
     }
 
@@ -201,11 +204,42 @@ private:
             shade = shade + light.lightContrib(scene, p, n);
         }
 
-        if (shade.x > 1.f || shade.y > 1.f || shade.z > 1.f) {
-            scene.metrics.record("LIGHT_SHADE_GREATER_THAN_ONE");
-        }
         // shade.clamp(0.f, 1.f); // comment out for overexposure?
         return shade;
+    }
+
+    /*
+    * @param overexposure: x,y,z > 1.f
+    * @return: x,y,z clamped to 1.f
+    */
+    Vec3 clampOverexposure(const Vec3& overexposed) const {
+       return clampOverexposureSlow(overexposed);
+    }
+
+    Vec3 clampOverexposureFast(const Vec3& overexposed) const {
+        Vec3 rest = overexposed - Vec3{ 1.f, 1.f, 1.f };
+        rest.clamp(0.f, FLT_MAX); 
+        float scalar = Utils::max(rest.x, rest.y, rest.z) / 3;
+        Vec3 result = overexposed + Vec3 { scalar, scalar, scalar};
+        result.clamp(0.f, 1.f);
+        return result;
+    }
+
+    // TODO: benchmark and try to optimize
+    Vec3 clampOverexposureSlow(const Vec3& overexposed) const {
+        Vec3 rest = overexposed - Vec3{ 1.f, 1.f, 1.f };
+        rest.clamp(0.f, FLT_MAX);
+
+        // Using a logarithmic approach to make the change more gradual
+        Vec3 adjusted = Vec3 {
+            log10(1.0f + rest.x),
+            log10(1.0f + rest.y),
+            log10(1.0f + rest.z)
+        };
+
+        Vec3 result = overexposed - adjusted;
+        result.clamp(0.f, 1.f);
+        return result;
     }
 
     /* hw3. For debugging camera Ray generation */

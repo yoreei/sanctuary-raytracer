@@ -11,6 +11,7 @@ public:
     auto getStartFrame() const { return startFrame; }
     auto getEndFrame() const { return endFrame; }
     virtual std::string toString() const = 0;
+    virtual ~Animation() = default;
 
 protected:
     int startFrame = 0;
@@ -43,13 +44,13 @@ public:
         switch (type)
         {
         case MoveType::Dolly:
-            _delta = { 0.f, 0.f, distance / (endFrame - startFrame) };
+            _delta = { 0.f, 0.f, distance / static_cast<float>(endFrame - startFrame) };
             break;
         case MoveType::Pedestal:
-            _delta = { 0.f, distance / (endFrame - startFrame), 0.f };
+            _delta = { 0.f, distance / static_cast<float>(endFrame - startFrame), 0.f };
             break;
         case MoveType::Truck:
-            _delta = { distance / (endFrame - startFrame), 0.f, 0.f };
+            _delta = { distance / static_cast<float>(endFrame - startFrame), 0.f, 0.f };
             break;
         default:
             throw std::invalid_argument("Invalid MoveType");
@@ -61,7 +62,8 @@ public:
     virtual std::string toString() const override;
 
 private:
-        Vec3 delta = { 0.f, 0.f, 0.f };
+    Vec3 delta = { 0.f, 0.f, 0.f };
+    char padding[4]; // Padding to make sure the size of the class is a multiple of 16 bytes
     };
 
 enum class RotateType
@@ -89,13 +91,13 @@ public:
         switch (type)
         {
         case RotateType::Pan:
-            _mat = Matrix3x3::Pan(angle / (endFrame - startFrame));
+            _mat = Matrix3x3::Pan(angle / static_cast<float>(endFrame - startFrame));
             break;
         case RotateType::Tilt:
-           _mat = Matrix3x3::Tilt(angle / (endFrame - startFrame));
+           _mat = Matrix3x3::Tilt(angle / static_cast<float>(endFrame - startFrame));
            break;
         case RotateType::Roll:
-           _mat = Matrix3x3::Roll(angle / (endFrame - startFrame));
+           _mat = Matrix3x3::Roll(angle / static_cast<float>(endFrame - startFrame));
            break;
         default:
             throw std::invalid_argument("Invalid MoveType");
@@ -109,4 +111,5 @@ public:
 
 private:
     Matrix3x3 mat;
+    char padding[4]; // Padding to make sure the size of the class is a multiple of 16 bytes
 };

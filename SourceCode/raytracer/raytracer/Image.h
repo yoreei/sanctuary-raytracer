@@ -84,11 +84,11 @@ public:
                 pngData[3 * (y * width + x) + 2] = color.b;
             }
         }
-        int stride_bytes = static_cast<int>(width) * 3;
         int channels = 3;
         int intWidth = static_cast<int>(width);
         int intHeight = static_cast<int>(height);
 #ifdef NDEBUG
+        int stride_bytes = static_cast<int>(width) * 3;
         filename += ".png";
         stbi_write_png(filename.c_str(), intWidth, intHeight, channels, pngData.data(), stride_bytes);
 #else

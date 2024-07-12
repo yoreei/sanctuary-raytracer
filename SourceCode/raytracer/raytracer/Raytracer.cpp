@@ -1,4 +1,6 @@
-﻿#include <fstream>
+﻿#pragma warning( disable : 4365 )
+
+#include <fstream>
 #include <cstdint>
 #include <memory>
 #include <string>

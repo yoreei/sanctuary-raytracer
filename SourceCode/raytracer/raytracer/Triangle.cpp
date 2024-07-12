@@ -1,3 +1,5 @@
+#pragma warning( disable : 4365 )
+
 #include "Triangle.h"
 #include "Scene.h"
 

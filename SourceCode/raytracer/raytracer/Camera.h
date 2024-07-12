@@ -64,8 +64,8 @@ protected:
         x += 0.5f;
         y += 0.5f;
 
-        x /= image.getWidth();
-        y /= image.getHeight();
+        x /= float(image.getWidth());
+        y /= float(image.getHeight());
     }
 
     //void screenFromNdc(Vec3& coordinates) const

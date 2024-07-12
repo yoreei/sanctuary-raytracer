@@ -1,3 +1,5 @@
+#pragma warning( disable : 4365 )
+
 #include "Material.h"
 
 Material::Type Material::TypeFromString(const std::string& type)

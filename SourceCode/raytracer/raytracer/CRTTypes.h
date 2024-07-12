@@ -9,15 +9,16 @@
 #include <iostream>
 #include <string>
 #include <cassert>
+#include <array>
 
 #include "Utils.h"
 
-inline bool fequal(float a, float b, float epsilon = 0.0001f) {
+inline bool fequal(float a, float b) {
     return std::abs(a - b) < epsilon;
 
 }
 
-inline bool flower(float a, float b, float epsilon = 0.0001f) {
+inline bool flower(float a, float b) {
     return a - b < -epsilon;
 }
 
@@ -54,8 +55,8 @@ public:
         return Vec3(x * scalar, y * scalar, z * scalar);
     }
 
-    bool equal(const Vec3& other, float epsilon = 0.0001f) const {
-        return fequal(this->x, other.x, epsilon) && fequal(this->y, other.y, epsilon) && fequal(this->z, other.z, epsilon);
+    bool equal(const Vec3& other) const {
+        return fequal(this->x, other.x) && fequal(this->y, other.y) && fequal(this->z, other.z);
     }
 
     Vec3 operator/(float scalar) const {
@@ -165,7 +166,7 @@ inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
 class Matrix3x3 {
 public:
     Matrix3x3() {
-        for (int i = 0; i < 9; ++i) {
+        for (size_t i = 0; i < 9; ++i) {
             data[i] = (i % 4 == 0) ? 1.0f : 0.0f; // Identity matrix
         }
     }
@@ -174,9 +175,8 @@ public:
         if (values.size() != 9) {
             throw std::invalid_argument("Matrix3x3 requires 9 values.");
         }
-        for (int i = 0; i < 9; ++i) {
-            data[i] = values[i];
-        }
+
+        std::copy(values.begin(), values.end(), data.begin());
     }
 
     static Matrix3x3 fromCols(const Vec3& c0, const Vec3& c1, const Vec3& c2) {
@@ -187,20 +187,20 @@ public:
             } };
     }
 
-    float& operator()(int row, int col) {
+    float& operator()(size_t row, size_t col) {
         return data[row * 3 + col];
     }
 
-    const float& operator()(int row, int col) const {
+    const float& operator()(size_t row, size_t col) const {
         return data[row * 3 + col];
     }
 
     Matrix3x3 operator*(const Matrix3x3& other) const {
         Matrix3x3 result;
-        for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 3; ++col) {
+        for (size_t row = 0; row < 3; ++row) {
+            for (size_t col = 0; col < 3; ++col) {
                 result(row, col) = 0.0f;
-                for (int k = 0; k < 3; ++k) {
+                for (size_t k = 0; k < 3; ++k) {
                     result(row, col) += (*this)(row, k) * other(k, col);
                 }
             }
@@ -226,7 +226,7 @@ public:
         if (num > 2) {
             throw std::out_of_range("Matrix3x3::col: Index out of range: " + num);
         }
-        return Vec3{ data[num], data[num + 3], data[num + 6] };
+        return Vec3{ data[num], data[num + size_t(3)], data[num + size_t(6)] };
     }
 
     static Matrix3x3 identity() {
@@ -303,8 +303,8 @@ public:
 
     std::string toString() const {
         std::string result = "";
-        for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 3; ++col) {
+        for (size_t row = 0; row < 3; ++row) {
+            for (size_t col = 0; col < 3; ++col) {
                 result += std::to_string((*this)(row, col));
                 result += " ";
             }
@@ -314,7 +314,7 @@ public:
     }
 
 private:
-    float data[9];
+    std::array<float, 9> data;
     static constexpr float radFromDeg = static_cast<float>(std::numbers::pi) / 180.0f;
 };
 
@@ -337,11 +337,8 @@ struct Ray {
     * @param normal: expected to face the ray.
     **/
     bool refract(const Vec3& point, Vec3 normal, float iorI, float iorR) {
-        if (!fequal(direction.length(), 1.f)) {
-            std::cout << "direction: " << direction.toString();
-            assert(false);
-        }
-        assert(dot(direction, normal) < -1e-6); // usage req: normal should face the ray
+        assert(fequal(direction.lengthSquared(), 1.f));
+        assert(dot(direction, normal) < -epsilon); // usage req: normal should face the ray
 
         auto dbgOldDirection = direction;
         float cosI = -dot(direction, normal);
@@ -359,10 +356,7 @@ struct Ray {
         direction = A + B;
         origin = point;
 
-        if (!fequal(direction.length(), 1.f)) {
-            std::cout << "direction: " << direction.toString();
-        }
-        assert(fequal(direction.length(), 1.f));
+        assert(fequal(direction.lengthSquared(), 1.f));
         assert(fequal(dot(direction, normal), -cosR));
         // assert R not going backwards:
         assert(dot(direction, dbgOldDirection) > 1e-6);

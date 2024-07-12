@@ -1,3 +1,5 @@
+#pragma warning( disable : 4365 )
+
 #include <memory>
 
 #include "Animator.h"
