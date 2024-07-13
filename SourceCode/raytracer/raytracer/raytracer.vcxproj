@@ -202,6 +202,7 @@
     <ClCompile Include="CRTSceneLoader.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="ImageQueue.cpp" />
+    <ClCompile Include="MeshObject.cpp" />
     <ClCompile Include="TraceHit.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Material.cpp" />

@@ -10,15 +10,14 @@
 #include "Animation.h"
 #include "MeshObject.h"
 #include "Metrics.h"
-#include "Image.h"
 #include "Light.h"
 #include "Material.h"
-#include "TraceHit.h"
 
 #include "json.hpp"
 
 using json = nlohmann::json;
 
+class TraceHit;
 class Scene
 {
 public:
@@ -49,6 +48,10 @@ public:
 
     void addObjects(const std::vector<Scene>& scenes);
 
+    /*
+    * Show debug visualizations for lights in the scene
+    */
+    void showLightDebug();
 private:
 
 };

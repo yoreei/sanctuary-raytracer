@@ -30,6 +30,8 @@ bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Ima
         return false;
     }
 
+    std::cout<<"Loading Scene: "<<filename<<std::endl;
+
     if (!validateCrtscene(j) ) {
         return false;
     }
@@ -43,7 +45,6 @@ bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Ima
         return false;
     }
     genVertexNormals(scene);
-    std::cout << "camera has " << scene.camera.animations.size() << " animations\n";
     return true;
 }
 
@@ -231,18 +232,17 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
     for (auto& jMaterial : j.at("materials")) {
         scene.materials.emplace_back();
         auto& material = scene.materials.back();
-        material.smoothShading = boolFromJson(jMaterial.at("smooth_shading"));
+        material.smoothShading = getDefault<bool>(jMaterial, "smooth_shading", false);
         material.type = Material::TypeFromString(jMaterial.at("type"));
-        material.ior = 1.f;
+        material.occludes = getDefault<bool>(jMaterial, "occludes", true);
+        material.ior = getDefault<float>(jMaterial, "ior", 1.f);
         material.albedo = Vec3{ 1.f, 1.f, 1.f };
-        if (jMaterial.contains("ior")) {
-            material.ior = jMaterial.at("ior");
-        }
         if (jMaterial.contains("albedo")) {
             material.albedo = Vec3FromJson(jMaterial.at("albedo"));
         }
         if (material.type == Material::Type::REFRACTIVE) {
             material.albedo = Vec3{ 1.f, 1.f, 1.f };
+            material.occludes = false;
             material.transparency = 1.f;
             material.reflectivity = 1.f;
         }
@@ -391,4 +391,12 @@ void CRTSceneLoader::genAttachedTriangles(const Scene& scene, size_t vertexIndex
             attachedTriangles.push_back(i);
         }
     }
+}
+
+template <typename T>
+bool CRTSceneLoader::getDefault(const json& j, const std::string& key, T defaultVal) {
+    if (!j.contains(key)) {
+        return defaultVal;
+    }
+    return j.at(key).get<T>();
 }

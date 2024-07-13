@@ -5,24 +5,36 @@
 #include "Triangle.h"
 #include "Material.h"
 #include "CRTTypes.h"
+#include "CRTSceneLoader.h"
+#include "Light.h"
+#include "MeshObject.h"
 
 /**
+* @param start: location vector
+* @param end: location vector
 * Determine best intersection of ray with scene.
 */
 bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
-    TraceHit hit{};
-    float t = end.length(); // todo: end - start ???????????????
-    Ray ray = { start, end.getUnit() };
+    Vec3 occlusionLine = end - start;
+    float maxDistanceSq = occlusionLine.lengthSquared();
+    Ray ray = { start, occlusionLine.getUnit() };
     for (const Triangle& tri : triangles) {
-        tri.intersect(*this, ray, hit);
+        TraceHit hit{}; // todo move up
         auto& material = materials[tri.materialIndex];
-        if (hit.successful() && material.type != Material::Type::REFRACTIVE && flower(hit.t, t)) {
-            return true;
+        if (!material.occludes) {
+            continue;
+        }
+
+        tri.intersect(*this, ray, hit);
+        if (hit.successful()) {
+            Vec3 shadowLine = hit.p - start;
+            float shadowDistanceSq = shadowLine.lengthSquared();
+            return shadowDistanceSq < maxDistanceSq;
         }
     }
-    // TODO: return dimming factor based on refractive objects intersected!!!!
     return false;
 }
+
 void Scene::intersect(const Ray& ray, TraceHit& out) const {
     out.t = std::numeric_limits<float>::max();
     TraceHit hit {};
@@ -81,4 +93,20 @@ void Scene::addObjects(const std::vector<Scene>& scenes)
         }
 
     }
+}
+
+void Scene::showLightDebug() {
+
+    std::vector<Scene> lightObjects;
+    Image _fakeImage {}; // throwaway image
+    for (const auto& light : lights) {
+        Scene lightBallScene {"LightBall"};
+        CRTSceneLoader::loadCrtscene("scenes/props/lightBall.crtscene", lightBallScene, _fakeImage);
+        assert(lightBallScene.meshObjects.size() == 1);
+        const Vec3& translation = light.pos;
+        MeshObject& meshObject = lightBallScene.meshObjects[0];
+        meshObject.translate(lightBallScene.triangles, translation, lightBallScene.vertices);
+        lightObjects.push_back(lightBallScene);
+    }
+    addObjects(lightObjects);
 }

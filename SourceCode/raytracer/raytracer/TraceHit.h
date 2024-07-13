@@ -16,7 +16,8 @@ enum class TraceHitType {
 
 std::string toString(TraceHitType hitType);
 
-struct TraceHit {
+class TraceHit {
+public:
     float t = FLT_MAX;    // Distance
     Vec3 p = { 0, 0, 0 };     // TraceHit Point
     Vec3 n = { 0, 0, 0 };     // Normal at Point

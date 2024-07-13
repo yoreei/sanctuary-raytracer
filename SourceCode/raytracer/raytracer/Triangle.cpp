@@ -15,6 +15,56 @@
 */
 // TODO return bool
 
+Triangle::Triangle(const std::vector<Vec3>& vertices, size_t v0, size_t v1, size_t v2, size_t _materialIndex)
+{
+    v[0] = v0;
+    v[1] = v1;
+    v[2] = v2;
+    materialIndex = _materialIndex;
+    normal = calculateNormal(vertices);
+}
+
+Vec3 Triangle::calculateNormal(const std::vector<Vec3>& vertices) const {
+    Vec3 out{};
+    const Vec3& v0 = vertices[v[0]];
+    const Vec3& v1 = vertices[v[1]];
+    const Vec3& v2 = vertices[v[2]];
+
+    Vec3 e1 = v1 - v0;
+    Vec3 e2 = v2 - v0;
+
+    e1.cross(e2, out);
+    out.normalize();
+    return out;
+}
+
+[[nodiscard]]
+Vec3 Triangle::getNormal() const {
+    return normal;
+}
+
+float Triangle::area(const std::vector<Vec3>& vertices) const {
+    const Vec3& v0 = vertices[v[0]];
+    const Vec3& v1 = vertices[v[1]];
+    const Vec3& v2 = vertices[v[2]];
+
+    Vec3 e1 = v1 - v0;
+    Vec3 e2 = v2 - v0;
+    return e1.crossLength(e2) * 0.5f;
+}
+
+std::string Triangle::toString(const std::vector<Vec3>& vertices) const {
+    const Vec3& v0 = vertices[v[0]];
+    const Vec3& v1 = vertices[v[1]];
+    const Vec3& v2 = vertices[v[2]];
+
+    return "Triangle: {" + v0.toString() + ", " + v1.toString() + ", " + v2.toString() + "}";
+}
+
+bool Triangle::hasVertex(size_t vertexIndex) const {
+    return v[0] == vertexIndex || v[1] == vertexIndex || v[2] == vertexIndex;
+}
+
 void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& hit) const {
 
     float rayProj = ray.direction.dot(normal);
@@ -133,6 +183,13 @@ Vec3 Triangle::hitNormal(const Scene& scene, float uCoord, float vCoord) const {
     }
     else {
         return normal;
+    }
+}
+
+void Triangle::translate(const Vec3& translation, std::vector<Vec3>& vertices) const
+{
+   for (size_t i = 0; i < 3; ++i) {
+        vertices[v[i]] += translation;
     }
 }
 

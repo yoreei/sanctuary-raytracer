@@ -8,54 +8,17 @@ public:
     size_t v[3]; // indices into the vertex array
     size_t materialIndex = 0;
 
-    Triangle(const std::vector<Vec3>& vertices, size_t v0, size_t v1, size_t v2, size_t _materialIndex)
-    {
-        v[0] = v0;
-        v[1] = v1;
-        v[2] = v2;
-        materialIndex = _materialIndex;
-        normal = calculateNormal(vertices);
-    }
+    Triangle(const std::vector<Vec3>& vertices, size_t v0, size_t v1, size_t v2, size_t _materialIndex);
 
-    Vec3 calculateNormal(const std::vector<Vec3>& vertices) const {
-        Vec3 out{};
-        const Vec3& v0 = vertices[v[0]];
-        const Vec3& v1 = vertices[v[1]];
-        const Vec3& v2 = vertices[v[2]];
+    Vec3 calculateNormal(const std::vector<Vec3>& vertices) const;
 
-        Vec3 e1 = v1 - v0;
-        Vec3 e2 = v2 - v0;
+    [[nodiscard]] Vec3 getNormal() const;
 
-        e1.cross(e2, out);
-        out.normalize();
-        return out;
-    }
+    float area(const std::vector<Vec3>& vertices) const;
 
-    [[nodiscard]] Vec3 getNormal() const {
-        return normal;
-    }
+    std::string toString(const std::vector<Vec3>& vertices) const;
 
-    float area(const std::vector<Vec3>& vertices) const {
-        const Vec3& v0 = vertices[v[0]];
-        const Vec3& v1 = vertices[v[1]];
-        const Vec3& v2 = vertices[v[2]];
-
-        Vec3 e1 = v1 - v0;
-        Vec3 e2 = v2 - v0;
-        return e1.crossLength(e2) * 0.5f;
-    }
-
-    std::string toString(const std::vector<Vec3>& vertices) const {
-        const Vec3& v0 = vertices[v[0]];
-        const Vec3& v1 = vertices[v[1]];
-        const Vec3& v2 = vertices[v[2]];
-
-        return "Triangle: {" + v0.toString() + ", " + v1.toString() + ", " + v2.toString() + "}";
-    }
-
-    bool hasVertex(size_t vertexIndex) const {
-        return v[0] == vertexIndex || v[1] == vertexIndex || v[2] == vertexIndex;
-    }
+    bool hasVertex(size_t vertexIndex) const;
 
     /*
     * @Danny search OneNote 'Triangle Intersect'
@@ -80,6 +43,8 @@ public:
     bool intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray, float& t, Vec3& p) const;
 
     Vec3 hitNormal(const Scene& scene, float uCoord, float vCoord) const;
+
+    void translate(const Vec3& translation, std::vector<Vec3>& vertices) const;
 
 private:
     Vec3 normal{};

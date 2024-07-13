@@ -26,8 +26,10 @@ class Renderer {
 public:
     size_t maxDepth = 5;
     float bias = 0.001f;
+    bool debugSingleRay = false;
+    bool debugLight = false;
+    bool debugImageQueue = true;
 private:
-    static constexpr bool debug = false;
     ImageQueue imageQueue {0, 0, {0.f, 0.f, 0.f}};
     std::queue<TraceTask> traceQueue {};
     std::shared_ptr<Scene> scene;
@@ -41,9 +43,13 @@ public:
     {
         // TODO perf: reserve space for the queue
         scene->metrics.startTimer(Timers::all);
+        if (debugLight) {
+            scene->showLightDebug();
+        }
+
         // Prepare Primary Queue
-        if constexpr (debug) {
-            Ray ray = scene->camera.rayFromPixel(image, 150, 75);
+        if (debugSingleRay) {
+            Ray ray = scene->camera.rayFromPixel(image, 150, 140);
             // Ray ray = { {0.f, 0.f, 0.f}, {0.f, 0.f, -1.f} };
             TraceTask task = { ray, 0, 0 };
             traceQueue.push(task);
@@ -62,17 +68,8 @@ public:
         scene->metrics.startTimer(Timers::processQueue);
         processTraceQueue();
         scene->metrics.stopTimer(Timers::processQueue);
+        flattenImage(image, imageComponents);
 
-        if constexpr (debug) {
-            ImageQueue imageQueueCopy = imageQueue;
-            imageQueue.flatten(image);
-            imageQueueCopy.slice(imageComponents);
-        }
-       else {
-            scene->metrics.startTimer(Timers::flatten);
-            imageQueue.flatten(image);
-            scene->metrics.stopTimer(Timers::flatten);
-        }
         scene->metrics.stopTimer(Timers::all);
     }
 private:
@@ -325,5 +322,19 @@ private:
         const uint8_t g = static_cast<uint8_t>(brightness * hit.n.y);
         const uint8_t b = static_cast<uint8_t>(brightness * hit.n.z);
         return Color{ r, g, b };
+    }
+
+    void flattenImage(Image& image, std::vector<Image>& imageComponents)
+    {
+        if (debugImageQueue) {
+            ImageQueue imageQueueCopy = imageQueue;
+            imageQueue.flatten(image);
+            imageQueueCopy.slice(imageComponents);
+        }
+       else {
+            scene->metrics.startTimer(Timers::flatten);
+            imageQueue.flatten(image);
+            scene->metrics.stopTimer(Timers::flatten);
+        }
     }
 };

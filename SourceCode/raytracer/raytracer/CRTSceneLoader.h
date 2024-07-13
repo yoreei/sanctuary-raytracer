@@ -31,5 +31,8 @@ private:
     static bool parseTriangles(const json& jObj, Scene& scene);
     static void genVertexNormals(Scene& scene);
     static void genAttachedTriangles(const Scene& scene, size_t vertexIndex, std::vector<size_t>& attachedTriangles);
+    static bool getBoolDefault(const json& j, const std::string& key, bool defaultVal = false);
+    template <typename T>
+    static bool getDefault(const json& j, const std::string& key, T defaultVal);
 };
 
