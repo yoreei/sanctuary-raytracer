@@ -10,7 +10,7 @@ class Image {
 public:
     Image() = default;
 
-    Image(int _width, int _height): width(_width), height(_height)
+    Image(size_t _width, size_t _height): width(_width), height(_height)
     {
         data = std::make_unique<Color[]>(width * height);
         aspectRatio = static_cast<float>(width) / static_cast<float>(height);
@@ -20,7 +20,7 @@ public:
     auto getHeight() const { return height; }
     auto getAspectRatio() const { return aspectRatio; }
 
-    Color& operator()(uint16_t x, uint16_t y)
+    Color& operator()(size_t x, size_t y)
     {
         if (x >= width || y >= height)
         {
@@ -42,7 +42,7 @@ public:
         ppmFileStream << "P3\n"; ppmFileStream << width << " " << height << "\n";
         ppmFileStream << Color::maxColorComponent << "\n";
 
-        for (int rowIdx = 0; rowIdx < height; ++rowIdx) {
+        for (size_t rowIdx = 0; rowIdx < height; ++rowIdx) {
             for (int colIdx = 0; colIdx < width; ++colIdx) {
                 const Color& color = data[rowIdx * width + colIdx];
                 ppmFileStream << (int)color.r << " " << (int)color.g << " " << (int)color.b << "\t";
@@ -85,11 +85,12 @@ public:
                 pngData[3 * (y * width + x) + 2] = color.b;
             }
         }
-        stbi_write_png(filename.c_str(), width, height, 3, pngData.data(), width * 3);
+        int stride_bytes = static_cast<int>(width) * 3;
+        stbi_write_png(filename.c_str(), static_cast<int>(width), static_cast<int>(height), 3, pngData.data(), stride_bytes);
     }
 
 private:
-    uint16_t width = 1;
-    uint16_t height = 1;
+    size_t width = 1;
+    size_t height = 1;
     float aspectRatio = 1.f;
 };

@@ -11,6 +11,8 @@
 #include "Metrics.h"
 #include "Image.h"
 #include "Light.h"
+#include "Material.h"
+#include "Intersection.h"
 
 #include "json.hpp"
 
@@ -19,6 +21,7 @@ using json = nlohmann::json;
 class Scene
 {
 public:
+    std::string fileName = "";
     Camera camera {};
     Settings settings {};
     mutable Metrics metrics {};
@@ -26,23 +29,28 @@ public:
     /* meshObjects reference trinagles. Triangles reference vertices */
     std::vector<Vec3> vertices {};
     std::vector<Triangle> triangles {};
+    std::vector<Vec3> vertexNormals {};
     std::vector<MeshObject> meshObjects {};
+    std::vector<Material> materials {};
     std::vector<Light> lights {};
     
-    Color bgColor = Color{0, 0, 0};
+    //Material bgMaterial = {};
+    Vec3 bgColor = {0.f, 0.f, 0.f};
 
     bool isOccluded(const Vec3& start, const Vec3& end) const {
-        Triangle::IntersectionData xData {};
+        Intersection xData {};
         float t = end.length();
-        Ray ray = { start, end.normalize() };
+        Ray ray = { start, end.getUnit() };
         for (const Triangle& tri : triangles) {
-            Intersection x = tri.intersect(vertices, ray, xData);
-            if (x == Intersection::SUCCESS && flower(xData.t, t)) {
+            tri.intersect(*this, ray, xData);
+            if (xData.successful() && flower(xData.t, t)) {
                 return true;
             }
         }
         return false;
     }
+
+    void intersect(const Ray& ray, Intersection& out) const;
 
     /* Compiles all vertices and triangles into a single mesh object */
     [[nodiscard]] bool bakeObject() {
@@ -80,8 +88,8 @@ public:
             meshObjects.insert(meshObjects.end(), scene.meshObjects.begin(), scene.meshObjects.end());
 
             for (size_t i = meshObjectsPadding; i < meshObjects.size(); ++i) {
-                for (size_t j = 0; j < meshObjects[i].triangles.size(); ++j) {
-                    meshObjects[i].triangles[j] += trianglesPadding;
+                for (size_t j = 0; j < meshObjects[i].triangleIndexes.size(); ++j) {
+                    meshObjects[i].triangleIndexes[j] += trianglesPadding;
                 }
             }
 

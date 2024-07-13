@@ -32,6 +32,7 @@ void Raytracer::runScene(const std::string& sceneName)
     
     CRTSceneLoader::loadCrtscene("scenes/" + sceneName + ".crtscene", scene, image) ? void() : exit(1);
     fs::create_directories("out/" + sceneName);
+    //image = Image(1280, 720); // Make rendering time shorter for quick testing
     image = Image(300, 200); // Make rendering time shorter for quick testing
 
     do {
@@ -41,6 +42,7 @@ void Raytracer::runScene(const std::string& sceneName)
         std::string filename = "out/" + sceneName + "/" + std::to_string(animator.getCurrentFrame()) + ".png";
 
         std::cout << filename << std::endl << scene.metrics.toString() << std::endl;
+        std::cout << scene.materials[0] << std::endl;
         std::cout << "---" << std::endl;
 
         image.writeToPng(filename);

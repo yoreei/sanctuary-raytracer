@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
+#include <vector>
 
 #define CHECK(condition) \
     do { \
@@ -11,3 +13,12 @@
             std::abort(); \
         } \
     } while (false)
+
+template<class T>
+inline bool contains(const std::vector<T>& vec, const T& item) {
+    return std::find(vec.begin(), vec.end(), item) != vec.end();
+}
+
+inline std::string stringFromBool(bool b) {
+    return b ? "true" : "false";
+}

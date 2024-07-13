@@ -30,22 +30,23 @@ namespace RendererIntegrationTests {
         Image image{300, 200};
         Animator animator {scene, 0};
 
-        std::vector<std::string> names = {"scene1"};
-        for (auto& name : names) {
-           UnitTestData::load(name, scene, animator);
+        using SceneFunc = std::function<void(Scene&, Animator&)>;
+        std::vector<SceneFunc> sceneLoaders = {};
+        for (auto& sceneLoader : sceneLoaders) {
+            sceneLoader(scene, animator);
 
             Renderer renderer{};
             renderer.renderScene(scene, image);
 
             if (fs::exists("ref/")) {
-                std::string sRef = loadFile("ref/" + name + ".ppm");
+                std::string sRef = loadFile("ref/" + scene.fileName+ ".ppm");
                 std::string sOut = image.toPpmString();
                 assert(sRef == sOut);
             }
             else {
                 std::cout << "Reference image directory not found. Generating new references." << std::endl;
                 fs::create_directories("ref/");
-                image.writeToPpm("ref/" + name + ".ppm");
+                image.writeToPpm("ref/" + scene.fileName + ".ppm");
             }
         }
     }

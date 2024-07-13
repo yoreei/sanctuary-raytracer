@@ -23,9 +23,9 @@ inline bool flower(float a, float b, float epsilon = 0.0001f) {
 
 class Vec3 {
 public:
-    float x = 0.f;
-    float y = 0.f;
-    float z = 0.f;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
 
     Vec3() = default;
 
@@ -33,6 +33,13 @@ public:
 
     Vec3 operator+(const Vec3& other) const {
         return Vec3(x + other.x, y + other.y, z + other.z);
+    }
+
+    Vec3& operator+=(const Vec3& other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
     }
 
     Vec3 operator-(const Vec3& other) const {
@@ -73,10 +80,18 @@ public:
         return std::sqrt(cx * cx + cy * cy + cz * cz);
     }
 
-    [[nodiscard]] Vec3 normalize() const {
+    [[nodiscard]] Vec3 getUnit() const {
+        Vec3 result = *this;
+        result.normalize();
+        return result;
+    }
+
+    void normalize() {
         float len = length();
         float divCache = 1.f/len; // division optimization
-        return Vec3(x * divCache, y * divCache, z * divCache);
+        x = x * divCache;
+        y = y * divCache;
+        z = z * divCache;
     }
 
     std::string toString() const
@@ -100,6 +115,29 @@ inline Vec3 cross(const Vec3& a, const Vec3& b) {
 
 inline float dot(const Vec3& a, const Vec3& b) {
     return a.dot(b);
+}
+
+inline Vec3 operator*(float scalar, const Vec3& vec) {
+    return vec * scalar;
+}
+
+/**
+ * Multiply two vectors component-wise.
+ */
+inline Vec3 multiply(const Vec3& a, const Vec3& b) {
+    return {a.x * b.x, a.y * b.y, a.z * b.z};
+}
+
+/**
+* @brief Linear interpolation between two vectors.
+* @param t: weight of the second vector.
+*/
+inline Vec3 lerp(const Vec3& a, const Vec3& b, float t) {
+    return {
+        a.x * (1 - t) + b.x * t,
+        a.y * (1 - t) + b.y * t,
+        a.z * (1 - t) + b.z * t
+    };
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
@@ -278,28 +316,28 @@ struct Ray {
     Ray() : origin(Vec3()), direction(Vec3()) {}
 
     Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction) {}
+
+    void reflect(const Vec3& point, const Vec3& normal) {
+        origin = point;
+        direction = direction - 2 * dot(direction, normal) * normal;
+    }
 };
 
-struct PixelRay : public Ray {
-    // Pixel coordinates
+struct TraceTask {
+    Ray ray;
     int pixelX {0};
     int pixelY {0};
+    uint32_t depth {0};
+    // [0, 1]. RGB
+    Vec3 color {1.f, 1.f, 1.f};
+    // [0, 1]. Higher values give more weight to intersection color.
+    float reflectivity {1.f};
 
-    PixelRay() : Ray(), pixelX(0), pixelY(0) {}
-    PixelRay(const Vec3& origin, const Vec3& direction, int pixelX, int pixelY) 
-        : Ray(origin,direction), pixelX(pixelX), pixelY(pixelY) {}
+    TraceTask(const Ray& ray, int pixelX, int pixelY) 
+        : ray(ray), pixelX(pixelX), pixelY(pixelY) {}
+
 };
 
-struct ShadowRay {
-    Vec3 origin;
-    Vec3 point;
-    Vec3 normal;
-    int pixelX = 0;
-    int pixelY = 0;
-
-    ShadowRay(const Vec3& origin, const Vec3& point, const Vec3& normal, int pixelX, int pixelY)
-        : origin(origin), point(point), normal(normal), pixelX(pixelX), pixelY(pixelY) {}
-};
 
 struct Color
 {

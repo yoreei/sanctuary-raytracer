@@ -24,17 +24,16 @@ public:
     /*
     * return unit ray in world space, originating from pixel (x,y) on the screen
     */
-    void emplacePrimaryRay(const Image& image, int x, int y, std::queue<PixelRay>& queue) const
+    void emplaceTask(const Image& image, int x, int y, std::queue<TraceTask>& queue) const
     {
         Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
         ndcFromRaster(image, coords);
         imageFromNdc(image, coords);
 
-        // coords = coords.normalize(); skip this
         Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
-        raydir = raydir.normalize();
-
-        queue.emplace(this->pos, raydir, x, y);
+        raydir.normalize();
+        Ray ray{this->pos, raydir};
+        queue.emplace(ray, x, y);
     }
 
     //Ray generateRay(const Image& image, int x, int y) const
@@ -43,9 +42,8 @@ public:
     //    ndcFromRaster(image, coords);
     //    imageFromNdc(image, coords);
 
-    //    // coords = coords.normalize(); skip this
     //    Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
-    //    raydir = raydir.normalize();
+    //    raydir.normalize();
 
     //    return Ray{this->pos, raydir};
     //}
