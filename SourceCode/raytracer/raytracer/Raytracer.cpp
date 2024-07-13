@@ -30,32 +30,32 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
 {
     std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
-    Scene scene {sceneName};
-    Renderer renderer {};
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneName);
+    Renderer renderer {scene};
     
-    CRTSceneLoader::loadCrtscene(INPUT_DIR + sceneName + ".crtscene", scene, image) ? void() : exit(1);
+    CRTSceneLoader::loadCrtscene(INPUT_DIR + sceneName + ".crtscene", *scene, image) ? void() : exit(1);
     auto truck = MoveAnimation::Make(MoveType::Truck, 3, 0, 24);
-    //scene.animator.addAnimation(scene.camera, truck);
+    //scene->animator.addAnimation(scene->camera, truck);
     fs::create_directories("out/" + sceneName);
     //image = Image(1280, 720); // Make rendering time shorter for quick testing
     image = Image(300, 200); // Make rendering time shorter for quick testing
     std::vector<Image> imageComponents {};
 
     do {
-        renderer.renderScene(scene, image, imageComponents);
+        renderer.renderScene(image, imageComponents);
 
-        std::string filename = "out/" + sceneName + "/" + std::to_string(scene.animator.getCurrentFrame());
+        std::string filename = "out/" + sceneName + "/" + std::to_string(scene->animator.getCurrentFrame());
 
-        std::cout << filename << std::endl << scene.metrics.toString() << std::endl;
-        std::cout << scene.materials[0] << std::endl;
+        std::cout << filename << std::endl << scene->metrics.toString() << std::endl;
+        std::cout << scene->materials[0] << std::endl;
         std::cout << "---" << std::endl;
 
         image.writeImage(filename);
         for (size_t i = 0; i < imageComponents.size(); i++) {
             imageComponents[i].writeImage(filename + "_depth_" + std::to_string(i));
         }
-    } while (scene.animator.update());
-    metrics = scene.metrics;
+    } while (scene->animator.update());
+    metrics = scene->metrics;
 }
 
 int Raytracer::run()

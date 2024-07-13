@@ -15,7 +15,7 @@
 */
 // TODO return bool
 
-void Triangle::intersect(const Scene& scene, const Ray& ray, Intersection& xData) const {
+void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& xData) const {
 
     float rayProj = ray.direction.dot(normal);
 
@@ -27,25 +27,25 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, Intersection& xData
         if (material.type == Material::Type::REFRACTIVE) {
             Triangle swapT = swappedTriangle();
             swapT.intersect(scene, ray, xData);
-            if (xData.type == IntersectionType::SUCCESS) {
-                xData.type = IntersectionType::INSIDE_REFRACTIVE;
+            if (xData.type == TraceHitType::SUCCESS) {
+                xData.type = TraceHitType::INSIDE_REFRACTIVE;
                 xData.n = -xData.n;
                 assert(dot(xData.n, ray.direction) > 1e-6); // ray is exiting refractive material
             }
         }
         else {
-            xData.type = IntersectionType::PLANE_BACKFACE;
+            xData.type = TraceHitType::PLANE_BACKFACE;
         }
     }
     else {
-        xData.type = IntersectionType::PARALLEL;
+        xData.type = TraceHitType::PARALLEL;
     }
 }
 
 /**
 * @param n: normal of the triangle to use instead of this->normal (for refraction)
 */
-void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, Intersection& xData) const {
+void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& xData) const {
     const Vec3& n = normal; // refactoring helper. TODO: remove
     const Vec3& v0 = scene.vertices[v[0]];
     const Vec3& v1 = scene.vertices[v[1]];
@@ -57,7 +57,7 @@ void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, Int
     float rpDist = dot(n, v0 - ray.origin); // Ray-Plane distance
     xData.t = rpDist / rProj;
     if (xData.t < -1e-6) {
-        xData.type = IntersectionType::PLANE_BEHIND_RAY_ORIGIN;
+        xData.type = TraceHitType::PLANE_BEHIND_RAY_ORIGIN;
         return;
     }
     xData.p = ray.origin + ray.direction * xData.t;
@@ -79,11 +79,11 @@ void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, Int
         xData.v = c1.length() * area_inv;
         xData.materialIndex = this->materialIndex;
         xData.n = intersectionNormal(scene, xData.u, xData.v);
-        xData.type = IntersectionType::SUCCESS;
+        xData.type = TraceHitType::SUCCESS;
         return;
     }
     else {
-        xData.type = IntersectionType::OUT_OF_BOUNDS;
+        xData.type = TraceHitType::OUT_OF_BOUNDS;
         return;
     }
 }

@@ -329,8 +329,7 @@ struct Ray {
     void reflect(const Vec3& point, const Vec3& normal) {
         origin = point;
         direction = direction - 2 * dot(direction, normal) * normal;
-        direction.normalize(); // TODO perf: can we avoid this?
-        assert(fequal(direction.length(), 1.f));
+        direction.normalize();
     }
 
     /**
@@ -338,10 +337,12 @@ struct Ray {
     * @param normal: expected to face the ray.
     **/
     bool refract(const Vec3& point, Vec3 normal, float iorI, float iorR) {
+#ifndef NDEBUG
+        auto dbgOldDirection = direction;
         assert(fequal(direction.lengthSquared(), 1.f));
         assert(dot(direction, normal) < -epsilon); // usage req: normal should face the ray
+#endif
 
-        auto dbgOldDirection = direction;
         float cosI = -dot(direction, normal);
         float sinR = sqrt(1 - cosI * cosI) * iorI / iorR;
         if (sinR - 1.f >= -1e-6f) {
@@ -350,20 +351,18 @@ struct Ray {
         }
         float cosR = sqrt(1 - sinR * sinR);
         // bump direction to avoid 0 vector check // TODO ask in Discord
-        direction = direction * (1.f + 1e-6f); // todo maybe leads to having to normalize?
+        direction = direction * (1.f + 1e-6f);
         Vec3 C = (direction + cosI * normal).getUnit();
         Vec3 B = C * sinR;
         Vec3 A = -normal * cosR;
         direction = A + B;
-        direction.normalize(); // TODO perf: can we avoid this?
+        direction.normalize(); // TODO ask in Discord: can we avoid this?
         origin = point;
 
         assert(fequal(direction.lengthSquared(), 1.f));
         assert(fequal(dot(direction, normal), -cosR));
         // assert R not going backwards:
         assert(dot(direction, dbgOldDirection) > 1e-6);
-        // assert Snell's Law:
-        //assert(fequal(sinI / sinR, iorR / iorI));
         return true;
     }
 };
@@ -373,8 +372,8 @@ struct TraceTask {
     int pixelX{ 0 };
     int pixelY{ 0 };
     uint32_t depth{ 0 };
-    // [0, 1]. i.e. inverseColorWeight. Higher values diminish the weight of `color` when `lerp`ing. 
-    float attenuation{ 1.f };
+    // [0, 1]. Higher values increase the weight of the diffuseComponent of the hit point when `lerp`ing.  See ImageQueue::flatten
+    float weight{ 1.f };
     float ior{ 1.f };
 
     TraceTask(const Ray& ray, int pixelX, int pixelY)

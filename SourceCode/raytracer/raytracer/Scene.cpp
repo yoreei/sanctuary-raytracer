@@ -1,7 +1,7 @@
 #pragma warning( disable : 4365 )
 
 #include "Scene.h"
-#include "Intersection.h"
+#include "TraceHit.h"
 #include "Triangle.h"
 #include "Material.h"
 #include "CRTTypes.h"
@@ -10,7 +10,7 @@
 * Determine best intersection of ray with scene.
 */
 bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
-    Intersection xData{};
+    TraceHit xData{};
     float t = end.length(); // todo: end - start ???????????????
     Ray ray = { start, end.getUnit() };
     for (const Triangle& tri : triangles) {
@@ -23,9 +23,9 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
     // TODO: return dimming factor based on refractive objects intersected!!!!
     return false;
 }
-void Scene::intersect(const Ray& ray, Intersection& out) const {
+void Scene::intersect(const Ray& ray, TraceHit& out) const {
     out.t = std::numeric_limits<float>::max();
-    Intersection xData {};
+    TraceHit xData {};
     for (const Triangle& tri : triangles) {
         // TODO: Separate plane intersection & triangle uv intersection tests?
         tri.intersect(*this, ray, xData);

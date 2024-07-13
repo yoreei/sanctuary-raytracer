@@ -17,5 +17,5 @@ public:
     Vec3 lightContrib(const Scene& scene, const Vec3& point, const Vec3& normal) const;
 private:
     float intensity;
-    Color color; // TODO
+    Color color; // TODO implement color
 };

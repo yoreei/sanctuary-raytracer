@@ -22,8 +22,8 @@ void ImageQueue::flatten(Image& image)
     for (int i = 0; i < width * height; i++) {
         Vec3 unitColor = bgColor;
         while (!data[i].empty()) {
-            ColorContrib& contrib = data[i].front();
-            unitColor = lerp(contrib.color, unitColor, contrib.attenuation);
+            ColorContrib& layer= data[i].front();
+            unitColor = lerp(unitColor, layer.color, layer.weight);
             data[i].pop();
         }
         image.data[i] = Color::fromUnit(unitColor);
@@ -40,7 +40,9 @@ void ImageQueue::slice(std::vector<Image>& images) {
         for (size_t i = 0; i < width * height; ++i) {
             if(!data[i].empty()) {
                 bContinue = true;
-                images[depth].data[i] = Color::fromUnit(data[i].front().color);
+                ColorContrib& layer = data[i].front();
+                Vec3 unitColor = lerp({0.f, 0.f, 0.f}, layer.color, layer.weight);
+                images[depth].data[i] = Color::fromUnit(unitColor);
                 data[i].pop();
             }
             else {
@@ -60,4 +62,4 @@ size_t ImageQueue::maxDepth() const
     return max;
 }
 
-ColorContrib::ColorContrib(Vec3 color, float attenuation) : color(color), attenuation(attenuation) {}
+ColorContrib::ColorContrib(Vec3 color, float weight) : color(color), weight(weight) {}

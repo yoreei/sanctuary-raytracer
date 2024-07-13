@@ -2,7 +2,7 @@
 #include <string>
 #include "CRTTypes.h"
 
-enum class IntersectionType {
+enum class TraceHitType {
     // planeFacingRay = true:
     SUCCESS,                    // rayIntersectsPlnae = true, withinTriangle = true
     OUT_OF_BOUNDS,              // rayIntersectsPlane = true, withinTriangle = false
@@ -14,16 +14,17 @@ enum class IntersectionType {
     PARALLEL,                   // rayIntersectsPlane = false, withinTriangle = false
 };
 
-std::string toString(IntersectionType intersection);
+std::string toString(TraceHitType intersection);
 
-struct Intersection {
+struct TraceHit {
     float t = FLT_MAX;    // Distance
-    Vec3 p = { 0, 0, 0 };     // Intersection Point
+    Vec3 p = { 0, 0, 0 };     // TraceHit Point
     Vec3 n = { 0, 0, 0 };     // Normal at Point
     float u = 0.f;    // First Barycentric Base
     float v = 0.f;    // Second Barycentric Base
     size_t materialIndex = 0;
-    IntersectionType type = IntersectionType::OUT_OF_BOUNDS;
-    bool successful() const { return type == IntersectionType::SUCCESS || type == IntersectionType::INSIDE_REFRACTIVE; }
+    TraceHitType type = TraceHitType::OUT_OF_BOUNDS;
+    bool successful() const { return type == TraceHitType::SUCCESS || type == TraceHitType::INSIDE_REFRACTIVE; }
+    Vec3 biasP(float bias) const { return p + n * bias; }
 };
 

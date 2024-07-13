@@ -1,6 +1,6 @@
 #pragma once
 #include "CRTTypes.h"
-#include "Intersection.h"
+#include "TraceHit.h"
 
 class Scene;
 class Triangle {
@@ -69,9 +69,9 @@ public:
     */
     // TODO return bool
 
-    void intersect(const Scene& scene, const Ray& ray, Intersection& xData) const;
+    void intersect(const Scene& scene, const Ray& ray, TraceHit& xData) const;
 
-    void computeXData(const Scene& scene, const Ray& ray, float rProj, Intersection& xData) const;
+    void computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& xData) const;
 
     Triangle swappedTriangle() const;
 

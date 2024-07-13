@@ -26,27 +26,19 @@ public:
     */
     void emplaceTask(const Image& image, int x, int y, std::queue<TraceTask>& queue) const
     {
+        Ray ray = rayFromPixel(image, x, y);
+        queue.emplace(ray, x, y);
+    }
+
+    Ray rayFromPixel(const Image& image, int x, int y) const {
         Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
         ndcFromRaster(image, coords);
         imageFromNdc(image, coords);
 
         Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
         raydir.normalize();
-        Ray ray{this->pos, raydir};
-        queue.emplace(ray, x, y);
+        return {this->pos, raydir};
     }
-
-    //Ray generateRay(const Image& image, int x, int y) const
-    //{
-    //    Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
-    //    ndcFromRaster(image, coords);
-    //    imageFromNdc(image, coords);
-
-    //    Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
-    //    raydir.normalize();
-
-    //    return Ray{this->pos, raydir};
-    //}
 
 protected:
 

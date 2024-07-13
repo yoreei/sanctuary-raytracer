@@ -231,7 +231,6 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
     for (auto& jMaterial : j.at("materials")) {
         scene.materials.emplace_back();
         auto& material = scene.materials.back();
-        material.reflectivity = 0.5f;
         material.smoothShading = boolFromJson(jMaterial.at("smooth_shading"));
         material.type = Material::TypeFromString(jMaterial.at("type"));
         material.ior = 1.f;
@@ -245,6 +244,12 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
         if (material.type == Material::Type::REFRACTIVE) {
             material.albedo = Vec3{ 1.f, 1.f, 1.f };
             material.transparency = 1.f;
+            material.reflectivity = 1.f;
+        }
+
+        else if (material.type == Material::Type::REFLECTIVE) {
+            material.albedo = Vec3{ 1.f, 1.f, 1.f };
+            material.reflectivity = 1.f;
         }
     }
 

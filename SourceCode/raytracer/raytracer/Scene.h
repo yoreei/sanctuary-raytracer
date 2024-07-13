@@ -13,7 +13,7 @@
 #include "Image.h"
 #include "Light.h"
 #include "Material.h"
-#include "Intersection.h"
+#include "TraceHit.h"
 
 #include "json.hpp"
 
@@ -42,7 +42,7 @@ public:
 
     bool isOccluded(const Vec3& start, const Vec3& end) const;
 
-    void intersect(const Ray& ray, Intersection& out) const;
+    void intersect(const Ray& ray, TraceHit& out) const;
 
     /* Compiles all vertices and triangles into a single mesh object */
     [[nodiscard]] bool bakeObject();
