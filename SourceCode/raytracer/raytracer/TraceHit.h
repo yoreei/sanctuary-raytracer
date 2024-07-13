@@ -14,7 +14,7 @@ enum class TraceHitType {
     PARALLEL,                   // rayIntersectsPlane = false, withinTriangle = false
 };
 
-std::string toString(TraceHitType intersection);
+std::string toString(TraceHitType hitType);
 
 struct TraceHit {
     float t = FLT_MAX;    // Distance

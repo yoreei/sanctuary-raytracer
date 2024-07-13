@@ -15,37 +15,37 @@
 */
 // TODO return bool
 
-void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& xData) const {
+void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& hit) const {
 
     float rayProj = ray.direction.dot(normal);
 
     if (rayProj < -1e-6) { // normal is facing ray
-        computeXData(scene, ray, rayProj, xData);
+        computeXData(scene, ray, rayProj, hit);
     }
     else if (rayProj > 1e-6) { // normal is facing away from ray
         auto& material = scene.materials[materialIndex];
         if (material.type == Material::Type::REFRACTIVE) {
             Triangle swapT = swappedTriangle();
-            swapT.intersect(scene, ray, xData);
-            if (xData.type == TraceHitType::SUCCESS) {
-                xData.type = TraceHitType::INSIDE_REFRACTIVE;
-                xData.n = -xData.n;
-                assert(dot(xData.n, ray.direction) > 1e-6); // ray is exiting refractive material
+            swapT.intersect(scene, ray, hit);
+            if (hit.type == TraceHitType::SUCCESS) {
+                hit.type = TraceHitType::INSIDE_REFRACTIVE;
+                hit.n = -hit.n;
+                assert(dot(hit.n, ray.direction) > 1e-6); // ray is exiting refractive material
             }
         }
         else {
-            xData.type = TraceHitType::PLANE_BACKFACE;
+            hit.type = TraceHitType::PLANE_BACKFACE;
         }
     }
     else {
-        xData.type = TraceHitType::PARALLEL;
+        hit.type = TraceHitType::PARALLEL;
     }
 }
 
 /**
 * @param n: normal of the triangle to use instead of this->normal (for refraction)
 */
-void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& xData) const {
+void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const {
     const Vec3& n = normal; // refactoring helper. TODO: remove
     const Vec3& v0 = scene.vertices[v[0]];
     const Vec3& v1 = scene.vertices[v[1]];
@@ -55,19 +55,19 @@ void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, Tra
     Vec3 e0 = v1 - v0;
     Vec3 e1 = v2 - v0;
     float rpDist = dot(n, v0 - ray.origin); // Ray-Plane distance
-    xData.t = rpDist / rProj;
-    if (xData.t < -1e-6) {
-        xData.type = TraceHitType::PLANE_BEHIND_RAY_ORIGIN;
+    hit.t = rpDist / rProj;
+    if (hit.t < -1e-6) {
+        hit.type = TraceHitType::PLANE_BEHIND_RAY_ORIGIN;
         return;
     }
-    xData.p = ray.origin + ray.direction * xData.t;
+    hit.p = ray.origin + ray.direction * hit.t;
 
     // check if `p` is inside triangle
-    Vec3 v0p = xData.p - v0;
+    Vec3 v0p = hit.p - v0;
     Vec3 e2 = v2 - v1;
     Vec3 c0 = cross(e0, v0p);
     Vec3 c1 = cross(v0p, e1);
-    Vec3 c2 = cross(e2, xData.p - v1);
+    Vec3 c2 = cross(e2, hit.p - v1);
 
     bool inside = dot(n, c0) > -1e-6 && // TODO: optimize dot away
         dot(n, c1) > -1e-6 &&
@@ -75,15 +75,15 @@ void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, Tra
 
     if (inside) {
         float area_inv = 1.f / e0.crossLength(e1);
-        xData.u = c0.length() * area_inv;
-        xData.v = c1.length() * area_inv;
-        xData.materialIndex = this->materialIndex;
-        xData.n = intersectionNormal(scene, xData.u, xData.v);
-        xData.type = TraceHitType::SUCCESS;
+        hit.u = c0.length() * area_inv;
+        hit.v = c1.length() * area_inv;
+        hit.materialIndex = this->materialIndex;
+        hit.n = hitNormal(scene, hit.u, hit.v);
+        hit.type = TraceHitType::SUCCESS;
         return;
     }
     else {
-        xData.type = TraceHitType::OUT_OF_BOUNDS;
+        hit.type = TraceHitType::OUT_OF_BOUNDS;
         return;
     }
 }
@@ -123,7 +123,7 @@ bool Triangle::intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray
     return false;
 }
 
-Vec3 Triangle::intersectionNormal(const Scene& scene, float uCoord, float vCoord) const {
+Vec3 Triangle::hitNormal(const Scene& scene, float uCoord, float vCoord) const {
     Vec3 result{};
     if (scene.materials[materialIndex].smoothShading) {
         const Vec3& v2N = scene.vertexNormals[v[2]];

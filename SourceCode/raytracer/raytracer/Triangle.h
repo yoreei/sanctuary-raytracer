@@ -69,9 +69,9 @@ public:
     */
     // TODO return bool
 
-    void intersect(const Scene& scene, const Ray& ray, TraceHit& xData) const;
+    void intersect(const Scene& scene, const Ray& ray, TraceHit& hit) const;
 
-    void computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& xData) const;
+    void computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const;
 
     Triangle swappedTriangle() const;
 
@@ -79,7 +79,7 @@ public:
 
     bool intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray, float& t, Vec3& p) const;
 
-    Vec3 intersectionNormal(const Scene& scene, float uCoord, float vCoord) const;
+    Vec3 hitNormal(const Scene& scene, float uCoord, float vCoord) const;
 
 private:
     Vec3 normal{};

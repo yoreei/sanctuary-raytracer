@@ -10,13 +10,13 @@
 * Determine best intersection of ray with scene.
 */
 bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
-    TraceHit xData{};
+    TraceHit hit{};
     float t = end.length(); // todo: end - start ???????????????
     Ray ray = { start, end.getUnit() };
     for (const Triangle& tri : triangles) {
-        tri.intersect(*this, ray, xData);
+        tri.intersect(*this, ray, hit);
         auto& material = materials[tri.materialIndex];
-        if (xData.successful() && material.type != Material::Type::REFRACTIVE && flower(xData.t, t)) {
+        if (hit.successful() && material.type != Material::Type::REFRACTIVE && flower(hit.t, t)) {
             return true;
         }
     }
@@ -25,15 +25,15 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
 }
 void Scene::intersect(const Ray& ray, TraceHit& out) const {
     out.t = std::numeric_limits<float>::max();
-    TraceHit xData {};
+    TraceHit hit {};
     for (const Triangle& tri : triangles) {
         // TODO: Separate plane intersection & triangle uv intersection tests?
-        tri.intersect(*this, ray, xData);
-        if (xData.successful() && xData.t < out.t) {
-            out = xData;
+        tri.intersect(*this, ray, hit);
+        if (hit.successful() && hit.t < out.t) {
+            out = hit;
         }
 
-        metrics.record(toString(xData.type));
+        metrics.record(toString(hit.type));
     }
 }
 

@@ -83,14 +83,14 @@ private:
             TraceTask task = traceQueue.front();
             Ray& ray = task.ray;
             traceQueue.pop();
-            TraceHit xData{};
-            scene->intersect(ray, xData);
-            processXData(task, xData);
+            TraceHit hit{};
+            scene->intersect(ray, hit);
+            processXData(task, hit);
         }
     }
 
-    void processXData(TraceTask& task, TraceHit& xData) {
-        if (!xData.successful()) {
+    void processXData(TraceTask& task, TraceHit& hit) {
+        if (!hit.successful()) {
             return;
         }
         if (task.depth >= maxDepth) {
@@ -98,26 +98,26 @@ private:
             return;
         }
 
-        const auto& material = scene->materials[xData.materialIndex];
+        const auto& material = scene->materials[hit.materialIndex];
         switch (material.type) {
         case Material::Type::DIFFUSE:
-            shadeDiffuse(task, xData);
+            shadeDiffuse(task, hit);
             scene->metrics.record("HIT_MATERIAL_DIFFUSE");
             break;
         case Material::Type::CONSTANT:
-            shadeConstant(task, xData);
+            shadeConstant(task, hit);
             scene->metrics.record("HIT_MATERIAL_CONSTANT");
             break;
         case Material::Type::REFLECTIVE:
-            shadeReflective(task, xData);
+            shadeReflective(task, hit);
             scene->metrics.record("HIT_MATERIAL_REFLECTIVE");
             break;
         case Material::Type::REFRACTIVE:
-            shadeRefractive(task, xData);
+            shadeRefractive(task, hit);
             scene->metrics.record("HIT_MATERIAL_REFRACTIVE");
             break;
         case Material::Type::DEBUG:
-            shadeNormal(task, xData);
+            shadeNormal(task, hit);
             scene->metrics.record("HIT_MATERIAL_DEBUG");
             break;
         case Material::Type::VOID:
@@ -126,52 +126,52 @@ private:
         }
     }
 
-    void shadeConstant(TraceTask& task, const TraceHit& xData)
+    void shadeConstant(TraceTask& task, const TraceHit& hit)
     {
-        auto& material = scene->materials[xData.materialIndex];
+        auto& material = scene->materials[hit.materialIndex];
         if (task.weight > epsilon) {
             imageQueue(task.pixelX, task.pixelY).push({material.albedo, task.weight});
         }
     }
 
-    void shadeDiffuse(const TraceTask& task, const TraceHit& xData)
+    void shadeDiffuse(const TraceTask& task, const TraceHit& hit)
     {
         if (task.weight < epsilon) {
             return;
         }
 
-        auto& material = scene->materials[xData.materialIndex];
-        Vec3 light = hitLight(xData.biasP(bias), xData.n); // overexposure x,y,z > 1.f
+        auto& material = scene->materials[hit.materialIndex];
+        Vec3 light = hitLight(hit.biasP(bias), hit.n); // overexposure x,y,z > 1.f
         Vec3 overexposedColor = multiply(light, material.albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
         imageQueue(task.pixelX, task.pixelY).push({diffuseComponent, task.weight});
         assert(imageQueue(task.pixelX, task.pixelY).size() > 0);
     }
 
-    void shadeReflective(TraceTask& task, const TraceHit& xData)
+    void shadeReflective(TraceTask& task, const TraceHit& hit)
     {
-        auto& material = scene->materials[xData.materialIndex];
+        auto& material = scene->materials[hit.materialIndex];
         task.weight *= material.reflectivity;
         if (task.weight > epsilon) {
-            task.ray.reflect(xData.biasP(bias), xData.n);
+            task.ray.reflect(hit.biasP(bias), hit.n);
             ++task.depth;
             traceQueue.push(task);
         }
 
         task.weight *= (1.f - material.reflectivity);
-        shadeDiffuse(task, xData);
+        shadeDiffuse(task, hit);
     }
 
-    void shadeRefractive(TraceTask& task, TraceHit& xData)
+    void shadeRefractive(TraceTask& task, TraceHit& hit)
     {
 #ifndef NDEBUG
         auto oldRay = task.ray;
 #endif
 
-        auto& material = scene->materials[xData.materialIndex];
+        auto& material = scene->materials[hit.materialIndex];
         float enteringIor = material.ior; // the IOR of the material we're entering
-        if (xData.type == TraceHitType::INSIDE_REFRACTIVE) {
-            xData.n = -xData.n; // n always facing ray
+        if (hit.type == TraceHitType::INSIDE_REFRACTIVE) {
+            hit.n = -hit.n; // n always facing ray
             //  (simplification) exiting a refractive object means we're back to air
             enteringIor = 1.f; // todo: implement nested refractive objects
             scene->metrics.record("shadeRefractive_INSIDE");
@@ -179,13 +179,13 @@ private:
         else {
             scene->metrics.record("shadeRefractive_OUTSIDE");
         }
-        assert(dot(xData.n, task.ray.direction) < -1e-6);
+        assert(dot(hit.n, task.ray.direction) < -1e-6);
 
         TraceTask& refractionTask = task;
         TraceTask reflectiveTask = task;
-        bool hasRefraction = refractionTask.ray.refract(xData.biasP(-bias), xData.n, task.ior, enteringIor);
+        bool hasRefraction = refractionTask.ray.refract(hit.biasP(-bias), hit.n, task.ior, enteringIor);
         if (hasRefraction) {
-            float fresnelFactor = schlickApproxVladi(task.ray.direction, xData.n);
+            float fresnelFactor = schlickApproxVladi(task.ray.direction, hit.n);
 
             refractionTask.weight *= (1.f - fresnelFactor);
             if (refractionTask.weight > epsilon) {
@@ -195,28 +195,28 @@ private:
             }
 
             reflectiveTask.weight *= fresnelFactor;
-            shadeReflective(reflectiveTask, xData); // shadeReflective takes care of shadeDiffuse
+            shadeReflective(reflectiveTask, hit); // shadeReflective takes care of shadeDiffuse
 
             scene->metrics.record("shadeRefractive_REFRACTED_YES");
         }
         else {
-            shadeReflective(reflectiveTask, xData); // shadeReflective takes care of shadeDiffuse
+            shadeReflective(reflectiveTask, hit); // shadeReflective takes care of shadeDiffuse
             scene->metrics.record("shadeRefractive_REFRACTED_NO(TIR)");
         }
 
 #ifndef NDEBUG
-        // assert refractP is farther away from ray.origin than xData.p
-        Vec3 oP = xData.p - oldRay.origin;
+        // assert refractP is farther away from ray.origin than hit.p
+        Vec3 oP = hit.p - oldRay.origin;
         float oPLen = oP.lengthSquared();
-        Vec3 oReflect = xData.biasP(bias) - oldRay.origin;
+        Vec3 oReflect = hit.biasP(bias) - oldRay.origin;
         float oReflectLen = oReflect.lengthSquared();
         assert(oReflectLen < oPLen + 10 * epsilon);
 #endif
     }
 
-    void shadeNormal(TraceTask& task, const TraceHit& xData)
+    void shadeNormal(TraceTask& task, const TraceHit& hit)
     {
-        Vec3 unitColor = xData.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
+        Vec3 unitColor = hit.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
         imageQueue(task.pixelX, task.pixelY).push({unitColor, task.weight});
     }
 
@@ -278,9 +278,9 @@ private:
 
         float scale = imagePlaneDist / rayProj;
         p = p * scale;
-        TraceHit xData;
-        xData.p = p;
-        return shade_abs(xData);
+        TraceHit hit;
+        hit.p = p;
+        return shade_abs(hit);
     }
 
     Color shade_dbg_b(Vec3 p) const {
@@ -288,18 +288,18 @@ private:
         return Color{ 5,5 , b };
     }
 
-    Color shade_abs(const TraceHit& xData) const {
-        uint8_t r = static_cast<uint8_t>(fabs(xData.p.x * 100.f));
-        uint8_t g = static_cast<uint8_t>(fabs(xData.p.y * 100.f));
-        uint8_t b = static_cast<uint8_t>(fabs(xData.p.z * 100.f));
+    Color shade_abs(const TraceHit& hit) const {
+        uint8_t r = static_cast<uint8_t>(fabs(hit.p.x * 100.f));
+        uint8_t g = static_cast<uint8_t>(fabs(hit.p.y * 100.f));
+        uint8_t b = static_cast<uint8_t>(fabs(hit.p.z * 100.f));
 
         return Color{ r, g, b };
     }
 
-    //Color shade_normal(const TraceHit& xData) const {
-    //    uint8_t r = static_cast<uint8_t>(fabs(xData.n.x + 1.f) * 127.5f);
-    //    uint8_t g = static_cast<uint8_t>(fabs(xData.n.y + 1.f) * 127.5f);
-    //    uint8_t b = static_cast<uint8_t>(fabs(xData.n.z + 1.f) * 127.5f);
+    //Color shade_normal(const TraceHit& hit) const {
+    //    uint8_t r = static_cast<uint8_t>(fabs(hit.n.x + 1.f) * 127.5f);
+    //    uint8_t g = static_cast<uint8_t>(fabs(hit.n.y + 1.f) * 127.5f);
+    //    uint8_t b = static_cast<uint8_t>(fabs(hit.n.z + 1.f) * 127.5f);
 
     //    return Color{ r, g, b };
     //}
@@ -314,16 +314,16 @@ private:
         return Color{ color, color, color };
     }
 
-    Color shade_uv(const TraceHit& xData)
+    Color shade_uv(const TraceHit& hit)
     {
         static const siv::PerlinNoise::seed_type seed = 123456u;
         static const siv::PerlinNoise perlin{ seed };
 
-        const double noise = perlin.octave2D_01(xData.u, xData.v, 8, 0.8);
+        const double noise = perlin.octave2D_01(hit.u, hit.v, 8, 0.8);
         float brightness = static_cast<uint8_t>(noise * 255);
-        const uint8_t r = static_cast<uint8_t>(brightness * xData.n.x);
-        const uint8_t g = static_cast<uint8_t>(brightness * xData.n.y);
-        const uint8_t b = static_cast<uint8_t>(brightness * xData.n.z);
+        const uint8_t r = static_cast<uint8_t>(brightness * hit.n.x);
+        const uint8_t g = static_cast<uint8_t>(brightness * hit.n.y);
+        const uint8_t b = static_cast<uint8_t>(brightness * hit.n.z);
         return Color{ r, g, b };
     }
 };
