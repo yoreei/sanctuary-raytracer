@@ -45,5 +45,16 @@ namespace TriangleUnitTests
 
         assert(n.equal({ 0.756420f, 0.275748f, -0.593120f, }));
         assert(fequal(t.area(vs), 6.11862f));
+
+        // intersect
+        t = createTriangle(vs, { -2.f, 1.5f, 0.f }, { 0.f, 1.5f, -5.f }, { 2.f, 1.5f, 0.f });
+        Ray ray { {0.f, 0.f, -1.f}, {0.f, 1.f, 0.f} };
+        TraceHit hit {};
+        scene.materials.push_back(Material{});
+        Material& material = scene.materials.back();
+        material.type = Material::Type::DIFFUSE;
+        t.intersect(scene, ray, hit);
+        assert(hit.successful());
+
     }
 } // namespace TriangleUnitTests

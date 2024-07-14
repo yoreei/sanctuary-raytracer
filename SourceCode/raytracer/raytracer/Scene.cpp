@@ -15,9 +15,9 @@
 * Determine best intersection of ray with scene.
 */
 bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
-    Vec3 occlusionLine = end - start;
-    float maxDistanceSq = occlusionLine.lengthSquared();
-    Ray ray = { start, occlusionLine.getUnit() };
+    // todo remove Vec3 occlusionLine = end - start;
+    // todo remove float maxDistanceSq = occlusionLine.lengthSquared();
+    // todo remove Ray ray = { start, occlusionLine.getUnit() };
     for (const Triangle& tri : triangles) {
         TraceHit hit{}; // todo move up
         auto& material = materials[tri.materialIndex];
@@ -25,11 +25,11 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
             continue;
         }
 
-        tri.intersect(*this, ray, hit);
-        if (hit.successful()) {
-            Vec3 shadowLine = hit.p - start;
-            float shadowDistanceSq = shadowLine.lengthSquared();
-            return shadowDistanceSq < maxDistanceSq;
+        if (tri.boolIntersect(*this, start, end)) {
+           return true;
+        }
+        else {
+            continue;
         }
     }
     return false;
@@ -109,4 +109,36 @@ void Scene::showLightDebug() {
         lightObjects.push_back(lightBallScene);
     }
     addObjects(lightObjects);
+}
+
+void Scene::generateVertexNormals() {
+    // Vec3{0.f, 0.f, 0.f} is important for summation
+    vertexNormals.resize(vertices.size(), Vec3{0.f, 0.f, 0.f});
+    for(size_t i = 0; i < vertices.size(); ++i) {
+        std::vector<size_t> attachedTriangles {};
+        genAttachedTriangles(i, attachedTriangles);
+        for(size_t triIndex : attachedTriangles) {
+            vertexNormals[i] += triangles[triIndex].getNormal();
+        }
+    }
+
+    for(Vec3& normal : vertexNormals) {
+        normal.normalize();
+    }
+}
+
+/**
+ * @brief Generate a list of triangle indexes that are attached to a vertex
+ * 
+ * @param scene Scene object
+ * @param vertexIndex Index of the vertex
+ * @param attachedTriangles Output list of triangle indexes
+ */
+void Scene::genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attachedTriangles) {
+    for(size_t i = 0; i < triangles.size(); ++i) {
+        const Triangle& tri = triangles[i];
+        if(tri.hasVertex(vertexIndex)) {
+            attachedTriangles.push_back(i);
+        }
+    }
 }

@@ -44,7 +44,8 @@ bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Ima
         !parseLight(j, scene)) {
         return false;
     }
-    genVertexNormals(scene);
+
+    scene.generateVertexNormals();
     return true;
 }
 
@@ -361,38 +362,6 @@ inline bool CRTSceneLoader::parseTriangles(const json& jObj, Scene& scene) {
     return true;
 }
 
-void CRTSceneLoader::genVertexNormals(Scene& scene) {
-    // Vec3{0.f, 0.f, 0.f} is important for summation
-    scene.vertexNormals.resize(scene.vertices.size(), Vec3{0.f, 0.f, 0.f});
-    for(size_t i = 0; i < scene.vertices.size(); ++i) {
-        std::vector<size_t> attachedTriangles {};
-        genAttachedTriangles(scene, i, attachedTriangles);
-        for(size_t triIndex : attachedTriangles) {
-            scene.vertexNormals[i] += scene.triangles[triIndex].getNormal();
-        }
-    }
-
-    for(Vec3& normal : scene.vertexNormals) {
-        normal.normalize();
-    }
-}
-
-/**
- * @brief Generate a list of triangle indexes that are attached to a vertex
- * 
- * @param scene Scene object
- * @param vertexIndex Index of the vertex
- * @param attachedTriangles Output list of triangle indexes
- */
-void CRTSceneLoader::genAttachedTriangles(const Scene& scene, size_t vertexIndex, std::vector<size_t>& attachedTriangles) {
-    for(size_t i = 0; i < scene.triangles.size(); ++i) {
-        const Triangle& tri = scene.triangles[i];
-        if(tri.hasVertex(vertexIndex)) {
-            attachedTriangles.push_back(i);
-        }
-    }
-}
-
 template <typename T>
 bool CRTSceneLoader::getDefault(const json& j, const std::string& key, T defaultVal) {
     if (!j.contains(key)) {
@@ -400,3 +369,4 @@ bool CRTSceneLoader::getDefault(const json& j, const std::string& key, T default
     }
     return j.at(key).get<T>();
 }
+

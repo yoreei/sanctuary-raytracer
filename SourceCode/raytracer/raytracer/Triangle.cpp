@@ -70,7 +70,7 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& hit) cons
     float rayProj = ray.direction.dot(normal);
 
     if (rayProj < -1e-6) { // normal is facing ray
-        computeXData(scene, ray, rayProj, hit);
+        computeHit(scene, ray, rayProj, hit);
     }
     else if (rayProj > 1e-6) { // normal is facing away from ray
         auto& material = scene.materials[materialIndex];
@@ -92,10 +92,29 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& hit) cons
     }
 }
 
+/*
+* Quick line-triangle intersect that returns only a bool. Used for occlusion testing.
+* @return: true also for backside
+*/
+bool Triangle::boolIntersect(const Scene& scene, const Vec3& start, const Vec3& end) const
+{
+    const Vec3& v0 = scene.vertices[v[0]];
+    const Vec3& v1 = scene.vertices[v[1]];
+    const Vec3& v2 = scene.vertices[v[2]];
+
+    if (signOfVolume(start, v0, v1, v2) != signOfVolume(end, v0, v1, v2)) {
+        bool pyr3 = signOfVolume(start, end, v0, v1);
+        if (pyr3 == signOfVolume(start, end, v1, v2) && pyr3 == signOfVolume(start, end, v2, v0)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
 * @param n: normal of the triangle to use instead of this->normal (for refraction)
 */
-void Triangle::computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const {
+void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const {
     const Vec3& n = normal; // refactoring helper. TODO: remove
     const Vec3& v0 = scene.vertices[v[0]];
     const Vec3& v1 = scene.vertices[v[1]];
@@ -191,5 +210,14 @@ void Triangle::translate(const Vec3& translation, std::vector<Vec3>& vertices) c
    for (size_t i = 0; i < 3; ++i) {
         vertices[v[i]] += translation;
     }
+}
+
+
+/*
+* Used for quick line-triangle intersection testing
+* @return: true if sign is positive. False if sign is negative or zero
+*/
+bool Triangle::signOfVolume(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) const {
+    return dot(cross(b-a,c-a),d-a) > 0.f;
 }
 

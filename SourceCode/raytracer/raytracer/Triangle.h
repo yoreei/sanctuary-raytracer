@@ -34,7 +34,9 @@ public:
 
     void intersect(const Scene& scene, const Ray& ray, TraceHit& hit) const;
 
-    void computeXData(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const;
+    bool boolIntersect(const Scene& scene, const Vec3& start, const Vec3& end) const;
+
+    void computeHit(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const;
 
     Triangle swappedTriangle() const;
 
@@ -45,6 +47,8 @@ public:
     Vec3 hitNormal(const Scene& scene, float uCoord, float vCoord) const;
 
     void translate(const Vec3& translation, std::vector<Vec3>& vertices) const;
+
+    bool signOfVolume(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) const;
 
 private:
     Vec3 normal{};

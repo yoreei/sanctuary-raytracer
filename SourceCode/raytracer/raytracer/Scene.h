@@ -52,6 +52,10 @@ public:
     * Show debug visualizations for lights in the scene
     */
     void showLightDebug();
+
+    void generateVertexNormals();
+
+    void genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attachedTriangles);
 private:
 
 };
