@@ -207,6 +207,7 @@
     <ClInclude Include="CameraUnitTests.h" />
     <ClInclude Include="CRTTypesUnitTests.h" />
     <ClInclude Include="RendererIntegrationTests.h" />
+    <ClInclude Include="SceneUnitTests.h" />
     <ClInclude Include="TestUtils.h" />
     <ClInclude Include="TriangleUnitTests.h" />
     <ClInclude Include="UnitTestData.h" />

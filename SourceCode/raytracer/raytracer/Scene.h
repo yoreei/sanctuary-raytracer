@@ -36,7 +36,6 @@ public:
     std::vector<Material> materials {};
     std::vector<Light> lights {};
     
-    //Material bgMaterial = {};
     Vec3 bgColor = {0.f, 0.f, 0.f};
 
     bool isOccluded(const Vec3& start, const Vec3& end) const;
@@ -53,6 +52,9 @@ public:
     */
     void showLightDebug();
 
+    /*
+    * populates `vertexNormals` with the average normal of all attached triangles. Important for smooth shading
+    */
     void generateVertexNormals();
 
     void genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attachedTriangles);

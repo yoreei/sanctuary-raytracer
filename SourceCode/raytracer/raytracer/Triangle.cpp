@@ -144,8 +144,8 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
 
     if (inside) {
         float area_inv = 1.f / e0.crossLength(e1);
-        hit.u = c0.length() * area_inv;
-        hit.v = c1.length() * area_inv;
+        hit.u = c1.length() * area_inv;
+        hit.v = c0.length() * area_inv;
         hit.materialIndex = this->materialIndex;
         hit.n = hitNormal(scene, hit.u, hit.v);
         hit.type = TraceHitType::SUCCESS;
@@ -195,9 +195,9 @@ bool Triangle::intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray
 Vec3 Triangle::hitNormal(const Scene& scene, float uCoord, float vCoord) const {
     Vec3 result{};
     if (scene.materials[materialIndex].smoothShading) {
-        const Vec3& v2N = scene.vertexNormals[v[2]];
         const Vec3& v0N = scene.vertexNormals[v[0]];
         const Vec3& v1N = scene.vertexNormals[v[1]];
+        const Vec3& v2N = scene.vertexNormals[v[2]];
         return v0N * (1 - uCoord - vCoord) + v1N * uCoord + v2N * vCoord;
     }
     else {

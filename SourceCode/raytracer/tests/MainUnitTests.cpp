@@ -4,6 +4,7 @@
 #include "TriangleUnitTests.h"
 #include "CameraUnitTests.h"
 #include "Benchmarks.h"
+#include "SceneUnitTests.h"
 //#include "RendererIntegrationTests.h"
 
 int main()
@@ -11,6 +12,7 @@ int main()
     CRTTypesUnitTests::run();
     TriangleUnitTests::run();
     CameraUnitTests::run();
+    SceneUnitTests::run();
     Benchmarks::run();
 
     //RendererIntegrationTests::run();

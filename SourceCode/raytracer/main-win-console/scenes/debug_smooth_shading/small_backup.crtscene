@@ -1,0 +1,48 @@
+{
+	"settings": {
+		"background_color": [
+			0, 0.5, 0
+		],		
+		"image_settings": {
+			"width": 1920,
+			"height": 1080
+		}
+	},
+	
+	"camera": {
+		"matrix": [
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1
+		],		
+		"position": [
+			0, 0, 1.2
+		]
+	},
+
+	"materials": [{
+			"type": "debug_normal",
+			"albedo": [
+				1, 1, 1
+			],
+			"smooth_shading": false
+		}	
+	],
+	
+	"objects": [{		
+			"material_index": 0,	
+			"vertices": [
+				0, 0, 1,
+				0, 0.4647232, 0.6,
+				-0.2159677, 0.4114919, 0.6,
+				-0.3824597, 0.2639928, 0.6
+			],			
+			"triangles": [
+				0, 1, 2,
+				0, 2, 3
+			]
+		}	
+	]
+}
+
+

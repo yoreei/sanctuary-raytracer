@@ -12,7 +12,7 @@ public:
         CONSTANT,
         REFLECTIVE,
         REFRACTIVE,
-        DEBUG
+        DEBUG_NORMAL
     };
 
     Material() = default;

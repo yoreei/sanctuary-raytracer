@@ -96,7 +96,6 @@ void Scene::addObjects(const std::vector<Scene>& scenes)
 }
 
 void Scene::showLightDebug() {
-
     std::vector<Scene> lightObjects;
     Image _fakeImage {}; // throwaway image
     for (const auto& light : lights) {
@@ -122,7 +121,8 @@ void Scene::generateVertexNormals() {
         }
     }
 
-    for(Vec3& normal : vertexNormals) {
+    for(size_t i = 0; i < vertexNormals.size(); ++i) {
+        auto& normal = vertexNormals[i];
         normal.normalize();
     }
 }

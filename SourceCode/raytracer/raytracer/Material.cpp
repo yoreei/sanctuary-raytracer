@@ -24,9 +24,9 @@ Material::Type Material::TypeFromString(const std::string& type)
     {
         return Type::REFRACTIVE;
     }
-    else if (type == "debug")
+    else if (type == "debug_normal")
     {
-        return Type::DEBUG;
+        return Type::DEBUG_NORMAL;
     }
     else
     {
@@ -52,9 +52,9 @@ std::string Material::StringFromType(const Material::Type& type)
     {
         return "refractive";
     }
-    else if (type == Type::DEBUG)
+    else if (type == Type::DEBUG_NORMAL)
     {
-        return "debug";
+        return "debug_normal";
     }
     else if (type == Type::CONSTANT)
     {

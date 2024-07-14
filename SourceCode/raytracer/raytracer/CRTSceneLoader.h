@@ -33,6 +33,7 @@ private:
     static void genAttachedTriangles(const Scene& scene, size_t vertexIndex, std::vector<size_t>& attachedTriangles);
     static bool getBoolDefault(const json& j, const std::string& key, bool defaultVal = false);
     template <typename T>
-    static bool getDefault(const json& j, const std::string& key, T defaultVal);
+    static T getDefault(const json& j, const std::string& key, T defaultVal);
+    static void warnIfMissing(const json& j, const std::string& key);
 };
 

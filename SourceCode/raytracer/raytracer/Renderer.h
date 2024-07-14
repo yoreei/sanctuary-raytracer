@@ -113,9 +113,10 @@ private:
             shadeRefractive(task, hit);
             scene->metrics.record("HIT_MATERIAL_REFRACTIVE");
             break;
-        case Material::Type::DEBUG:
+        case Material::Type::DEBUG_NORMAL:
             shadeNormal(task, hit);
-            scene->metrics.record("HIT_MATERIAL_DEBUG");
+            // shadeUv(task, hit);
+            scene->metrics.record("HIT_MATERIAL_DEBUG_NORMAL");
             break;
         case Material::Type::VOID:
             throw std::invalid_argument("not handled");
@@ -210,13 +211,6 @@ private:
         assert(oReflectLen < oPLen + 10 * epsilon);
 #endif
     }
-
-    void shadeNormal(TraceTask& task, const TraceHit& hit)
-    {
-        Vec3 unitColor = hit.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
-        imageQueue(task.pixelX, task.pixelY).push({unitColor, task.weight});
-    }
-
     /*
     * return: non-clamped hit light color, summed from all lights in the scene
     */
@@ -277,7 +271,7 @@ private:
         p = p * scale;
         TraceHit hit;
         hit.p = p;
-        return shade_abs(hit);
+        return shadePosition(hit);
     }
 
     Color shade_dbg_b(Vec3 p) const {
@@ -285,7 +279,7 @@ private:
         return Color{ 5,5 , b };
     }
 
-    Color shade_abs(const TraceHit& hit) const {
+    Color shadePosition(const TraceHit& hit) const {
         uint8_t r = static_cast<uint8_t>(fabs(hit.p.x * 100.f));
         uint8_t g = static_cast<uint8_t>(fabs(hit.p.y * 100.f));
         uint8_t b = static_cast<uint8_t>(fabs(hit.p.z * 100.f));
@@ -293,15 +287,7 @@ private:
         return Color{ r, g, b };
     }
 
-    //Color shade_normal(const TraceHit& hit) const {
-    //    uint8_t r = static_cast<uint8_t>(fabs(hit.n.x + 1.f) * 127.5f);
-    //    uint8_t g = static_cast<uint8_t>(fabs(hit.n.y + 1.f) * 127.5f);
-    //    uint8_t b = static_cast<uint8_t>(fabs(hit.n.z + 1.f) * 127.5f);
-
-    //    return Color{ r, g, b };
-    //}
-
-    Color shade_perlin(Vec3 p) const
+    Color shadePerlin(Vec3 p) const
     {
         static const siv::PerlinNoise::seed_type seed = 123456u;
         static const siv::PerlinNoise perlin{ seed };
@@ -311,17 +297,18 @@ private:
         return Color{ color, color, color };
     }
 
-    Color shade_uv(const TraceHit& hit)
+    void shadeUv(const TraceTask& task, const TraceHit& hit)
     {
-        static const siv::PerlinNoise::seed_type seed = 123456u;
-        static const siv::PerlinNoise perlin{ seed };
+        assert(hit.u <= 1.f + epsilon && hit.u >= -epsilon);
+        assert(hit.v <= 1.f + epsilon && hit.u >= -epsilon);
+        Vec3 unitColor = { hit.u, 0.f, hit.v };
+        imageQueue(task.pixelX, task.pixelY).push({unitColor, task.weight});
+    }
 
-        const double noise = perlin.octave2D_01(hit.u, hit.v, 8, 0.8);
-        float brightness = static_cast<uint8_t>(noise * 255);
-        const uint8_t r = static_cast<uint8_t>(brightness * hit.n.x);
-        const uint8_t g = static_cast<uint8_t>(brightness * hit.n.y);
-        const uint8_t b = static_cast<uint8_t>(brightness * hit.n.z);
-        return Color{ r, g, b };
+    void shadeNormal(TraceTask& task, const TraceHit& hit)
+    {
+        Vec3 unitColor = hit.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
+        imageQueue(task.pixelX, task.pixelY).push({unitColor, task.weight});
     }
 
     void flattenImage(Image& image, std::vector<Image>& imageComponents)
