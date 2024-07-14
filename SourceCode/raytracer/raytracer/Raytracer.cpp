@@ -38,7 +38,7 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
     //scene->animator.addAnimation(scene->camera, truck);
     fs::create_directories("out/" + sceneName);
     //image = Image(1280, 720); // Make rendering time shorter for quick testing
-    //image = Image(300, 200); // Make rendering time shorter for quick testing
+    image = Image(300, 200); // Make rendering time shorter for quick testing
     std::vector<Image> imageComponents {};
 
     do {

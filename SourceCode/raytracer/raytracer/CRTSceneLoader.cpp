@@ -264,7 +264,7 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
 
         else if (material.type == Material::Type::REFLECTIVE) {
             material.albedo = Vec3{ 1.f, 1.f, 1.f };
-            material.reflectivity = 1.f;
+            material.reflectivity = .8f;
         }
     }
 
