@@ -28,6 +28,9 @@ void Raytracer::writeFile(const std::string& filename, const std::string& data) 
 
 void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
 {
+    // TODO: Make these configurable
+    bool bWritePng = true;
+    bool bWriteBmp = true;
     std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneName);
@@ -49,9 +52,9 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
         std::cout << filename << std::endl << scene->metrics.toString() << std::endl;
         std::cout << "---" << std::endl;
 
-        image.writeImage(filename);
+        image.writeImage(filename, bWritePng, bWriteBmp);
         for (size_t i = 0; i < imageComponents.size(); i++) {
-            imageComponents[i].writeImage(filename + "_depth_" + std::to_string(i));
+            imageComponents[i].writeImage(filename + "_depth_" + std::to_string(i), bWritePng, bWriteBmp);
         }
     } while (scene->animator.update());
     metrics = scene->metrics;

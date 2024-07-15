@@ -13,13 +13,12 @@
 
 #include "Utils.h"
 
-inline bool fequal(float a, float b) {
-    return std::abs(a - b) < epsilon;
-
+inline bool fEqual(float a, float b, float maxDiff = epsilon) {
+    return std::abs(a - b) < maxDiff;
 }
 
-inline bool flower(float a, float b) {
-    return a - b < -epsilon;
+inline bool fLower(float a, float b, float maxDiff = epsilon) {
+    return a - b < -maxDiff;
 }
 
 class Vec3 {
@@ -55,8 +54,10 @@ public:
         return Vec3(x * scalar, y * scalar, z * scalar);
     }
 
-    bool equal(const Vec3& other) const {
-        return fequal(this->x, other.x) && fequal(this->y, other.y) && fequal(this->z, other.z);
+    bool equal(const Vec3& other, float maxDiff = epsilon) const {
+        return  fEqual(this->x, other.x, maxDiff) &&
+                fEqual(this->y, other.y, maxDiff) &&
+                fEqual(this->z, other.z, maxDiff);
     }
 
     Vec3 operator/(float scalar) const {
@@ -339,7 +340,7 @@ struct Ray {
     bool refract(const Vec3& point, Vec3 normal, float iorI, float iorR) {
 #ifndef NDEBUG
         auto dbgOldDirection = direction;
-        assert(fequal(direction.lengthSquared(), 1.f));
+        assert(fEqual(direction.lengthSquared(), 1.f));
         assert(dot(direction, normal) < -epsilon); // usage req: normal should face the ray
 #endif
 
@@ -359,13 +360,14 @@ struct Ray {
         direction.normalize(); // TODO ask in Discord: can we avoid this?
         origin = point;
 
-        assert(fequal(direction.lengthSquared(), 1.f));
-        assert(fequal(dot(direction, normal), -cosR));
+        assert(fEqual(direction.lengthSquared(), 1.f));
+        assert(fEqual(dot(direction, normal), -cosR, 1e-2f)); // very low precision here
         // assert R not going backwards:
         assert(dot(direction, dbgOldDirection) > 1e-6);
         return true;
     }
 };
+
 
 struct TraceTask {
     Ray ray;

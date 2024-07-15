@@ -148,13 +148,40 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
         hit.v = c0.length() * area_inv;
         hit.materialIndex = this->materialIndex;
         hit.n = hitNormal(scene, hit.u, hit.v);
-        hit.type = TraceHitType::SUCCESS;
+        hit.type = getTraceHitType(hit.n, ray.direction);
+        assertTraceHitType(hit.type, scene, materialIndex);
         return;
     }
     else {
         hit.type = TraceHitType::OUT_OF_BOUNDS;
         return;
     }
+}
+
+TraceHitType Triangle::getTraceHitType(const Vec3& n, const Vec3& rayDir) {
+    float rProj = dot(rayDir, n);
+    if (rProj < -epsilon) {
+        return TraceHitType::SUCCESS;
+    }
+    else if (rProj > epsilon) {
+        return TraceHitType::SMOOTH_SHADING_BACKFACE;
+    }
+    else {
+        return TraceHitType::SMOOTH_SHADING_PARALLEL;
+    }
+}
+
+void Triangle::assertTraceHitType(TraceHitType type, const Scene& scene, size_t materialIndex) {
+    // This function should be optimized away by the compiler in release builds
+    // Suppress unused parameter warnings:
+    type;
+    scene;
+    materialIndex;
+#ifndef NDEBUG
+    if (type == TraceHitType::SMOOTH_SHADING_BACKFACE || type == TraceHitType::SMOOTH_SHADING_PARALLEL) {
+        assert(scene.materials[materialIndex].smoothShading);
+    }
+#endif
 }
 
 Triangle Triangle::swappedTriangle() const
@@ -220,4 +247,5 @@ void Triangle::translate(const Vec3& translation, std::vector<Vec3>& vertices) c
 bool Triangle::signOfVolume(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) const {
     return dot(cross(b-a,c-a),d-a) > 0.f;
 }
+
 

@@ -24,17 +24,17 @@ namespace Timers {
 
 class Renderer {
 public:
-    size_t maxDepth = 5;
+    size_t maxDepth = 16;
     float bias = 0.001f;
     bool debugSingleRay = false;
     bool debugLight = false;
     bool debugImageQueue = true;
 private:
-    ImageQueue imageQueue {0, 0, {0.f, 0.f, 0.f}};
+    ImageQueue imageQueue{ 0, 0, {0.f, 0.f, 0.f} };
     std::queue<TraceTask> traceQueue {};
     std::shared_ptr<Scene> scene;
 public:
-    Renderer(std::shared_ptr<Scene> scene): scene(scene) {}
+    Renderer(std::shared_ptr<Scene> scene) : scene(scene) {}
 
     /*
     * @parameter imageComponents: depth slices of the image, useful for debugging
@@ -49,8 +49,8 @@ public:
 
         // Prepare Primary Queue
         if (debugSingleRay) {
-            Ray ray = scene->camera.rayFromPixel(image, 150, 140);
-            // Ray ray = { {0.f, 0.f, 0.f}, {0.f, 0.f, -1.f} };
+            //Ray ray = scene->camera.rayFromPixel(image, 150, 140);
+            Ray ray = { {0.f, 0.f, 0.f}, {0.f, 0.f, -1.f} };
             TraceTask task = { ray, 0, 0 };
             traceQueue.push(task);
         }
@@ -63,7 +63,7 @@ public:
             }
             scene->metrics.stopTimer(Timers::generateQueue);
         }
-        imageQueue = {image.getWidth(), image.getHeight(), scene->bgColor};
+        imageQueue = { image.getWidth(), image.getHeight(), scene->bgColor };
 
         scene->metrics.startTimer(Timers::processQueue);
         processTraceQueue();
@@ -128,7 +128,7 @@ private:
     {
         auto& material = scene->materials[hit.materialIndex];
         if (task.weight > epsilon) {
-            imageQueue(task.pixelX, task.pixelY).push({material.albedo, task.weight});
+            imageQueue(task.pixelX, task.pixelY).push({ material.albedo, task.weight });
         }
     }
 
@@ -142,22 +142,23 @@ private:
         Vec3 light = hitLight(hit.biasP(bias), hit.n); // overexposure x,y,z > 1.f
         Vec3 overexposedColor = multiply(light, material.albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
-        imageQueue(task.pixelX, task.pixelY).push({diffuseComponent, task.weight});
+        imageQueue(task.pixelX, task.pixelY).push({ diffuseComponent, task.weight });
         assert(imageQueue(task.pixelX, task.pixelY).size() > 0);
     }
 
     void shadeReflective(TraceTask& task, const TraceHit& hit)
     {
         auto& material = scene->materials[hit.materialIndex];
-        task.weight *= material.reflectivity;
+        float originalWeight = task.weight;
+        task.weight = originalWeight * (1.f - material.reflectivity);
+        shadeDiffuse(task, hit);
+
+        task.weight = originalWeight * material.reflectivity;
         if (task.weight > epsilon) {
             task.ray.reflect(hit.biasP(bias), hit.n);
             ++task.depth;
             traceQueue.push(task);
         }
-
-        task.weight *= (1.f - material.reflectivity);
-        shadeDiffuse(task, hit);
     }
 
     void shadeRefractive(TraceTask& task, TraceHit& hit)
@@ -168,8 +169,9 @@ private:
 
         auto& material = scene->materials[hit.materialIndex];
         float enteringIor = material.ior; // the IOR of the material we're entering
+        enteringIor *= 2; // TODO: why does it look better with this?
         if (hit.type == TraceHitType::INSIDE_REFRACTIVE) {
-            hit.n = -hit.n; // n always facing ray
+            hit.n = -hit.n; // let n always face ray
             //  (simplification) exiting a refractive object means we're back to air
             enteringIor = 1.f; // todo: implement nested refractive objects
             scene->metrics.record("shadeRefractive_INSIDE");
@@ -182,8 +184,9 @@ private:
         TraceTask& refractionTask = task;
         TraceTask reflectiveTask = task;
         bool hasRefraction = refractionTask.ray.refract(hit.biasP(-bias), hit.n, task.ior, enteringIor);
+
         if (hasRefraction) {
-            float fresnelFactor = schlickApproxVladi(task.ray.direction, hit.n);
+             float fresnelFactor = schlickApprox(task.ray.direction, hit.n, task.ior, enteringIor);
 
             refractionTask.weight *= (1.f - fresnelFactor);
             if (refractionTask.weight > epsilon) {
@@ -240,7 +243,7 @@ private:
         rest.clamp(0.f, FLT_MAX);
 
         // Using a logarithmic approach to make the change more gradual
-        Vec3 adjusted = Vec3 {
+        Vec3 adjusted = Vec3{
             log10(1.0f + rest.x),
             log10(1.0f + rest.y),
             log10(1.0f + rest.z)
@@ -249,6 +252,24 @@ private:
         Vec3 result = overexposed - adjusted;
         result.clamp(0.f, 1.f);
         return result;
+    }
+
+    /*
+    * @return: fresnel factor
+    */
+    float schlickApprox(const Vec3& i, const Vec3& n, float n1, float n2) const {
+        n1; // clear unused param warning
+        n2;
+        return schlickApproxVladi(i, n);
+    }
+    /*
+    * @return: fresnel factor
+    */
+    float schlickApproxWikipedia(const Vec3& i, const Vec3& n, float n1, float n2) const {
+        // assumption: n is always facing i
+        float cosTheta = -dot(i, n);
+        float F0 = std::powf((n1 - n2) / (n1 + n2), 2);
+        return F0 + (1.f - F0) * std::powf(1.f - cosTheta, 5);
     }
 
     /*
@@ -302,13 +323,13 @@ private:
         assert(hit.u <= 1.f + epsilon && hit.u >= -epsilon);
         assert(hit.v <= 1.f + epsilon && hit.u >= -epsilon);
         Vec3 unitColor = { hit.u, 0.f, hit.v };
-        imageQueue(task.pixelX, task.pixelY).push({unitColor, task.weight});
+        imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }
 
     void shadeNormal(TraceTask& task, const TraceHit& hit)
     {
         Vec3 unitColor = hit.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
-        imageQueue(task.pixelX, task.pixelY).push({unitColor, task.weight});
+        imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }
 
     void flattenImage(Image& image, std::vector<Image>& imageComponents)
@@ -318,7 +339,7 @@ private:
             imageQueue.flatten(image);
             imageQueueCopy.slice(imageComponents);
         }
-       else {
+        else {
             scene->metrics.startTimer(Timers::flatten);
             imageQueue.flatten(image);
             scene->metrics.stopTimer(Timers::flatten);

@@ -38,6 +38,10 @@ public:
 
     void computeHit(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const;
 
+    static TraceHitType getTraceHitType(const Vec3& n, const Vec3& rayDir);
+
+    static void assertTraceHitType(TraceHitType type, const Scene& scene, size_t materialIndex);
+
     Triangle swappedTriangle() const;
 
     void swapFace();

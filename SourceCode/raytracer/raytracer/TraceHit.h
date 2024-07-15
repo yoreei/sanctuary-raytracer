@@ -10,8 +10,10 @@ enum class TraceHitType {
     // planeFacingRay = false:
     INSIDE_REFRACTIVE,          // rayIntersectsPlane = true, withinTriangle = true
     PLANE_BACKFACE,             // rayIntersectsPlane = [true|false], withinTriangle = [true|false]
+    SMOOTH_SHADING_BACKFACE,
     // planeFacingRay = PARALLEL
     PARALLEL,                   // rayIntersectsPlane = false, withinTriangle = false
+    SMOOTH_SHADING_PARALLEL
 };
 
 std::string toString(TraceHitType hitType);
