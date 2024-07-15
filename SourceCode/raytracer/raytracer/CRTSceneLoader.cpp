@@ -10,6 +10,7 @@
 #include "Scene.h"
 #include "Image.h"
 #include "Material.h"
+#include "Texture.h"
 
 using json = nlohmann::json;
 
@@ -39,6 +40,7 @@ bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Ima
     if (!parseBackgroundColor(j, scene) ||
         !parseImageSettings(j, image) ||
         !parseCameraSettings(j, scene) ||
+        !parseTextures(j, scene) ||
         !parseMaterials(j, scene) ||
         !parseObjects(j, scene) ||
         !parseLight(j, scene)) {
@@ -236,6 +238,32 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
     return true;
 }
 
+inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene) {
+    if (!j.contains("textures")) {
+        std::cerr << "No textures found\n";
+        return true;
+    }
+
+    for (const auto& jTexture : j.at("textures")) {
+        std::string name = jTexture.at("name");
+        std::string typeStr = jTexture.at("type");
+        TextureType type = Texture::TypeFromString(typeStr);
+        Texture tex{ name, type };
+
+        assignIfExists<Vec3>(jTexture, "albedo", tex.color1);
+        assignIfExists<Vec3>(jTexture, "edge_color", tex.color1);
+        assignIfExists<Vec3>(jTexture, "color_A", tex.color1);
+        assignIfExists<Vec3>(jTexture, "inner_color", tex.color2);
+        assignIfExists<Vec3>(jTexture, "color_B", tex.color2);
+        assignIfExists<float>(jTexture, "edge_width", tex.textureSize);
+        assignIfExists<float>(jTexture, "square_size", tex.textureSize);
+        assignIfExists<std::string>(jTexture, "file_path", tex.filePath);
+
+        scene.textures.push_back(tex);
+    }
+    return true;
+}
+
 inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
     warnIfMissing(j, "materials");
     if (!j.contains("materials")) {
@@ -284,10 +312,6 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
 }
 
 inline Vec3 CRTSceneLoader::Vec3FromJson(const json& j) {
-    if (!j.is_array() || j.size() != 3) {
-        std::cerr << "Error loading Vec3: Vec3 is not an array or not of size 3\n";
-        return Vec3{ };
-    }
     return Vec3{ j[0], j[1], j[2] };
 }
 
@@ -374,8 +398,35 @@ T CRTSceneLoader::getDefault(const json& j, const std::string& key, T defaultVal
     return j.at(key).get<T>();
 }
 
+template <>
+Vec3 CRTSceneLoader::getDefault<Vec3>(const json& j, const std::string& key, Vec3 defaultVal) {
+    if (!j.contains(key)) {
+        return defaultVal;
+    }
+
+    return Vec3FromJson(j.at(key));
+}
+
 void CRTSceneLoader::warnIfMissing(const json& j, const std::string& key) {
     if (!j.contains(key)) {
         std::cerr << "CRTSceneLoader::warnIfMissing: key " << key << " not found\n";
     }
 }
+
+
+template <typename T>
+void CRTSceneLoader::assignIfExists(const json& j, std::string key, T& out) {
+    if (j.contains(key)) {
+        out = j.at(key).get<T>();
+    }
+}
+
+template <>
+void CRTSceneLoader::assignIfExists<Vec3>(const json& j, std::string key, Vec3& out) {
+    if (j.contains(key)) {
+        out = Vec3FromJson(j.at(key));
+    }
+}
+
+
+

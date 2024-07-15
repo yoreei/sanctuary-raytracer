@@ -12,6 +12,7 @@
 #include "Metrics.h"
 #include "Light.h"
 #include "Material.h"
+#include "Texture.h"
 
 #include "json.hpp"
 
@@ -35,6 +36,7 @@ public:
     std::vector<MeshObject> meshObjects {};
     std::vector<Material> materials {};
     std::vector<Light> lights {};
+    std::vector<Texture> textures {};
     
     Vec3 bgColor = {0.f, 0.f, 0.f};
 

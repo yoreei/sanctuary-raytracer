@@ -22,6 +22,7 @@ private:
     static bool parseBackgroundColor(const json& j, Scene& scene);
     static bool parseImageSettings(const json& j, Image& image);
     static bool parseCameraSettings(const json& j, Scene& scene);
+    static bool parseTextures(const json& j, Scene& scene);
     static bool parseMaterials(const json& j, Scene& scene);
     static std::shared_ptr<Animation> parseAnimation(const json& j, size_t idx);
     static Vec3 Vec3FromJson(const json& j);
@@ -35,5 +36,9 @@ private:
     template <typename T>
     static T getDefault(const json& j, const std::string& key, T defaultVal);
     static void warnIfMissing(const json& j, const std::string& key);
+    template <typename T>
+    static void assignIfExists(const json& j, std::string key, T& out);
+    template <>
+    void assignIfExists<Vec3>(const json& j, std::string key, Vec3& out);
 };
 
