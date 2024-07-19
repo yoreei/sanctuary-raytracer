@@ -63,7 +63,7 @@ public:
 
 private:
     Vec3 delta = { 0.f, 0.f, 0.f };
-    char padding[4]; // Padding to make sure the size of the class is a multiple of 16 bytes
+    char padding[4] {}; // Padding to make sure the size of the class is a multiple of 16 bytes
     };
 
 enum class RotateType
@@ -111,5 +111,5 @@ public:
 
 private:
     Matrix3x3 mat;
-    char padding[4]; // Padding to make sure the size of the class is a multiple of 16 bytes
+    char padding[4] {}; // Padding to make sure the size of the class is a multiple of 16 bytes
 };

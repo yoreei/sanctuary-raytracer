@@ -4,6 +4,7 @@
 
 #include <memory>
 #include "json.hpp"
+#include "stb_image.h"
 
 #include "Animation.h"
 #include "CRTSceneLoader.h"
@@ -239,13 +240,16 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
     return true;
 }
 
-inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene) {
+inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene)
+{
     if (!j.contains("textures")) {
         std::cerr << "No textures found\n";
         return true;
     }
 
-    for (const auto& jTexture : j.at("textures")) {
+    auto& jTextures = j.at("textures");
+    for (size_t i = 0; i < jTextures.size(); ++i) {
+        const auto& jTexture = jTextures[i];
         std::string name = jTexture.at("name");
         std::string typeStr = jTexture.at("type");
         TextureType type = Texture::TypeFromString(typeStr);
@@ -259,6 +263,13 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene) {
         assignIfExists<float>(jTexture, "edge_width", tex.textureSize);
         assignIfExists<float>(jTexture, "square_size", tex.textureSize);
         assignIfExists<std::string>(jTexture, "file_path", tex.filePath);
+
+        if (type == TextureType::BITMAP) {
+            Image bitmap;
+            loadJpgBitmap(tex.filePath, bitmap);
+            size_t bitmapIdx = scene.addBitmap(std::move(bitmap));
+            tex.bitmapIdx = bitmapIdx;
+        }
 
         scene.textures.push_back(tex);
     }
@@ -343,7 +354,7 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
                 return false;
             }
 
-            scenes.push_back(objScene);
+            scenes.push_back(std::move(objScene));
         }
 
     }
@@ -414,6 +425,31 @@ void CRTSceneLoader::warnIfMissing(const json& j, const std::string& key) {
     }
 }
 
+void CRTSceneLoader::loadJpgBitmap(std::string filePath, Image& bitmap)
+{
+    std::ifstream file(filePath);
+    if (!file) {
+        throw std::runtime_error("Failed to load image");
+    }
+    int width, height, channels;
+    int desired_channels = 3;
+    unsigned char* img = stbi_load(filePath.c_str(), &width, &height, &channels, desired_channels);
+
+    // Check if the image was loaded successfully
+    if (img == nullptr) {
+        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
+    }
+
+    bitmap = std::move(Image{ size_t(width), size_t(height) });
+    for (int i = 0; i < width * height; ++i) {
+        bitmap.data[i].r = img[i * 3];
+        bitmap.data[i].g = img[i * 3 + 1];
+        bitmap.data[i].b = img[i * 3 + 2];
+    }
+
+    stbi_image_free(img);
+}
+
 
 template <typename T>
 void CRTSceneLoader::assignIfExists(const json& j, std::string key, T& out) {
@@ -428,6 +464,3 @@ void CRTSceneLoader::assignIfExists<Vec3>(const json& j, std::string key, Vec3& 
         out = Vec3FromJson(j.at(key));
     }
 }
-
-
-

@@ -63,7 +63,7 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
 #ifndef NDEBUG
     float cosTTest = fabs(dot(direction, N));
     cosTTest = std::clamp(cosTTest, -1.f, 1.f);
-    assert(fEqual(cosT, cosTTest, 0.1)); // very low precision here.
+    assert(fEqual(cosT, cosTTest, 0.1f)); // very low precision here.
 #endif
     return true;
 }

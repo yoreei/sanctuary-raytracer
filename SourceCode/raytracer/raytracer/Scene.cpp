@@ -97,7 +97,7 @@ void Scene::addObjects(const std::vector<Scene>& scenes)
 
 void Scene::showLightDebug() {
     std::vector<Scene> lightObjects;
-    Image _fakeImage {}; // throwaway image
+    Image _fakeImage {0, 0}; // throwaway image
     for (const auto& light : lights) {
         Scene lightBallScene {"LightBall"};
         CRTSceneLoader::loadCrtscene("scenes/props/lightBall.crtscene", lightBallScene, _fakeImage);
@@ -105,7 +105,7 @@ void Scene::showLightDebug() {
         const Vec3& translation = light.pos;
         MeshObject& meshObject = lightBallScene.meshObjects[0];
         meshObject.translate(lightBallScene.triangles, translation, lightBallScene.vertices);
-        lightObjects.push_back(lightBallScene);
+        lightObjects.push_back(std::move(lightBallScene));
     }
     addObjects(lightObjects);
 }
@@ -141,4 +141,10 @@ void Scene::genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attach
             attachedTriangles.push_back(i);
         }
     }
+}
+
+size_t Scene::addBitmap(Image&& bitmap)
+{
+    bitmaps.push_back(std::move(bitmap));
+    return bitmaps.size() - 1;
 }

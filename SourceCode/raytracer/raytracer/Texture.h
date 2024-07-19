@@ -18,8 +18,8 @@ public:
     Vec3 color1 {0.f, 0.f, 0.f}; // edge_color, color_A, albedo
     Vec3 color2 {0.f, 0.f, 0.f}; // inner_color, color_B
     float textureSize = 1.f; // edge_width, square_size
-    std::string filePath = "default.bmp"; // only BITMAP
+    std::string filePath = ""; // only BITMAP
+    size_t bitmapIdx = 0; // only BITMAP
 
     static TextureType TypeFromString(const std::string& type);
 };
-

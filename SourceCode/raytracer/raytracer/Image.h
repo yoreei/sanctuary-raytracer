@@ -8,13 +8,14 @@
 
 class Image {
 public:
-    Image() = default;
+    Image() : Image(0, 0){}
 
-    Image(size_t _width, size_t _height): width(_width), height(_height)
-    {
-        data = std::make_unique<Color[]>(width * height);
-        aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-    }
+    Image(size_t _width, size_t _height):
+        width(_width),
+        height(_height),
+        aspectRatio(static_cast<float>(width) / static_cast<float>(height)),
+        data(std::make_unique<Color[]>(width * height))
+    {}
 
     auto getWidth() const { return width; }
     auto getHeight() const { return height; }
@@ -29,6 +30,11 @@ public:
         return data[y * width + x];
     }
 
+    Image(Image&&) = default;
+    Image& operator=(Image&&) = default;
+
+    Image(const Image&) = delete;
+    Image& operator=(const Image&) = delete;
 
     void writeToPpm(const std::string& filename);
 
@@ -40,8 +46,8 @@ public:
         result += std::to_string(width) + " " + std::to_string(height) + "\n";
         result += std::to_string(Color::maxColorComponent) + "\n";
 
-        for (int rowIdx = 0; rowIdx < height; ++rowIdx) {
-            for (int colIdx = 0; colIdx < width; ++colIdx) {
+        for (size_t rowIdx = 0; rowIdx < height; ++rowIdx) {
+            for (size_t colIdx = 0; colIdx < width; ++colIdx) {
                 const Color& color = data[rowIdx * width + colIdx];
                 result += std::to_string(color.r) + " " + std::to_string(color.g) + " " + std::to_string(color.b) + "\t";
             }
@@ -53,8 +59,8 @@ public:
 
     void writeImage(std::string filename, bool writePng, bool writeBmp) const {
         std::vector<uint8_t> pngData(width * height * 3);
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
+        for (size_t y = 0; y < height; ++y) {
+            for (size_t x = 0; x < width; ++x) {
                 const Color& color = data[y * width + x];
                 pngData[3 * (y * width + x) + 0] = color.r;
                 pngData[3 * (y * width + x) + 1] = color.g;
@@ -79,7 +85,7 @@ public:
 
     std::unique_ptr<Color[]> data;
 private:
-    size_t width = 1;
-    size_t height = 1;
-    float aspectRatio = 1.f;
+    size_t width;
+    size_t height;
+    float aspectRatio;
 };
