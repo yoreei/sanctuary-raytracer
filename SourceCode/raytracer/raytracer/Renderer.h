@@ -49,8 +49,8 @@ public:
 
         // Prepare Primary Queue
         if (debugSingleRay) {
-            //Ray ray = scene->camera.rayFromPixel(image, 150, 140);
-            Ray ray = { {0.f, 0.f, 0.f}, {0.f, 0.f, -1.f} };
+            Ray ray = scene->camera.rayFromPixel(image, 145, 67);
+            //Ray ray = { {0.f, 0.f, 0.f}, {0.f, 0.f, -1.f} };
             TraceTask task = { ray, 0, 0 };
             traceQueue.push(task);
         }
@@ -168,30 +168,29 @@ private:
 #endif
 
         auto& material = scene->materials[hit.materialIndex];
-        float enteringIor = material.ior; // the IOR of the material we're entering
-        enteringIor *= 2; // TODO: why does it look better with this?
+        float etai = 1, etat = material.ior;
+        etat *= 1; // TODO: why does it look better with this?
         if (hit.type == TraceHitType::INSIDE_REFRACTIVE) {
-            hit.n = -hit.n; // let n always face ray
-            //  (simplification) exiting a refractive object means we're back to air
-            enteringIor = 1.f; // todo: implement nested refractive objects
+            hit.n = -hit.n;
+            std::swap(etai, etat);
             scene->metrics.record("shadeRefractive_INSIDE");
         }
         else {
             scene->metrics.record("shadeRefractive_OUTSIDE");
         }
-        assert(dot(hit.n, task.ray.direction) < -1e-6);
 
         TraceTask& refractionTask = task;
         TraceTask reflectiveTask = task;
-        bool hasRefraction = refractionTask.ray.refract(hit.biasP(-bias), hit.n, task.ior, enteringIor);
+
+        bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-bias), hit.n, etai, etat);
 
         if (hasRefraction) {
-             float fresnelFactor = schlickApprox(task.ray.direction, hit.n, task.ior, enteringIor);
+             float fresnelFactor = schlickApprox(task.ray.direction, hit.n, etai, etat);
 
             refractionTask.weight *= (1.f - fresnelFactor);
             if (refractionTask.weight > epsilon) {
                 ++refractionTask.depth;
-                refractionTask.ior = enteringIor;
+                refractionTask.ior = etat;
                 traceQueue.push(refractionTask);
             }
 

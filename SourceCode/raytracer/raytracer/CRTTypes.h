@@ -327,45 +327,45 @@ struct Ray {
 
     Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction) {}
 
-    void reflect(const Vec3& point, const Vec3& normal) {
+    /*
+    * @param cosi: allows us to share a dot product calculation with the refract method
+    expectation from caller:
+        cosi = dot(direction, normal)
+        float cosi = std::clamp(-1.f, 1.f, cosi);
+    * @param normal: expected to face the ray.
+    */
+    void reflect(const Vec3& point, const Vec3& N) {
+        float cosi = dot(direction, N);
         origin = point;
-        direction = direction - 2 * dot(direction, normal) * normal;
+        direction = direction - 2 * cosi * N;
         direction.normalize();
     }
 
+    bool compareRefract(const Vec3 point, const Vec3& N, float etai, float etat);
+    /*
+    * algorithm from Scratchapixel
+    * @param cosi: Cos of incidence.
+        allows us to share a dot product calculation with the refract method
+    * @param normal: expected to face the ray.
+    expectation from caller:
+        cosi = dot(direction, normal)
+        float cosi = std::clamp(-1.f, 1.f, cosi);
+
+        float etai = 1, etat = ior;
+        Vec3f n = N;
+        if (cosi < 0) { cosi = -cosi; }
+        else { std::swap(etai, etat); n = -N; }
+        float eta = etai / etat;
+
+    */
+    bool refractSP(const Vec3 point, const Vec3& N, float etai, float etat);
+
     /**
+    * @brief: Inuitive implementation, suffers from precision issues.
     * @return false if no refraction (i.e. total internal reflection)
     * @param normal: expected to face the ray.
     **/
-    bool refract(const Vec3& point, Vec3 normal, float iorI, float iorR) {
-#ifndef NDEBUG
-        auto dbgOldDirection = direction;
-        assert(fEqual(direction.lengthSquared(), 1.f));
-        assert(dot(direction, normal) < -epsilon); // usage req: normal should face the ray
-#endif
-
-        float cosI = -dot(direction, normal);
-        float sinR = sqrt(1 - cosI * cosI) * iorI / iorR;
-        if (sinR - 1.f >= -1e-6f) {
-            // total internal reflection
-            return false;
-        }
-        float cosR = sqrt(1 - sinR * sinR);
-        // bump direction to avoid 0 vector check // TODO ask in Discord
-        direction = direction * (1.f + 1e-6f);
-        Vec3 C = (direction + cosI * normal).getUnit();
-        Vec3 B = C * sinR;
-        Vec3 A = -normal * cosR;
-        direction = A + B;
-        direction.normalize(); // TODO ask in Discord: can we avoid this?
-        origin = point;
-
-        assert(fEqual(direction.lengthSquared(), 1.f));
-        assert(fEqual(dot(direction, normal), -cosR, 1e-2f)); // very low precision here
-        // assert R not going backwards:
-        assert(dot(direction, dbgOldDirection) > 1e-6);
-        return true;
-    }
+    bool refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR);
 };
 
 

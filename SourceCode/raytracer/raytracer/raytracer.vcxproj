@@ -201,6 +201,8 @@
     <ClCompile Include="Animator.cpp" />
     <ClCompile Include="CRTMath.cpp" />
     <ClCompile Include="CRTSceneLoader.cpp" />
+    <ClCompile Include="CRTTypes.cpp" />
+    <ClCompile Include="GlobalDebugData.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="ImageQueue.cpp" />
     <ClCompile Include="MeshObject.cpp" />
@@ -222,6 +224,7 @@
     <ClInclude Include="CRTMath.h" />
     <ClInclude Include="CRTSceneLoader.h" />
     <ClInclude Include="CRTTypes.h" />
+    <ClInclude Include="GlobalDebugData.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="ImageQueue.h" />
     <ClInclude Include="Texture.h" />

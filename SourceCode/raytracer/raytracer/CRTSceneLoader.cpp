@@ -47,6 +47,7 @@ bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Ima
         return false;
     }
 
+    // TODO performance: perform genAttachedTriangles (in generateVertexNormals) during Scene loading
     scene.generateVertexNormals();
     return true;
 }

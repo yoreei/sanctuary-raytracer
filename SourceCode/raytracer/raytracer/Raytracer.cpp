@@ -17,6 +17,8 @@
 #include "CRTSceneLoader.h"
 #include "Renderer.h"
 
+#include "GlobalDebugData.h"
+
 namespace fs = std::filesystem;
 const std::string Raytracer::INPUT_DIR = "scenes/in/";
 
@@ -50,6 +52,8 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
         std::string filename = "out/" + sceneName + "/" + std::to_string(scene->animator.getCurrentFrame());
 
         std::cout << filename << std::endl << scene->metrics.toString() << std::endl;
+        std::cout << "---" << std::endl;
+        std::cout << GlobalDebug::toString();
         std::cout << "---" << std::endl;
 
         image.writeImage(filename, bWritePng, bWriteBmp);
