@@ -12,25 +12,21 @@
 #include "Image.h"
 #include "Material.h"
 #include "Texture.h"
+#include "Settings.h"
 
 using json = nlohmann::json;
 
 [[nodiscard]]
-bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Image& image) {
-    std::ifstream file(filename);
+bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& filename, Scene& scene, Image& image) {
+    const std::string filePath = settings.inputDir + "/" + filename;
+    std::ifstream file(filePath);
     if (!file) {
-        std::cerr << "Unable to open file: " << filename << '\n';
+        throw std::runtime_error("Failed to load CRTScene file: " + filePath);
         return false;
     }
 
     json j;
-    try {
-        file >> j;
-    }
-    catch (const json::exception& e) {
-        std::cerr << "Error parsing JSON file: " << e.what() << '\n';
-        return false;
-    }
+    file >> j;
 
     std::cout << "Loading Scene: " << filename << std::endl;
 
@@ -41,7 +37,7 @@ bool CRTSceneLoader::loadCrtscene(const std::string& filename, Scene& scene, Ima
     if (!parseBackgroundColor(j, scene) ||
         !parseImageSettings(j, image) ||
         !parseCameraSettings(j, scene) ||
-        !parseTextures(j, scene) ||
+        !parseTextures(j, scene, settings) ||
         !parseMaterials(j, scene) ||
         !parseObjects(j, scene) ||
         !parseLight(j, scene)) {
@@ -128,6 +124,7 @@ bool CRTSceneLoader::validateCrtscene(const json& j) {
                 }
             }
         }
+        else if (key == "textures") {}
         else {
             std::cerr << "Error loading CRTScene: unknown key: " << key << '\n';
             return false;
@@ -205,15 +202,11 @@ bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
 }
 
 inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image) {
-    try {
-        const auto& jImgSettings = j.at("settings").at("image_settings");
-        image = Image(jImgSettings.at("width"), jImgSettings.at("height"));
-        return true;
-    }
-    catch (const json::exception& e) {
-        std::cerr << "Error loading image_settings: " << e.what() << '\n';
-        return false;
-    }
+    const auto& jImgSettings = j.at("settings").at("image_settings");
+    size_t width = jImgSettings.at("width").get<size_t>();
+    size_t height = jImgSettings.at("height").get<size_t>();
+    image = Image(width, height);
+    return true;
 }
 
 inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
@@ -240,7 +233,7 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
     return true;
 }
 
-inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene)
+inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Settings& settings)
 {
     if (!j.contains("textures")) {
         std::cerr << "No textures found\n";
@@ -263,6 +256,8 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene)
         assignIfExists<float>(jTexture, "edge_width", tex.textureSize);
         assignIfExists<float>(jTexture, "square_size", tex.textureSize);
         assignIfExists<std::string>(jTexture, "file_path", tex.filePath);
+        //tex.filePath = settings.inputDir + "/" + tex.filePath;
+        tex.filePath = settings.inputDir + "/textures/lila.jpg";
 
         if (type == TextureType::BITMAP) {
             Image bitmap;

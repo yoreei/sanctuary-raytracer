@@ -5,24 +5,19 @@
 
 TextureType Texture::TypeFromString(const std::string& type)
 {
-    if (type == "solid_color")
-    {
+    if (type == "albedo") {
         return TextureType::SOLID_COLOR;
     }
-    else if (type == "edges")
-    {
+    else if (type == "edges") {
         return TextureType::EDGES;
     }
-    else if (type == "checker")
-    {
+    else if (type == "checker") {
         return TextureType::CHECKER;
     }
-    else if (type == "bitmap")
-    {
+    else if (type == "bitmap") {
         return TextureType::BITMAP;
     }
-    else
-    {
+    else {
         throw std::runtime_error("Unknown texture type: " + type);
     }
 }

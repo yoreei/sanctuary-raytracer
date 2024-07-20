@@ -16,11 +16,11 @@
 #include "Metrics.h"
 #include "CRTSceneLoader.h"
 #include "Renderer.h"
+#include "Settings.h"
 
 #include "GlobalDebugData.h"
 
 namespace fs = std::filesystem;
-const std::string Raytracer::INPUT_DIR = "scenes/in/";
 
 void Raytracer::writeFile(const std::string& filename, const std::string& data) {
     std::ofstream ppmFileStream(filename, std::ios::out | std::ios::binary);
@@ -36,9 +36,9 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
     std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneName);
-    Renderer renderer {scene};
+    Renderer renderer {settings, scene};
     
-    CRTSceneLoader::loadCrtscene(INPUT_DIR + sceneName + ".crtscene", *scene, image) ? void() : exit(1);
+    CRTSceneLoader::loadCrtscene(settings, sceneName + ".crtscene", *scene, image) ? void() : exit(1);
     auto truck = MoveAnimation::Make(MoveType::Truck, 3, 0, 24);
     //scene->animator.addAnimation(scene->camera, truck);
     fs::create_directories("out/" + sceneName);
@@ -66,10 +66,10 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
 
 int Raytracer::run()
 {
-
+    using path = std::filesystem::path;
     std::vector<Metrics> metricsList = {};
-    for (const auto& entry : fs::directory_iterator(INPUT_DIR)) {
-        if (auto ext = entry.path().extension(); ext != ".crtscene") {
+    for (const auto& entry : fs::directory_iterator(settings.inputDir)) {
+        if (path ext = entry.path().extension(); ext != ".crtscene") {
             continue;
         }
 

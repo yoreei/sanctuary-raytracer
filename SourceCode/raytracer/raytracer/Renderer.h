@@ -24,17 +24,13 @@ namespace Timers {
 
 class Renderer {
 public:
-    size_t maxDepth = 16;
-    float bias = 0.001f;
-    bool debugSingleRay = false;
-    bool debugLight = false;
-    bool debugImageQueue = true;
+    const Settings& settings;
 private:
     ImageQueue imageQueue{ 0, 0, {0.f, 0.f, 0.f} };
     std::queue<TraceTask> traceQueue {};
     std::shared_ptr<Scene> scene;
 public:
-    Renderer(std::shared_ptr<Scene> scene) : scene(scene) {}
+    Renderer(const Settings& settings, std::shared_ptr<Scene> scene) : settings(settings), scene(scene) {}
 
     /*
     * @parameter imageComponents: depth slices of the image, useful for debugging
@@ -43,12 +39,12 @@ public:
     {
         // TODO perf: reserve space for the queue
         scene->metrics.startTimer(Timers::all);
-        if (debugLight) {
+        if (settings.debugLight) {
             scene->showLightDebug();
         }
 
         // Prepare Primary Queue
-        if (debugSingleRay) {
+        if (settings.debugSingleRay) {
             Ray ray = scene->camera.rayFromPixel(image, 145, 67);
             //Ray ray = { {0.f, 0.f, 0.f}, {0.f, 0.f, -1.f} };
             TraceTask task = { ray, 0, 0 };
@@ -90,7 +86,7 @@ private:
         if (!hit.successful()) {
             return;
         }
-        if (task.depth >= maxDepth) {
+        if (task.depth >= settings.maxDepth) {
             scene->metrics.record("REACHED_MAX_DEPTH");
             return;
         }
@@ -139,7 +135,7 @@ private:
         }
 
         auto& material = scene->materials[hit.materialIndex];
-        Vec3 light = hitLight(hit.biasP(bias), hit.n); // overexposure x,y,z > 1.f
+        Vec3 light = hitLight(hit.biasP(settings.bias), hit.n); // overexposure x,y,z > 1.f
         Vec3 overexposedColor = multiply(light, material.albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
         imageQueue(task.pixelX, task.pixelY).push({ diffuseComponent, task.weight });
@@ -155,7 +151,7 @@ private:
 
         task.weight = originalWeight * material.reflectivity;
         if (task.weight > epsilon) {
-            task.ray.reflect(hit.biasP(bias), hit.n);
+            task.ray.reflect(hit.biasP(settings.bias), hit.n);
             ++task.depth;
             traceQueue.push(task);
         }
@@ -182,7 +178,7 @@ private:
         TraceTask& refractionTask = task;
         TraceTask reflectiveTask = task;
 
-        bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-bias), hit.n, etai, etat);
+        bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-settings.bias), hit.n, etai, etat);
 
         if (hasRefraction) {
              float fresnelFactor = schlickApprox(task.ray.direction, hit.n, etai, etat);
@@ -208,7 +204,7 @@ private:
         // assert refractP is farther away from ray.origin than hit.p
         Vec3 oP = hit.p - oldRay.origin;
         float oPLen = oP.lengthSquared();
-        Vec3 oReflect = hit.biasP(bias) - oldRay.origin;
+        Vec3 oReflect = hit.biasP(settings.bias) - oldRay.origin;
         float oReflectLen = oReflect.lengthSquared();
         assert(oReflectLen < oPLen + 10 * epsilon);
 #endif
@@ -333,7 +329,7 @@ private:
 
     void flattenImage(Image& image, std::vector<Image>& imageComponents)
     {
-        if (debugImageQueue) {
+        if (settings.debugImageQueue) {
             ImageQueue imageQueueCopy = imageQueue;
             imageQueue.flatten(image);
             imageQueueCopy.slice(imageComponents);

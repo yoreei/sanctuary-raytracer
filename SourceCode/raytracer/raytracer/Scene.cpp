@@ -96,18 +96,20 @@ void Scene::addObjects(const std::vector<Scene>& scenes)
 }
 
 void Scene::showLightDebug() {
-    std::vector<Scene> lightObjects;
-    Image _fakeImage {0, 0}; // throwaway image
-    for (const auto& light : lights) {
-        Scene lightBallScene {"LightBall"};
-        CRTSceneLoader::loadCrtscene("scenes/props/lightBall.crtscene", lightBallScene, _fakeImage);
-        assert(lightBallScene.meshObjects.size() == 1);
-        const Vec3& translation = light.pos;
-        MeshObject& meshObject = lightBallScene.meshObjects[0];
-        meshObject.translate(lightBallScene.triangles, translation, lightBallScene.vertices);
-        lightObjects.push_back(std::move(lightBallScene));
-    }
-    addObjects(lightObjects);
+    // TODO: Implement
+    throw std::runtime_error("Not implemented");
+    //std::vector<Scene> lightObjects;
+    //Image _fakeImage {0, 0}; // throwaway image
+    //for (const auto& light : lights) {
+    //    Scene lightBallScene {"LightBall"};
+    //    CRTSceneLoader::loadCrtscene("scenes/props/lightBall.crtscene", lightBallScene, _fakeImage);
+    //    assert(lightBallScene.meshObjects.size() == 1);
+    //    const Vec3& translation = light.pos;
+    //    MeshObject& meshObject = lightBallScene.meshObjects[0];
+    //    meshObject.translate(lightBallScene.triangles, translation, lightBallScene.vertices);
+    //    lightObjects.push_back(std::move(lightBallScene));
+    //}
+    //addObjects(lightObjects);
 }
 
 void Scene::generateVertexNormals() {
