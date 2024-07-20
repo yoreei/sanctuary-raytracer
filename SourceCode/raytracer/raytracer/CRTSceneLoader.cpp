@@ -256,8 +256,7 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Set
         assignIfExists<float>(jTexture, "edge_width", tex.textureSize);
         assignIfExists<float>(jTexture, "square_size", tex.textureSize);
         assignIfExists<std::string>(jTexture, "file_path", tex.filePath);
-        //tex.filePath = settings.inputDir + "/" + tex.filePath;
-        tex.filePath = settings.inputDir + "/textures/lila.jpg";
+        tex.filePath = settings.inputDir + "/" + tex.filePath;
 
         if (type == TextureType::BITMAP) {
             Image bitmap;
@@ -288,7 +287,13 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
         material.ior = getDefault<float>(jMaterial, "ior", 1.f);
         material.albedo = Vec3{ 1.f, 1.f, 1.f };
         if (jMaterial.contains("albedo")) {
-            material.albedo = Vec3FromJson(jMaterial.at("albedo"));
+            if (jMaterial.at("albedo").is_string()) {
+                std::string textureName = jMaterial.at("albedo").get<std::string>();
+            }
+            else if (jMaterial.at("albedo").is_array()) {
+                material.albedo = Vec3FromJson(jMaterial.at("albedo"));
+            }
+            else { throw std::runtime_error("Error loading albedo: albedo is not a string or array\n"); }
         }
         if (material.type == Material::Type::REFRACTIVE) {
             material.albedo = Vec3{ 1.f, 1.f, 1.f };
@@ -420,29 +425,46 @@ void CRTSceneLoader::warnIfMissing(const json& j, const std::string& key) {
     }
 }
 
+struct TestPixel {
+    unsigned char r, g, b;
+};
+
+struct TestImage {
+    size_t width, height;
+    std::vector<TestPixel> data;
+
+    TestImage(size_t w, size_t h) : width(w), height(h), data(w * h) {}
+};
+
 void CRTSceneLoader::loadJpgBitmap(std::string filePath, Image& bitmap)
 {
     std::ifstream file(filePath);
     if (!file) {
         throw std::runtime_error("Failed to load image");
     }
-    int width, height, channels;
-    int desired_channels = 3;
-    unsigned char* img = stbi_load(filePath.c_str(), &width, &height, &channels, desired_channels);
 
-    // Check if the image was loaded successfully
-    if (img == nullptr) {
+    int width, height, channels;
+    int ok = stbi_info(filePath.c_str(), &width, &height, &channels);
+    if (ok != 1) {
+        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
+    }
+    Image img {size_t(width), size_t(height)};
+
+    unsigned char* stbi_ptr = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
+    if (stbi_ptr == nullptr || channels < 3 || channels > 4) {
         throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
     }
 
-    bitmap = std::move(Image{ size_t(width), size_t(height) });
-    for (int i = 0; i < width * height; ++i) {
-        bitmap.data[i].r = img[i * 3];
-        bitmap.data[i].g = img[i * 3 + 1];
-        bitmap.data[i].b = img[i * 3 + 2];
+    for (size_t i = 0; i < width * height; ++i)
+    {
+        img.data[i].r = stbi_ptr[i * channels];
+        img.data[i].g = stbi_ptr[i * channels + 1];
+        img.data[i].b = stbi_ptr[i * channels + 2];
     }
 
-    stbi_image_free(img);
+    stbi_image_free(stbi_ptr);
+
+    bitmap = std::move(img); 
 }
 
 

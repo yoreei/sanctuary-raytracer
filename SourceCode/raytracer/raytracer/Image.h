@@ -14,8 +14,9 @@ public:
         width(_width),
         height(_height),
         aspectRatio(static_cast<float>(width) / static_cast<float>(height)),
-        data(std::make_unique<Color[]>(width * height))
+        data(_width * _height)
     {}
+    std::vector<Color> data;
 
     auto getWidth() const { return width; }
     auto getHeight() const { return height; }
@@ -83,7 +84,6 @@ public:
 
     }
 
-    std::unique_ptr<Color[]> data;
 private:
     size_t width;
     size_t height;
