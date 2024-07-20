@@ -45,7 +45,8 @@ public:
     std::vector<Material> materials {};
     std::vector<Light> lights {};
     std::vector<Texture> textures {};
-    std::vector<Image> bitmaps {};
+    std::vector<Image> bitmaps {}; // TODO: move to texture
+    std::vector<Vec3> uvs {};
     
     Vec3 bgColor = {0.f, 0.f, 0.f};
 

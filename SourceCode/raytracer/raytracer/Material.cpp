@@ -1,6 +1,7 @@
 #pragma warning( disable : 4365 )
 
 #include "Material.h"
+#include "Scene.h"
 
 Material::Type Material::TypeFromString(const std::string& type)
 {
@@ -27,6 +28,10 @@ Material::Type Material::TypeFromString(const std::string& type)
     else if (type == "debug_normal")
     {
         return Type::DEBUG_NORMAL;
+    }
+    else if (type == "debug_uv")
+    {
+        return Type::DEBUG_UV;
     }
     else
     {
@@ -56,6 +61,10 @@ std::string Material::StringFromType(const Material::Type& type)
     {
         return "debug_normal";
     }
+    else if (type == Type::DEBUG_UV)
+    {
+        return "debug_uv";
+    }
     else if (type == Type::CONSTANT)
     {
         return "constant";
@@ -71,3 +80,15 @@ std::string Material::toString() const
     return "Material{ albedo=" + albedo.toString() + " + smooth_shading=" + stringFromBool(smoothShading) + " + type=" + StringFromType(type) + " }";
 
 }
+
+Vec3 Material::getAlbedo(const Scene& scene, const TraceHit& hit) const
+{
+    if (hasTexture) {
+        const Texture& texture = scene.textures.at(textureIdx);
+        return texture.getAlbedo(scene, hit);
+    }
+    else {
+        return albedo;
+    }
+}
+

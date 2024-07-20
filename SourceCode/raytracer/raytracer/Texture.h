@@ -10,6 +10,8 @@ enum class TextureType {
 };
 
 
+class TraceHit;
+class Scene;
 class Texture {
 public:
     Texture(std::string& name, TextureType type) : name(name), type(type) {}
@@ -22,4 +24,5 @@ public:
     size_t bitmapIdx = 0; // only BITMAP
 
     static TextureType TypeFromString(const std::string& type);
+    Vec3 getAlbedo(const Scene& scene, const TraceHit& hit) const;
 };

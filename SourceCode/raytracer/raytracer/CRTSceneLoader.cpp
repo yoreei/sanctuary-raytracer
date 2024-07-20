@@ -34,11 +34,12 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         return false;
     }
 
+    std::map<std::string, size_t> idxFromTextureName;
     if (!parseBackgroundColor(j, scene) ||
         !parseImageSettings(j, image) ||
         !parseCameraSettings(j, scene) ||
-        !parseTextures(j, scene, settings) ||
-        !parseMaterials(j, scene) ||
+        !parseTextures(j, scene, settings, idxFromTextureName) ||
+        !parseMaterials(j, scene, idxFromTextureName) ||
         !parseObjects(j, scene) ||
         !parseLight(j, scene)) {
         return false;
@@ -233,7 +234,7 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
     return true;
 }
 
-inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Settings& settings)
+inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Settings& settings, std::map<std::string, size_t>& idxFromTextureName)
 {
     if (!j.contains("textures")) {
         std::cerr << "No textures found\n";
@@ -265,12 +266,13 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Set
             tex.bitmapIdx = bitmapIdx;
         }
 
+        idxFromTextureName[name] = i;
         scene.textures.push_back(tex);
     }
     return true;
 }
 
-inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
+inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene, const std::map<std::string, size_t>& idxFromTextureName) {
     warnIfMissing(j, "materials");
     if (!j.contains("materials")) {
         scene.materials.push_back(Material{});
@@ -285,25 +287,26 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene) {
         material.type = Material::TypeFromString(jMaterial.at("type"));
         material.occludes = getDefault<bool>(jMaterial, "occludes", true);
         material.ior = getDefault<float>(jMaterial, "ior", 1.f);
-        material.albedo = Vec3{ 1.f, 1.f, 1.f };
+        material.setAlbedo({ 1.f, 1.f, 1.f });
         if (jMaterial.contains("albedo")) {
             if (jMaterial.at("albedo").is_string()) {
                 std::string textureName = jMaterial.at("albedo").get<std::string>();
+                material.textureIdx = idxFromTextureName.at(textureName);
+                material.hasTexture = true;
             }
             else if (jMaterial.at("albedo").is_array()) {
-                material.albedo = Vec3FromJson(jMaterial.at("albedo"));
+                material.setAlbedo(Vec3FromJson(jMaterial.at("albedo")));
+                material.hasTexture = false;
             }
             else { throw std::runtime_error("Error loading albedo: albedo is not a string or array\n"); }
         }
         if (material.type == Material::Type::REFRACTIVE) {
-            material.albedo = Vec3{ 1.f, 1.f, 1.f };
             material.occludes = false;
             material.transparency = 1.f;
             material.reflectivity = 1.f;
         }
 
         else if (material.type == Material::Type::REFLECTIVE) {
-            material.albedo = Vec3{ 1.f, 1.f, 1.f };
             material.reflectivity = .8f;
         }
     }
@@ -368,22 +371,31 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
 
 inline bool CRTSceneLoader::parseVertices(const json& jObj, Scene& scene) {
     auto& vertices = scene.vertices;
-    try {
-        const auto& jVertices = jObj.at("vertices");
+    const auto& jVertices = jObj.at("vertices");
+    bool hasUvs = jObj.contains("uvs");
 
-        if (!jVertices.is_array() || jVertices.size() % 3 != 0) {
-            std::cerr << "Error loading vertices: vertices is not an array or not divisible by 3\n";
-            return false;
-        }
-
-        for (size_t i = 0; i < jVertices.size(); i += 3) {
-            float y = static_cast<float>(jVertices[i + 1]);
-            vertices.emplace_back(jVertices[i], y, jVertices[i + 2]);
-        }
+    if (!jVertices.is_array() || jVertices.size() % 3 != 0) {
+        throw std::runtime_error("Error loading vertices: vertices is not an array or not divisible by 3");
     }
-    catch (const json::exception& e) {
-        std::cerr << "Error loading vertices: " << e.what() << '\n';
-        return false;
+    if (hasUvs || jObj.at("uvs").size() != jVertices.size()) {
+        throw std::runtime_error("Error loading uvs: uvs is not an array or not of the same size as vertices");
+    }
+
+    for (size_t i = 0; i < jVertices.size(); i += 3) {
+        float x = jVertices[i].get<float>();
+        float y = jVertices[i + 1].get<float>();
+        float z = jVertices[i + 2].get<float>();
+        vertices.emplace_back(x, y, z);
+    }
+
+    if (hasUvs) {
+        const auto& jUvs = jObj.at("uvs");
+        for (size_t i = 0; i < jUvs.size(); i += 3) {
+            float u = jUvs[i].get<float>();
+            float v = jUvs[i + 1].get<float>();
+            float w = jUvs[i + 2].get<float>();
+            scene.uvs.emplace_back(u, v, w);
+        }
     }
 
     return true;

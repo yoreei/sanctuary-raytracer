@@ -23,8 +23,10 @@ public:
     float t = FLT_MAX;    // Distance
     Vec3 p = { 0, 0, 0 };     // TraceHit Point
     Vec3 n = { 0, 0, 0 };     // Normal at Point
-    float u = 0.f;    // First Barycentric Base
-    float v = 0.f;    // Second Barycentric Base
+    float baryU = 0.f;  // Barycentric U coordinate
+    float baryV = 0.f;  // Barycentric V coordinate
+    float u = 0.f;    // Mapped U coordinate
+    float v = 0.f;    // Mapped V coordinate
     size_t materialIndex = 0;
     TraceHitType type = TraceHitType::OUT_OF_BOUNDS;
     bool successful() const { return type == TraceHitType::SUCCESS || type == TraceHitType::INSIDE_REFRACTIVE; }

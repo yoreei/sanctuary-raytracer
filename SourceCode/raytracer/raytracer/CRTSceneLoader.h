@@ -23,8 +23,8 @@ private:
     static bool parseBackgroundColor(const json& j, Scene& scene);
     static bool parseImageSettings(const json& j, Image& image);
     static bool parseCameraSettings(const json& j, Scene& scene);
-    static bool parseTextures(const json& j, Scene& scene, const Settings& settings);
-    static bool parseMaterials(const json& j, Scene& scene);
+    static bool parseTextures(const json& j, Scene& scene, const Settings& settings, std::map<std::string, size_t>& idxFromTextureName);
+    static bool parseMaterials(const json& j, Scene& scene, const std::map<std::string, size_t>& idxFromTextureName);
     static std::shared_ptr<Animation> parseAnimation(const json& j, size_t idx);
     static Vec3 Vec3FromJson(const json& j);
     static bool boolFromJson(const json& j);

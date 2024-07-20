@@ -111,8 +111,13 @@ private:
             break;
         case Material::Type::DEBUG_NORMAL:
             shadeNormal(task, hit);
-            // shadeUv(task, hit);
             scene->metrics.record("HIT_MATERIAL_DEBUG_NORMAL");
+            break;
+        case Material::Type::DEBUG_UV:
+            shadeUv(task, hit);
+            break;
+        case Material::Type::DEBUG_BARY:
+            zzz
             break;
         case Material::Type::VOID:
             throw std::invalid_argument("not handled");
@@ -124,7 +129,7 @@ private:
     {
         auto& material = scene->materials[hit.materialIndex];
         if (task.weight > epsilon) {
-            imageQueue(task.pixelX, task.pixelY).push({ material.albedo, task.weight });
+            imageQueue(task.pixelX, task.pixelY).push({ material.getAlbedo(*scene, hit), task.weight });
         }
     }
 
@@ -134,9 +139,10 @@ private:
             return;
         }
 
-        auto& material = scene->materials[hit.materialIndex];
+        Material& material = scene->materials[hit.materialIndex];
+        Vec3 albedo = material.getAlbedo(*scene, hit);
         Vec3 light = hitLight(hit.biasP(settings.bias), hit.n); // overexposure x,y,z > 1.f
-        Vec3 overexposedColor = multiply(light, material.albedo);
+        Vec3 overexposedColor = multiply(light, albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
         imageQueue(task.pixelX, task.pixelY).push({ diffuseComponent, task.weight });
         assert(imageQueue(task.pixelX, task.pixelY).size() > 0);
@@ -315,8 +321,8 @@ private:
 
     void shadeUv(const TraceTask& task, const TraceHit& hit)
     {
-        assert(hit.u <= 1.f + epsilon && hit.u >= -epsilon);
-        assert(hit.v <= 1.f + epsilon && hit.u >= -epsilon);
+        assert(hit.u <= 1.f && hit.u >= 0);
+        assert(hit.v <= 1.f && hit.u >= 0);
         Vec3 unitColor = { hit.u, 0.f, hit.v };
         imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }

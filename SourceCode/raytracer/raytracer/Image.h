@@ -31,6 +31,15 @@ public:
         return data[y * width + x];
     }
 
+    const Color& operator()(size_t x, size_t y) const
+    {
+        if (x >= width || y >= height)
+        {
+            throw std::out_of_range("Image::operator(): Index out of range");
+        }
+        return data[y * width + x];
+    }
+
     Image(Image&&) = default;
     Image& operator=(Image&&) = default;
 
