@@ -260,14 +260,11 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Set
         tex.filePath = settings.inputDir + "/" + tex.filePath;
 
         if (type == TextureType::BITMAP) {
-            Image bitmap;
-            loadJpgBitmap(tex.filePath, bitmap);
-            size_t bitmapIdx = scene.addBitmap(std::move(bitmap));
-            tex.bitmapIdx = bitmapIdx;
+            loadJpgBitmap(tex.filePath, tex.bitmap);
         }
 
         idxFromTextureName[name] = i;
-        scene.textures.push_back(tex);
+        scene.textures.push_back(std::move(tex));
     }
     return true;
 }
@@ -341,61 +338,56 @@ inline bool CRTSceneLoader::boolFromJson(const json& j) {
 inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
     std::vector<Scene> scenes {};
 
-    try {
-        const auto& jObjects = j.at("objects");
-        for (const auto& jObj : jObjects) {
-            Scene objScene{ "tempScene" };
+    const auto& jObjects = j.at("objects");
+    for (const auto& jObj : jObjects) {
+        Scene objScene{ "tempScene" };
 
-            if (!parseVertices(jObj, objScene)) {
-                return false;
-            }
-            if (!parseTriangles(jObj, objScene)) {
-                return false;
-            }
-
-            if (!objScene.bakeObject()) {
-                return false;
-            }
-
-            scenes.push_back(std::move(objScene));
+        if (!parseVertices(jObj, objScene)) {
+            return false;
+        }
+        if (!parseTriangles(jObj, objScene)) {
+            return false;
         }
 
+        if (!objScene.bakeObject()) {
+            return false;
+        }
+
+        scenes.push_back(std::move(objScene));
     }
-    catch (const json::exception& e) {
-        std::cerr << "Error loading objects: " << e.what() << '\n';
-        return false;
-    }
+
     scene.addObjects(scenes);
     return true;
 }
 
 inline bool CRTSceneLoader::parseVertices(const json& jObj, Scene& scene) {
-    auto& vertices = scene.vertices;
     const auto& jVertices = jObj.at("vertices");
-    bool hasUvs = jObj.contains("uvs");
 
     if (!jVertices.is_array() || jVertices.size() % 3 != 0) {
         throw std::runtime_error("Error loading vertices: vertices is not an array or not divisible by 3");
-    }
-    if (hasUvs || jObj.at("uvs").size() != jVertices.size()) {
-        throw std::runtime_error("Error loading uvs: uvs is not an array or not of the same size as vertices");
     }
 
     for (size_t i = 0; i < jVertices.size(); i += 3) {
         float x = jVertices[i].get<float>();
         float y = jVertices[i + 1].get<float>();
         float z = jVertices[i + 2].get<float>();
-        vertices.emplace_back(x, y, z);
+        scene.vertices.emplace_back(x, y, z);
     }
 
-    if (hasUvs) {
+    if (jObj.contains("uvs")) {
         const auto& jUvs = jObj.at("uvs");
+        if (jUvs.size() != jVertices.size()) {
+            throw std::runtime_error("jUvs size not correct");
+        }
+
         for (size_t i = 0; i < jUvs.size(); i += 3) {
             float u = jUvs[i].get<float>();
             float v = jUvs[i + 1].get<float>();
             float w = jUvs[i + 2].get<float>();
             scene.uvs.emplace_back(u, v, w);
         }
+
+        assert(scene.uvs.size() == scene.vertices.size());
     }
 
     return true;

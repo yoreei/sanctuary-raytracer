@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
+
 #include "CRTTypes.h"
+#include "Image.h"
 
 enum class TextureType {
     SOLID_COLOR,
@@ -21,8 +23,16 @@ public:
     Vec3 color2 {0.f, 0.f, 0.f}; // inner_color, color_B
     float textureSize = 1.f; // edge_width, square_size
     std::string filePath = ""; // only BITMAP
-    size_t bitmapIdx = 0; // only BITMAP
+    Image bitmap {};
 
     static TextureType TypeFromString(const std::string& type);
-    Vec3 getAlbedo(const Scene& scene, const TraceHit& hit) const;
+    Vec3 getAlbedo(const TraceHit& hit) const;
+
+    // disable copy. Enable move:
+    Texture(Texture&&) = default;
+    Texture& operator=(Texture&&) = default;
+
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+    
 };

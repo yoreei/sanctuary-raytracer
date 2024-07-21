@@ -147,9 +147,14 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
         float area_inv = 1.f / e0.crossLength(e1);
         hit.baryU = c1.length() * area_inv;
         hit.baryV = c0.length() * area_inv;
-        hit.u;
-        hit.v;
-        zzz
+        float baryW = 1.0f - hit.baryU - hit.baryV;
+        const Vec3& uvMap0 = scene.uvs[v[0]];
+        const Vec3& uvMap1 = scene.uvs[v[1]];
+        const Vec3& uvMap2 = scene.uvs[v[2]];
+
+        hit.u = uvMap0.x * baryW + uvMap1.x * hit.baryU + uvMap2.x * hit.baryV;
+        hit.v = uvMap0.y * baryW + uvMap1.y * hit.baryU + uvMap2.y * hit.baryV;
+
         hit.materialIndex = this->materialIndex;
         hit.n = hitNormal(scene, hit.u, hit.v);
         hit.type = getTraceHitType(hit.n, ray.direction);

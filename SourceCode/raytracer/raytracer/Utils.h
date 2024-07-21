@@ -26,3 +26,19 @@ inline std::string stringFromBool(bool b) {
 inline constexpr float epsilon = 1e-5f; // high precision
 // inline constexpr float epsilon = 1e-4f; // good precision
 
+namespace Utils {
+    template<class T>
+    /*
+    * @return the number of elements moved
+    */
+    [[nodiscard]]
+    size_t move_back(std::vector<T>& to, std::vector<T>& from) {
+        size_t padding = from.size();
+        to.reserve(to.size() + from.size());
+        to.insert(to.end(),
+                   std::make_move_iterator(from.begin()),
+                   std::make_move_iterator(from.end()));
+        return padding;
+    }
+}
+

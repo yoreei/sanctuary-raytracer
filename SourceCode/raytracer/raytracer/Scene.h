@@ -38,15 +38,16 @@ public:
     Animator animator;
 
     /* meshObjects reference trinagles. Triangles reference vertices */
-    std::vector<Vec3> vertices {};
-    std::vector<Triangle> triangles {};
-    std::vector<Vec3> vertexNormals {};
+    std::vector<Light> lights {};
     std::vector<MeshObject> meshObjects {};
     std::vector<Material> materials {};
-    std::vector<Light> lights {};
     std::vector<Texture> textures {};
-    std::vector<Image> bitmaps {}; // TODO: move to texture
+    std::vector<Triangle> triangles {};
     std::vector<Vec3> uvs {};
+    std::vector<Vec3> vertexNormals {};
+    std::vector<Vec3> vertices {};
+    // IMPORTANT: update `Scene::addObjects()` if adding new members
+    // IMPORTANT: keep alphabetical order
     
     Vec3 bgColor = {0.f, 0.f, 0.f};
 
@@ -57,7 +58,7 @@ public:
     /* Compiles all vertices and triangles into a single mesh object */
     [[nodiscard]] bool bakeObject();
 
-    void addObjects(const std::vector<Scene>& scenes);
+    void addObjects(std::vector<Scene>& scenes);
 
     /*
     * Show debug visualizations for lights in the scene
@@ -70,8 +71,6 @@ public:
     void generateVertexNormals();
 
     void genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attachedTriangles);
-
-    size_t addBitmap(Image&& bitmap);
 private:
 
 };

@@ -117,7 +117,7 @@ private:
             shadeUv(task, hit);
             break;
         case Material::Type::DEBUG_BARY:
-            zzz
+            shadeBary(task, hit);
             break;
         case Material::Type::VOID:
             throw std::invalid_argument("not handled");
@@ -317,6 +317,14 @@ private:
         const double noise = perlin.octave2D_01(p.x, p.y, 4);
         const uint8_t color = static_cast<uint8_t>(noise * 255);
         return Color{ color, color, color };
+    }
+
+    void shadeBary(const TraceTask& task, const TraceHit& hit)
+    {
+        assert(hit.baryU <= 1.f && hit.baryU >= 0);
+        assert(hit.baryV <= 1.f && hit.baryV >= 0);
+        Vec3 unitColor = { hit.baryU, 0.f, hit.baryV };
+        imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }
 
     void shadeUv(const TraceTask& task, const TraceHit& hit)

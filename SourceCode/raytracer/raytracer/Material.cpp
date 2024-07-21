@@ -33,6 +33,10 @@ Material::Type Material::TypeFromString(const std::string& type)
     {
         return Type::DEBUG_UV;
     }
+    else if (type == "debug_bary")
+    {
+        return Type::DEBUG_BARY;
+    }
     else
     {
         throw std::runtime_error("Unknown material type: " + type);
@@ -65,6 +69,10 @@ std::string Material::StringFromType(const Material::Type& type)
     {
         return "debug_uv";
     }
+    else if (type == Type::DEBUG_BARY)
+    {
+        return "debug_bary";
+    }
     else if (type == Type::CONSTANT)
     {
         return "constant";
@@ -85,7 +93,7 @@ Vec3 Material::getAlbedo(const Scene& scene, const TraceHit& hit) const
 {
     if (hasTexture) {
         const Texture& texture = scene.textures.at(textureIdx);
-        return texture.getAlbedo(scene, hit);
+        return texture.getAlbedo(hit);
     }
     else {
         return albedo;

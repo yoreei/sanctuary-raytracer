@@ -8,6 +8,7 @@
 #include "CRTSceneLoader.h"
 #include "Light.h"
 #include "MeshObject.h"
+#include "Utils.h"
 
 /**
 * @param start: location vector
@@ -65,33 +66,43 @@ bool Scene::bakeObject() {
     return true;
 }
 
-void Scene::addObjects(const std::vector<Scene>& scenes)
+void Scene::addObjects(std::vector<Scene>& scenes)
 {
-    for (const auto& scene : scenes) {
-        size_t verticesPadding = vertices.size();
-        vertices.reserve(vertices.size() + scene.vertices.size());
-        vertices.insert(vertices.end(), scene.vertices.begin(), scene.vertices.end());
+    // Update this implementation if more scene elements are added to Scene
+    for (Scene& scene : scenes) {
+        // All scene elements need to be moved to main scene:
+        size_t lightsPadding = moveElement<Light>(lights, scene.lights);
+        size_t meshObjectsPadding = moveElement<MeshObject>(meshObjects, scene.meshObjects);
+        size_t materialsPadding = moveElement<Material>(materials, scene.materials);
+        size_t texturesPadding = moveElement<Texture>(textures, scene.textures);
+        size_t trianglesPadding = moveElement<Triangle>(triangles, scene.triangles);
+        size_t uvsPadding = moveElement<Vec3>(uvs, scene.uvs);
+        size_t vertexNormalsPadding = moveElement<Vec3>(vertexNormals, scene.vertexNormals);
+        size_t verticesPadding = moveElement<Vec3>(vertices, scene.vertices);
 
-        size_t trianglesPadding = triangles.size();
-        triangles.reserve(triangles.size() + scene.triangles.size());
-        triangles.insert(triangles.end(), scene.triangles.begin(), scene.triangles.end());
-
+        zzz move these to respective SceneElement::move implementations
+        // Elements that are referenced by other elements need to be updated:
         for (size_t i = trianglesPadding; i < triangles.size(); i++) {
             triangles[i].v[0] += verticesPadding;
             triangles[i].v[1] += verticesPadding;
             triangles[i].v[2] += verticesPadding;
         }
 
-        size_t meshObjectsPadding = meshObjects.size();
-        meshObjects.reserve(meshObjects.size() + scene.meshObjects.size());
-        meshObjects.insert(meshObjects.end(), scene.meshObjects.begin(), scene.meshObjects.end());
-
         for (size_t i = meshObjectsPadding; i < meshObjects.size(); ++i) {
             for (size_t j = 0; j < meshObjects[i].triangleIndexes.size(); ++j) {
                 meshObjects[i].triangleIndexes[j] += trianglesPadding;
+                materials zzz
             }
         }
 
+        // Elements not referenced by other elements:
+        lightsPadding;
+        uvsPadding;
+        vertexNormalsPadding;
+
+        // Asserts:
+        assert(verticesPadding == uvsPadding);
+        assert(vertices.size() == uvs.size());
     }
 }
 
@@ -143,10 +154,4 @@ void Scene::genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attach
             attachedTriangles.push_back(i);
         }
     }
-}
-
-size_t Scene::addBitmap(Image&& bitmap)
-{
-    bitmaps.push_back(std::move(bitmap));
-    return bitmaps.size() - 1;
 }

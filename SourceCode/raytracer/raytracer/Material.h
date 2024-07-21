@@ -15,7 +15,8 @@ public:
         REFLECTIVE,
         REFRACTIVE,
         DEBUG_NORMAL,
-        DEBUG_UV
+        DEBUG_UV,
+        DEBUG_BARY
     };
 
     Material() = default;

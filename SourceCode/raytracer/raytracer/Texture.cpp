@@ -25,7 +25,7 @@ TextureType Texture::TypeFromString(const std::string& type)
     }
 }
 
-Vec3 Texture::getAlbedo(const Scene& scene, const TraceHit& hit) const
+Vec3 Texture::getAlbedo(const TraceHit& hit) const
 {
     float u = hit.u;
     float v = hit.v;
@@ -57,7 +57,6 @@ Vec3 Texture::getAlbedo(const Scene& scene, const TraceHit& hit) const
                throw std::runtime_error("Texture::getAlbedo(): Checkerboard texture error");
     }
     else if (type == TextureType::BITMAP) {
-        const Image& bitmap = scene.bitmaps.at(bitmapIdx);
         const size_t width = bitmap.getWidth();
         const size_t height = bitmap.getHeight();
         size_t x = size_t(u * (float(width) - 1.f));
