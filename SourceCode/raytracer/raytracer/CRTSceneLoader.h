@@ -29,10 +29,21 @@ private:
     static Vec3 Vec3FromJson(const json& j);
     static bool boolFromJson(const json& j);
     static bool parseObjects(const json& j, Scene& scene);
-    static bool parseVertices(const json& jObj, Scene& scene);
-    static bool parseTriangles(const json& jObj, Scene& scene);
-    static void genVertexNormals(Scene& scene);
-    static void genAttachedTriangles(const Scene& scene, size_t vertexIndex, std::vector<size_t>& attachedTriangles);
+    static bool parseVertices(const json& jObj, std::vector<Vec3>& vertices);
+    static void parseUvs(const json& jObj, const size_t expectedSize, std::vector<Vec3>& uvs);
+    static bool parseTriangles(const json& jObj, const std::vector<Vec3>& vertices, const size_t materialIdx, std::vector<Triangle>& triangles);
+    /*
+    * populates `vertexNormals` with the average normal of all attached triangles. Important for smooth shading
+    */
+    static void calculateVertexNormals(const std::vector<Vec3>& vertices, const std::vector<Triangle>& triangles, std::vector<Vec3>& vertexNormals);
+    /**
+     * @brief Generate a list of triangle indexes that are attached to a vertex
+     * 
+     * @param scene Scene object
+     * @param vertexIndex Index of the vertex
+     * @param attachedTriangles Output list of triangle indexes
+     */
+    static void genAttachedTriangles(const size_t vertexIndex, const std::vector<Triangle>& triangles, std::vector<size_t>& attachedTriangles);
     static bool getBoolDefault(const json& j, const std::string& key, bool defaultVal = false);
     template <typename T>
     static T getDefault(const json& j, const std::string& key, T defaultVal);
@@ -42,5 +53,6 @@ private:
     template <>
     void assignIfExists<Vec3>(const json& j, std::string key, Vec3& out);
     static void loadJpgBitmap(std::string filePath, Image& bitmap);
+    static void debugPrintNormals(const Scene& scene);
 };
 

@@ -50,60 +50,51 @@ void Scene::intersect(const Ray& ray, TraceHit& out) const {
     }
 }
 
-/* Compiles all vertices and triangles into a single mesh object */
+MeshObject& Scene::addObject(
+    std::vector<Vec3>& objVertices,
+    std::vector<Triangle>& objTriangles,
+    std::vector<Vec3>& objVertexNormals,
+    std::vector<Vec3>& objUvs)
+{
+    size_t vertexIdxStart = vertices.size();
+    Utils::move_back(vertices, objVertices);
+    size_t vertexIdxEnd = vertices.size();
 
-[[nodiscard]]
-bool Scene::bakeObject() {
-    for (const auto& tri : triangles) {
-        if (tri.v[0] >= vertices.size() || tri.v[1] >= vertices.size() || tri.v[2] >= vertices.size()) {
-            std::cerr << "Error loading triangles: vertex index out of bounds\n";
-            return false;
-        }
+    // Pad triangles:
+    for (auto& tri : objTriangles) {
+        tri.v[0] += vertexIdxStart;
+        tri.v[1] += vertexIdxStart;
+        tri.v[2] += vertexIdxStart;
     }
 
-    meshObjects.emplace_back(0, triangles.size() - 1);
+    Utils::move_back(triangles, objTriangles);
+    Utils::move_back(vertexNormals, objVertexNormals);
+    Utils::move_back(uvs, objUvs);
 
-    return true;
+    MeshObject& ref = meshObjects.emplace_back(vertexIdxStart, vertexIdxEnd);
+    assert(vertices.size() == vertexNormals.size());
+    assert(vertices.size() == uvs.size());
+    assert(triangles.size() > 0);
+    assert(vertices.size() > 0);
+
+    return ref;
 }
 
-void Scene::addObjects(std::vector<Scene>& scenes)
+void Scene::merge(const Scene& other)
 {
-    // Update this implementation if more scene elements are added to Scene
-    for (Scene& scene : scenes) {
-        // All scene elements need to be moved to main scene:
-        size_t lightsPadding = moveElement<Light>(lights, scene.lights);
-        size_t meshObjectsPadding = moveElement<MeshObject>(meshObjects, scene.meshObjects);
-        size_t materialsPadding = moveElement<Material>(materials, scene.materials);
-        size_t texturesPadding = moveElement<Texture>(textures, scene.textures);
-        size_t trianglesPadding = moveElement<Triangle>(triangles, scene.triangles);
-        size_t uvsPadding = moveElement<Vec3>(uvs, scene.uvs);
-        size_t vertexNormalsPadding = moveElement<Vec3>(vertexNormals, scene.vertexNormals);
-        size_t verticesPadding = moveElement<Vec3>(vertices, scene.vertices);
+    // not implemented
+    other;
+    throw std::runtime_error("Not implemented");
 
-        zzz move these to respective SceneElement::move implementations
-        // Elements that are referenced by other elements need to be updated:
-        for (size_t i = trianglesPadding; i < triangles.size(); i++) {
-            triangles[i].v[0] += verticesPadding;
-            triangles[i].v[1] += verticesPadding;
-            triangles[i].v[2] += verticesPadding;
-        }
-
-        for (size_t i = meshObjectsPadding; i < meshObjects.size(); ++i) {
-            for (size_t j = 0; j < meshObjects[i].triangleIndexes.size(); ++j) {
-                meshObjects[i].triangleIndexes[j] += trianglesPadding;
-                materials zzz
-            }
-        }
-
-        // Elements not referenced by other elements:
-        lightsPadding;
-        uvsPadding;
-        vertexNormalsPadding;
-
-        // Asserts:
-        assert(verticesPadding == uvsPadding);
-        assert(vertices.size() == uvs.size());
-    }
+    // Will look something like:
+    //size_t lightsPadding = moveElement<Light>(lights, scene.lights);
+    //size_t meshObjectsPadding = moveElement<MeshObject>(meshObjects, scene.meshObjects);
+    //size_t materialsPadding = moveElement<Material>(materials, scene.materials);
+    //size_t texturesPadding = moveElement<Texture>(textures, scene.textures);
+    //size_t trianglesPadding = moveElement<Triangle>(triangles, scene.triangles);
+    //size_t uvsPadding = moveElement<Vec3>(uvs, scene.uvs);
+    //size_t vertexNormalsPadding = moveElement<Vec3>(vertexNormals, scene.vertexNormals);
+    //size_t verticesPadding = moveElement<Vec3>(vertices, scene.vertices);
 }
 
 void Scene::showLightDebug() {
@@ -121,37 +112,4 @@ void Scene::showLightDebug() {
     //    lightObjects.push_back(std::move(lightBallScene));
     //}
     //addObjects(lightObjects);
-}
-
-void Scene::generateVertexNormals() {
-    // Vec3{0.f, 0.f, 0.f} is important for summation
-    vertexNormals.resize(vertices.size(), Vec3{0.f, 0.f, 0.f});
-    for(size_t i = 0; i < vertices.size(); ++i) {
-        std::vector<size_t> attachedTriangles {};
-        genAttachedTriangles(i, attachedTriangles);
-        for(size_t triIndex : attachedTriangles) {
-            vertexNormals[i] += triangles[triIndex].getNormal();
-        }
-    }
-
-    for(size_t i = 0; i < vertexNormals.size(); ++i) {
-        auto& normal = vertexNormals[i];
-        normal.normalize();
-    }
-}
-
-/**
- * @brief Generate a list of triangle indexes that are attached to a vertex
- * 
- * @param scene Scene object
- * @param vertexIndex Index of the vertex
- * @param attachedTriangles Output list of triangle indexes
- */
-void Scene::genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attachedTriangles) {
-    for(size_t i = 0; i < triangles.size(); ++i) {
-        const Triangle& tri = triangles[i];
-        if(tri.hasVertex(vertexIndex)) {
-            attachedTriangles.push_back(i);
-        }
-    }
 }

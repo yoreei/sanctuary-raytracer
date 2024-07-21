@@ -25,8 +25,8 @@ public:
     Vec3 n = { 0, 0, 0 };     // Normal at Point
     float baryU = 0.f;  // Barycentric U coordinate
     float baryV = 0.f;  // Barycentric V coordinate
-    float u = 0.f;    // Mapped U coordinate
-    float v = 0.f;    // Mapped V coordinate
+    float u = 0.f;    // Texture U coordinate
+    float v = 0.f;    // Texture V coordinate
     size_t materialIndex = 0;
     TraceHitType type = TraceHitType::OUT_OF_BOUNDS;
     bool successful() const { return type == TraceHitType::SUCCESS || type == TraceHitType::INSIDE_REFRACTIVE; }

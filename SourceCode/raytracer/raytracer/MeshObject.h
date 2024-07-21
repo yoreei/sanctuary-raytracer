@@ -21,4 +21,6 @@ public:
     void translate(const std::vector<Triangle>& triangles, const Vec3& translation, std::vector<Vec3>& vertices);
 
     Material& getMaterial(Scene& scene) const;
+
+    void setMaterialIdx(Scene& scene, size_t materialIdx);
 };

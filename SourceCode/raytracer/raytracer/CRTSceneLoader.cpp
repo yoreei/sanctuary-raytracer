@@ -45,9 +45,7 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         return false;
     }
 
-    // TODO performance: perform genAttachedTriangles (in generateVertexNormals) during Scene loading
-    scene.generateVertexNormals();
-    return true;
+   return true;
 }
 
 bool CRTSceneLoader::validateCrtscene(const json& j) {
@@ -336,31 +334,59 @@ inline bool CRTSceneLoader::boolFromJson(const json& j) {
 }
 
 inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
-    std::vector<Scene> scenes {};
-
     const auto& jObjects = j.at("objects");
     for (const auto& jObj : jObjects) {
-        Scene objScene{ "tempScene" };
+        std::vector<Vec3> vertices;
+        std::vector<Triangle> triangles;
+        std::vector<Vec3> uvs;
+        std::vector<Vec3> vertexNormals;
 
-        if (!parseVertices(jObj, objScene)) {
-            return false;
-        }
-        if (!parseTriangles(jObj, objScene)) {
-            return false;
-        }
+        parseVertices(jObj, vertices);
 
-        if (!objScene.bakeObject()) {
-            return false;
-        }
+        warnIfMissing(jObj, "material_index");
+        size_t materialIdx = getDefault<size_t>(jObj, "material_index", 0);
+        // 0 is the default material index. It is guaranteed to exist
+        assert(scene.materials.size() > materialIdx);
+        parseTriangles(jObj, vertices, materialIdx, triangles);
 
-        scenes.push_back(std::move(objScene));
+        parseUvs(jObj, vertices.size(), uvs);
+        calculateVertexNormals(vertices, triangles, vertexNormals);
+
+        assert(triangles.size() > 0);
+        scene.addObject(vertices, triangles, vertexNormals, uvs);
     }
 
-    scene.addObjects(scenes);
     return true;
 }
 
-inline bool CRTSceneLoader::parseVertices(const json& jObj, Scene& scene) {
+void CRTSceneLoader::calculateVertexNormals(const std::vector<Vec3>& vertices, const std::vector<Triangle>& triangles, std::vector<Vec3>& vertexNormals) {
+        // Vec3{0.f, 0.f, 0.f} is important for summation
+    vertexNormals.resize(vertices.size(), Vec3{0.f, 0.f, 0.f});
+    for(size_t i = 0; i < vertices.size(); ++i) {
+        std::vector<size_t> attachedTriangles {};
+        genAttachedTriangles(i, triangles, attachedTriangles);
+        for(size_t triIndex : attachedTriangles) {
+            vertexNormals[i] += triangles[triIndex].getNormal();
+        }
+    }
+
+    for(size_t i = 0; i < vertexNormals.size(); ++i) {
+        auto& normal = vertexNormals[i];
+        normal.normalize();
+    }
+
+}
+
+void CRTSceneLoader::genAttachedTriangles(const size_t vertexIndex, const std::vector<Triangle>& triangles, std::vector<size_t>& attachedTriangles) {
+    for(size_t i = 0; i < triangles.size(); ++i) {
+        const Triangle& tri = triangles[i];
+        if(tri.hasVertex(vertexIndex)) {
+            attachedTriangles.push_back(i);
+        }
+    }
+}
+
+inline bool CRTSceneLoader::parseVertices(const json& jObj, std::vector<Vec3>& vertices) {
     const auto& jVertices = jObj.at("vertices");
 
     if (!jVertices.is_array() || jVertices.size() % 3 != 0) {
@@ -371,36 +397,38 @@ inline bool CRTSceneLoader::parseVertices(const json& jObj, Scene& scene) {
         float x = jVertices[i].get<float>();
         float y = jVertices[i + 1].get<float>();
         float z = jVertices[i + 2].get<float>();
-        scene.vertices.emplace_back(x, y, z);
+        vertices.emplace_back(x, y, z);
     }
+ 
+    return true;
+}
 
+void CRTSceneLoader::parseUvs(const json& jObj, const size_t expectedSize, std::vector<Vec3>& uvs)
+{
     if (jObj.contains("uvs")) {
         const auto& jUvs = jObj.at("uvs");
-        if (jUvs.size() != jVertices.size()) {
-            throw std::runtime_error("jUvs size not correct");
-        }
 
         for (size_t i = 0; i < jUvs.size(); i += 3) {
             float u = jUvs[i].get<float>();
             float v = jUvs[i + 1].get<float>();
             float w = jUvs[i + 2].get<float>();
-            scene.uvs.emplace_back(u, v, w);
+            uvs.emplace_back(u, v, w);
         }
-
-        assert(scene.uvs.size() == scene.vertices.size());
+    }
+    else {
+        for (size_t i = 0; i < expectedSize; ++i) {
+            uvs.emplace_back(0.f, 0.f, 0.f);
+        }
     }
 
-    return true;
+    assert(uvs.size() == expectedSize);
 }
 
-inline bool CRTSceneLoader::parseTriangles(const json& jObj, Scene& scene) {
-    warnIfMissing(jObj, "material_index");
-    size_t materialIndex = getDefault<size_t>(jObj, "material_index", 0); // 0 is the default material index. It is guaranteed to exist
+inline bool CRTSceneLoader::parseTriangles(const json& jObj, const std::vector<Vec3>& vertices, const size_t materialIdx, std::vector<Triangle>& triangles) {
 
     const auto& jTriangles = jObj.at("triangles");
-    auto& triangles = scene.triangles;
     for (size_t i = 0; i < jTriangles.size(); i += 3) {
-        triangles.emplace_back(scene.vertices, jTriangles[i], jTriangles[i + 1], jTriangles[i + 2], materialIndex);
+        triangles.emplace_back(vertices, jTriangles[i], jTriangles[i + 1], jTriangles[i + 2], materialIdx);
     }
 
     return true;
@@ -469,6 +497,21 @@ void CRTSceneLoader::loadJpgBitmap(std::string filePath, Image& bitmap)
     stbi_image_free(stbi_ptr);
 
     bitmap = std::move(img); 
+}
+
+void CRTSceneLoader::debugPrintNormals(const Scene& scene)
+{
+    std::cout << "Vertex Normals:\n";
+    for (size_t i = 0; i < scene.vertexNormals.size(); ++i) {
+        const auto& vertNormal = scene.vertexNormals[i];
+        std::cout << i << ": " << vertNormal << '\n';
+    }
+
+    std::cout << "Triangle Normals:\n";
+    for (size_t i = 0; i < scene.triangles.size(); ++i) {
+        const auto& tri = scene.triangles[i];
+        std::cout << i << ": " << tri.getNormal() << '\n';
+    }
 }
 
 

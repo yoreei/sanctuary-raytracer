@@ -34,3 +34,10 @@ Material& MeshObject::getMaterial(Scene& scene) const
     Material& material = scene.materials[triangle.materialIndex];
     return material;
 }
+
+void MeshObject::setMaterialIdx(Scene& scene, size_t materialIdx)
+{
+    for (auto& tri : scene.triangles) {
+       tri.materialIndex = materialIdx;
+    }
+}

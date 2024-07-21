@@ -19,22 +19,13 @@
 			0, 0, 0
 		]
 	},
-	
-	"lights": [		
-		{
-			"intensity": 1000,
-			"position": [
-				5, 5, 6
-			]
-		}
-	],
 
 	"materials": [{
-			"type": "diffuse",
+			"type": "debug_normal",
 			"albedo": [
 				1, 1, 0
 			],
-			"smooth_shading": false
+			"smooth_shading": true
 		}	
 	],
 	

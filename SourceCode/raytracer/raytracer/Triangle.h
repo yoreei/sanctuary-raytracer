@@ -48,7 +48,7 @@ public:
 
     bool intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray, float& t, Vec3& p) const;
 
-    Vec3 hitNormal(const Scene& scene, float uCoord, float vCoord) const;
+    Vec3 hitNormal(const Scene& scene, const TraceHit& hit) const;
 
     void translate(const Vec3& translation, std::vector<Vec3>& vertices) const;
 

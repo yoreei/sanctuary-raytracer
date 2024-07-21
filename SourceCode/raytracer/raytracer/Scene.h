@@ -55,22 +55,19 @@ public:
 
     void intersect(const Ray& ray, TraceHit& out) const;
 
-    /* Compiles all vertices and triangles into a single mesh object */
-    [[nodiscard]] bool bakeObject();
+    MeshObject& addObject(
+        std::vector<Vec3>& objVertices,
+        std::vector<Triangle>& objTriangles,
+        std::vector<Vec3>& objVertexNormals,
+        std::vector<Vec3>& objUvs);
 
-    void addObjects(std::vector<Scene>& scenes);
+    void merge(const Scene& other);
 
     /*
     * Show debug visualizations for lights in the scene
     */
     void showLightDebug();
 
-    /*
-    * populates `vertexNormals` with the average normal of all attached triangles. Important for smooth shading
-    */
-    void generateVertexNormals();
-
-    void genAttachedTriangles(size_t vertexIndex, std::vector<size_t>& attachedTriangles);
 private:
 
 };

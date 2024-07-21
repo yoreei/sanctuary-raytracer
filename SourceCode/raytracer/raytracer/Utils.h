@@ -31,7 +31,6 @@ namespace Utils {
     /*
     * @return the number of elements moved
     */
-    [[nodiscard]]
     size_t move_back(std::vector<T>& to, std::vector<T>& from) {
         size_t padding = from.size();
         to.reserve(to.size() + from.size());
