@@ -30,7 +30,7 @@ public:
         queue.emplace(ray, x, y);
     }
 
-    Ray rayFromPixel(const Image& image, int x, int y) const {
+    Ray rayFromPixel(const Image& image, size_t x, size_t y) const {
         Vec3 coords {static_cast<float>(x), static_cast<float>(y), 0};
         ndcFromRaster(image, coords);
         imageFromNdc(image, coords);

@@ -60,6 +60,10 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
         for (size_t i = 0; i < imageComponents.size(); i++) {
             imageComponents[i].writeImage(filename + "_depth_" + std::to_string(i), bWritePng, bWriteBmp);
         }
+
+        if (settings.debugPixel) {
+            std::cout << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
+        }
     } while (scene->animator.update());
     metrics = scene->metrics;
 }

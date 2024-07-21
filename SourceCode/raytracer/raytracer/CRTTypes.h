@@ -371,15 +371,12 @@ struct Ray {
 
 struct TraceTask {
     Ray ray;
-    int pixelX{ 0 };
-    int pixelY{ 0 };
+    size_t pixelX{ 0 };
+    size_t pixelY{ 0 };
     uint32_t depth{ 0 };
     // [0, 1]. Higher values increase the weight of the diffuseComponent of the hit point when `lerp`ing.  See ImageQueue::flatten
     float weight{ 1.f };
     float ior{ 1.f };
-
-    TraceTask(const Ray& ray, int pixelX, int pixelY)
-        : ray(ray), pixelX(pixelX), pixelY(pixelY) {}
 };
 
 

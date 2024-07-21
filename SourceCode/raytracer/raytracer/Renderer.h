@@ -44,10 +44,11 @@ public:
         }
 
         // Prepare Primary Queue
-        if (settings.debugSingleRay) {
-            Ray ray = scene->camera.rayFromPixel(image, 145, 67);
-            //Ray ray = { {0.f, 0.f, 0.f}, {0.f, 0.f, -1.f} };
-            TraceTask task = { ray, 0, 0 };
+        if (settings.debugPixel) {
+            Ray ray = scene->camera.rayFromPixel(image, settings.debugPixelX, settings.debugPixelY);
+            TraceTask task { .ray = ray,
+                             .pixelX = settings.debugPixelX,
+                             .pixelY = settings.debugPixelY };
             traceQueue.push(task);
         }
         else {
