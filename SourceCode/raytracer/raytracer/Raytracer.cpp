@@ -28,7 +28,7 @@ void Raytracer::writeFile(const std::string& filename, const std::string& data) 
     ppmFileStream.close();
 }
 
-void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
+void Raytracer::runScene(const std::string& filePath, const std::string& sceneName, Metrics& metrics)
 {
     // TODO: Make these configurable
     bool bWritePng = true;
@@ -38,12 +38,10 @@ void Raytracer::runScene(const std::string& sceneName, Metrics& metrics)
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneName);
     Renderer renderer {settings, scene};
     
-    CRTSceneLoader::loadCrtscene(settings, sceneName + ".crtscene", *scene, image) ? void() : exit(1);
+    CRTSceneLoader::loadCrtscene(settings, filePath, *scene, image) ? void() : exit(1);
     auto truck = MoveAnimation::Make(MoveType::Truck, 3, 0, 24);
     //scene->animator.addAnimation(scene->camera, truck);
     fs::create_directories("out/" + sceneName);
-    //image = Image(1280, 720); // Make rendering time shorter for quick testing
-    //image = Image(300, 200); // Make rendering time shorter for quick testing
     std::vector<Image> imageComponents {};
 
     do {
@@ -72,7 +70,7 @@ int Raytracer::run()
 {
     using path = std::filesystem::path;
     std::vector<Metrics> metricsList = {};
-    for (const auto& entry : fs::directory_iterator(settings.inputDir)) {
+    for (const auto& entry : fs::directory_iterator(settings.sceneLibraryDir + "/" + settings.projectDir)) {
         if (path ext = entry.path().extension(); ext != ".crtscene") {
             continue;
         }
@@ -80,7 +78,7 @@ int Raytracer::run()
         std::string sceneName = entry.path().filename().string();
         sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
         Metrics metrics {};
-        runScene(sceneName, metrics);
+        runScene(entry.path().string(), sceneName, metrics);
         metricsList.push_back(metrics);
     }
     writeMetrics(metricsList);

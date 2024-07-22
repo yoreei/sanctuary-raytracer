@@ -5,12 +5,7 @@
 
 int main() {
 
-    Settings settings {
-        .inputDir = "scenes/in",
-        .debugPixel = false,
-        .debugPixelX = 1300,
-        .debugPixelY = 200
-    };
+    Settings settings = Settings::load("settings.json");
     Raytracer rt {settings};
     rt.run();
 

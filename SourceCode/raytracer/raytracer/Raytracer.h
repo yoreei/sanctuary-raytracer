@@ -8,7 +8,7 @@ class Raytracer {
 public:
     Raytracer(const Settings& settings) : settings(settings) {}
     void writeFile(const std::string& filename, const std::string& data);
-    void runScene(const std::string& sceneName, Metrics& metrics);
+    void runScene(const std::string& filePath, const std::string& sceneName, Metrics& metrics);
     int run();
 
 private:

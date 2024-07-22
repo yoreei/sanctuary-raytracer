@@ -17,8 +17,7 @@
 using json = nlohmann::json;
 
 [[nodiscard]]
-bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& filename, Scene& scene, Image& image) {
-    const std::string filePath = settings.inputDir + "/" + filename;
+bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& filePath, Scene& scene, Image& image) {
     std::ifstream file(filePath);
     if (!file) {
         throw std::runtime_error("Failed to load CRTScene file: " + filePath);
@@ -28,7 +27,7 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
     json j;
     file >> j;
 
-    std::cout << "Loading Scene: " << filename << std::endl;
+    std::cout << "Loading Scene: " << filePath << std::endl;
 
     if (!validateCrtscene(j)) {
         return false;
@@ -43,6 +42,10 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         !parseObjects(j, scene) ||
         !parseLight(j, scene)) {
         return false;
+    }
+
+    if (settings.overrideResolution) {
+        image = Image(settings.resolutionX, settings.resolutionY);
     }
 
    return true;
@@ -255,7 +258,7 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Set
         assignIfExists<float>(jTexture, "edge_width", tex.textureSize);
         assignIfExists<float>(jTexture, "square_size", tex.textureSize);
         assignIfExists<std::string>(jTexture, "file_path", tex.filePath);
-        tex.filePath = settings.inputDir + "/" + tex.filePath;
+        tex.filePath = settings.sceneLibraryDir + "/" + tex.filePath;
 
         if (type == TextureType::BITMAP) {
             loadJpgBitmap(tex.filePath, tex.bitmap);

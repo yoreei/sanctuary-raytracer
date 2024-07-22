@@ -1,0 +1,20 @@
+{
+    "sceneLibraryDir": "sceneLibrary",
+    "projectDir": "hw13",
+
+    "maxDepth": 4,
+    "bias": 0.0001,
+    "forceSingleThread": false,
+
+    "debugPixel": false,
+    "debugPixelX": 0,
+    "debugPixelY": 0,
+
+    "debugLight": false,
+    "debugImageQueue": false,
+
+    "overrideResolution": true,
+    "resolutionX": 300,
+    "resolutionY": 200
+
+}
