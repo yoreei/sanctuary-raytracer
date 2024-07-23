@@ -48,6 +48,8 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         image = Image(settings.resolutionX, settings.resolutionY);
     }
 
+    scene.generateAccelerationStructure();
+
    return true;
 }
 
@@ -258,7 +260,7 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Set
         assignIfExists<float>(jTexture, "edge_width", tex.textureSize);
         assignIfExists<float>(jTexture, "square_size", tex.textureSize);
         assignIfExists<std::string>(jTexture, "file_path", tex.filePath);
-        tex.filePath = settings.sceneLibraryDir + "/" + tex.filePath;
+        tex.filePath = settings.sceneLibraryDir + "/" + settings.projectDir + "/" + tex.filePath;
 
         if (type == TextureType::BITMAP) {
             loadJpgBitmap(tex.filePath, tex.bitmap);

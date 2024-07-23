@@ -7,6 +7,11 @@
 
 using json = nlohmann::json;
 
+bool Settings::loadEntireProject() const
+{
+    return targetScenes.empty();
+}
+
 Settings Settings::load(const std::string& filename)
 {
     std::ifstream file(filename);
@@ -14,27 +19,30 @@ Settings Settings::load(const std::string& filename)
         throw std::runtime_error("Failed to load CRTScene file: " + filename);
     }
 
+    Settings settings;
     json j;
     file >> j;
 
-    Settings settings;
-    settings.sceneLibraryDir = j.at("sceneLibraryDir").get<std::string>();
-    settings.projectDir = j.at("projectDir").get<std::string>();
+    settings.sceneLibraryDir = j.at("sceneLibraryDir");
+    settings.projectDir = j.at("projectDir");
+    settings.targetScenes = j.at("targetScenes");
 
-    settings.maxDepth = j.at("maxDepth").get<size_t>();
-    settings.bias = j.at("bias").get<float>();
-    settings.forceSingleThread = j.at("forceSingleThread").get<bool>();
+    settings.maxDepth = j.at("maxDepth");
+    settings.bias = j.at("bias");
+    settings.forceSingleThread = j.at("forceSingleThread");
 
-    settings.debugPixel = j.at("debugPixel").get<bool>();
-    settings.debugPixelX = j.at("debugPixelX").get<size_t>();
-    settings.debugPixelY = j.at("debugPixelY").get<size_t>();
+    settings.debugPixel = j.at("debugPixel");
+    settings.debugPixelX = j.at("debugPixelX");
+    settings.debugPixelY = j.at("debugPixelY");
 
-    settings.debugLight = j.at("debugLight").get<bool>();
-    settings.debugImageQueue = j.at("debugImageQueue").get<bool>();
+    settings.debugLight = j.at("debugLight");
+    settings.debugImageQueue = j.at("debugImageQueue");
 
-    settings.overrideResolution = j.at("overrideResolution").get<bool>();
-    settings.resolutionX = j.at("resolutionX").get<size_t>();
-    settings.resolutionY = j.at("resolutionY").get<size_t>();
-    
+    settings.overrideResolution = j.at("overrideResolution");
+    settings.resolutionX = j.at("resolutionX");
+    settings.resolutionY = j.at("resolutionY");
+
+    settings.debugAccelStructure = j.at("debugAccelStructure");
     return settings;
 }
+

@@ -84,11 +84,17 @@ public:
         if (writePng) {
             int stride_bytes = static_cast<int>(width) * 3;
             std::string filenameWithExt = filename + ".png";
-            stbi_write_png(filenameWithExt.c_str(), intWidth, intHeight, channels, pngData.data(), stride_bytes);
+            int result = stbi_write_png(filenameWithExt.c_str(), intWidth, intHeight, channels, pngData.data(), stride_bytes);
+            if (result == 0) {
+                throw std::runtime_error("Failed to write PNG file");
+            }
         }
         if (writeBmp) {
             std::string filenameWithExt = filename + ".bmp";
-            stbi_write_bmp(filenameWithExt.c_str(), intWidth, intHeight, channels, pngData.data());
+            int result = stbi_write_bmp(filenameWithExt.c_str(), intWidth, intHeight, channels, pngData.data());
+            if (result == 0) {
+                throw std::runtime_error("Failed to write BMP file");
+            }
         }
 
     }

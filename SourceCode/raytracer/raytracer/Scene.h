@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "AABB.h"
 #include "Animator.h"
 #include "Animation.h"
 #include "CRTTypes.h"
@@ -23,7 +24,7 @@ class TraceHit;
 class Scene
 {
 public:
-    Scene (const std::string& name) : fileName(name), metrics(name), animator(*this) {}
+    Scene (const std::string& name, const Settings& settings) : fileName(name), metrics(name), animator(*this), settings(settings) {}
 
     Scene(Scene&&) noexcept = default;
     Scene& operator=(Scene&&) noexcept = default;
@@ -33,9 +34,10 @@ public:
 
     std::string fileName = "";
     Camera camera {};
-    Settings settings {};
-    mutable Metrics metrics;
+    const Settings settings;
+    mutable Metrics metrics {};
     Animator animator;
+    AABB accelStruct { {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f} };
 
     /* meshObjects reference trinagles. Triangles reference vertices */
     std::vector<Light> lights {};
@@ -67,6 +69,12 @@ public:
     * Show debug visualizations for lights in the scene
     */
     void showLightDebug();
+
+    void generateAccelerationStructure();
+
+    struct Timers {
+        static constexpr const char* generateAccelerationStructure = "generateAccelerationStructure";
+    };
 
 private:
 

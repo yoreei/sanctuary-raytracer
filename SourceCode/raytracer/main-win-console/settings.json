@@ -1,6 +1,7 @@
 {
     "sceneLibraryDir": "sceneLibrary",
     "projectDir": "hw13",
+    "targetScenes": [],
 
     "maxDepth": 4,
     "bias": 0.0001,
@@ -15,6 +16,7 @@
 
     "overrideResolution": true,
     "resolutionX": 300,
-    "resolutionY": 200
+    "resolutionY": 200,
 
+    "debugAccelStructure": true
 }

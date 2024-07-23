@@ -9,6 +9,7 @@
 #include "Light.h"
 #include "MeshObject.h"
 #include "Utils.h"
+#include "AABB.h"
 
 /**
 * @param start: location vector
@@ -27,7 +28,7 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
         }
 
         if (tri.boolIntersect(*this, start, end)) {
-           return true;
+            return true;
         }
         else {
             continue;
@@ -37,16 +38,17 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
 }
 
 void Scene::intersect(const Ray& ray, TraceHit& out) const {
-    out.t = std::numeric_limits<float>::max();
-    TraceHit hit {};
-    for (const Triangle& tri : triangles) {
-        // TODO: Separate plane intersection & triangle uv intersection tests?
-        tri.intersect(*this, ray, hit);
-        if (hit.successful() && hit.t < out.t) {
-            out = hit;
+    // debugAccelStructure
+    if (settings.debugAccelStructure) {
+        if (accelStruct.check(ray)) {
+            out.type = TraceHitType::SUCCESS;
+            out.n = {0.f, 1.f, 0.f};
         }
+        return;
+    }
 
-        metrics.record(toString(hit.type));
+    if (accelStruct.check(ray)) {
+        accelStruct.intersect(*this, ray, out);
     }
 }
 
@@ -112,4 +114,15 @@ void Scene::showLightDebug() {
     //    lightObjects.push_back(std::move(lightBallScene));
     //}
     //addObjects(lightObjects);
+}
+
+void Scene::generateAccelerationStructure()
+{
+    metrics.startTimer(Timers::generateAccelerationStructure);
+    for (size_t triRef = 0; triRef < triangles.size(); ++triRef) {
+        const Triangle& tri = triangles[triRef];
+        accelStruct.expandWithTriangle(*this, tri, triRef);
+    }
+    metrics.stopTimer(Timers::generateAccelerationStructure);
+    std::cout << "accelStruct[0]: " << accelStruct.bounds[0]<< " accelStruct[1]: " << accelStruct.bounds[1] << std::endl;
 }

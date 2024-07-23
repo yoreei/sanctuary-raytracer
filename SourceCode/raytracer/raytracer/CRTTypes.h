@@ -56,8 +56,8 @@ public:
 
     bool equal(const Vec3& other, float maxDiff = epsilon) const {
         return  fEqual(this->x, other.x, maxDiff) &&
-                fEqual(this->y, other.y, maxDiff) &&
-                fEqual(this->z, other.z, maxDiff);
+            fEqual(this->y, other.y, maxDiff) &&
+            fEqual(this->z, other.z, maxDiff);
     }
 
     Vec3 operator/(float scalar) const {
@@ -113,6 +113,14 @@ public:
         x = std::clamp(x, min, max);
         y = std::clamp(y, min, max);
         z = std::clamp(z, min, max);
+    }
+
+    static Vec3 minVec() {
+        return Vec3{ std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min() };
+    }
+
+    static Vec3 maxVec() {
+        return Vec3{ std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
     }
 
 };
@@ -319,13 +327,20 @@ private:
     static constexpr float radFromDeg = static_cast<float>(std::numbers::pi) / 180.0f;
 };
 
-struct Ray {
+class Ray {
+public:
     Vec3 origin;
     Vec3 direction;
+    Vec3 invdir;
+    int sign[3];
 
-    Ray() : origin(Vec3()), direction(Vec3()) {}
-
-    Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction) {}
+    Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction)
+    {
+        invdir = {1 / direction.x, 1 / direction.y, 1 / direction.z};
+        sign[0] = (invdir.x < 0);
+        sign[1] = (invdir.y < 0);
+        sign[2] = (invdir.z < 0);
+    }
 
     /*
     * @param cosi: allows us to share a dot product calculation with the refract method

@@ -15,14 +15,15 @@
 
 #include "perlin-noise.h"
 
-namespace Timers {
-    static constexpr const char* all = "RENDER_ALL";
-    static constexpr const char* generateQueue = "RENDER_GENERATE_QUEUE";
-    static constexpr const char* processQueue = "RENDER_PROCESS_QUEUE";
-    static constexpr const char* flatten = "RENDER_FLATTEN";
-} // namespace Timers
 
 class Renderer {
+    struct Timers {
+        static constexpr const char* all = "RENDER_ALL";
+        static constexpr const char* generateQueue = "RENDER_GENERATE_QUEUE";
+        static constexpr const char* processQueue = "RENDER_PROCESS_QUEUE";
+        static constexpr const char* flatten = "RENDER_FLATTEN";
+    }; 
+
 public:
     const Settings& settings;
 private:

@@ -5,70 +5,102 @@
 #include <string>
 #include <sstream>
 
+#include "Triangle.h"
+#include "Scene.h"
+#include "Metrics.h"
+#include "TraceHit.h"
+
 bool AABB::intersects(const AABB& other) const {
-    return (min.x <= other.max.x && max.x >= other.min.x) &&
-        (min.y <= other.max.y && max.y >= other.min.y) &&
-        (min.z <= other.max.z && max.z >= other.min.z);
+    return (bounds[0].x <= other.bounds[1].x && bounds[1].x >= other.bounds[0].x) &&
+        (bounds[0].y <= other.bounds[1].y && bounds[1].y >= other.bounds[0].y) &&
+        (bounds[0].z <= other.bounds[1].z && bounds[1].z >= other.bounds[0].z);
 }
 
-bool AABB::intersect(const Ray& ray) const {
-    float tmin = (min.x - ray.origin.x) / ray.direction.x;
-    float tmax = (max.x - ray.origin.x) / ray.direction.x;
 
-    if (tmin > tmax) std::swap(tmin, tmax);
+void AABB::intersect(const Scene& scene, const Ray& ray, TraceHit& out) const {
+    out.t = std::numeric_limits<float>::max();
+    TraceHit hit {};
 
-    float tymin = (min.y - ray.origin.y) / ray.direction.y;
-    float tymax = (max.y - ray.origin.y) / ray.direction.y;
+    for (const size_t& triangleRef : triangleRefs) {
+        const Triangle& tri = scene.triangles[triangleRef];
+        // TODO: Separate plane intersection & triangle uv intersection tests?
+        tri.intersect(scene, ray, hit);
+        if (hit.successful() && hit.t < out.t) {
+            out = hit;
+        }
 
-    if (tymin > tymax) std::swap(tymin, tymax);
+        scene.metrics.record(::toString(hit.type));
+    }
+}
 
+bool AABB::check(const Ray& r) const {
+    float tmin, tmax, tymin, tymax, tzmin, tzmax;
+    
+    tmin = (bounds[r.sign[0]].x - r.origin.x) * r.invdir.x;
+    tmax = (bounds[1-r.sign[0]].x - r.origin.x) * r.invdir.x;
+    tymin = (bounds[r.sign[1]].y - r.origin.y) * r.invdir.y;
+    tymax = (bounds[1-r.sign[1]].y - r.origin.y) * r.invdir.y;
+    
     if ((tmin > tymax) || (tymin > tmax))
         return false;
 
     if (tymin > tmin)
         tmin = tymin;
-
     if (tymax < tmax)
         tmax = tymax;
-
-    float tzmin = (min.z - ray.origin.z) / ray.direction.z;
-    float tzmax = (max.z - ray.origin.z) / ray.direction.z;
-
-    if (tzmin > tzmax) std::swap(tzmin, tzmax);
-
+    
+    tzmin = (bounds[r.sign[2]].z - r.origin.z) * r.invdir.z;
+    tzmax = (bounds[1-r.sign[2]].z - r.origin.z) * r.invdir.z;
+    
     if ((tmin > tzmax) || (tzmin > tmax))
         return false;
+
+    if (tzmin > tmin)
+        tmin = tzmin;
+    if (tzmax < tmax)
+        tmax = tzmax;
 
     return true;
 }
 
 bool AABB::contains(const Vec3& point) const {
-    return (point.x >= min.x && point.x <= max.x) &&
-        (point.y >= min.y && point.y <= max.y) &&
-        (point.z >= min.z && point.z <= max.z);
+    return (point.x >= bounds[0].x && point.x <= bounds[1].x) &&
+        (point.y >= bounds[0].y && point.y <= bounds[1].y) &&
+        (point.z >= bounds[0].z && point.z <= bounds[1].z);
 }
 
-void AABB::expand(const Vec3& point) {
-    min.x = std::min(min.x, point.x);
-    min.y = std::min(min.y, point.y);
-    min.z = std::min(min.z, point.z);
-
-    max.x = std::max(max.x, point.x);
-    max.y = std::max(max.y, point.y);
-    max.z = std::max(max.z, point.z);
+void AABB::expandWithTriangle(const Scene& scene, const Triangle& triangle, const size_t triangleRef)
+{
+    for (size_t i = 0; i < 3; ++i) {
+        const Vec3& vertex = scene.vertices[triangle.v[i]];
+        this->expandWithPoint(vertex);
+        triangleRefs.push_back(triangleRef);
+    }
 }
+
+void AABB::expandWithPoint(const Vec3& point)
+{
+    bounds[0].x = std::min(bounds[0].x, point.x);
+    bounds[0].y = std::min(bounds[0].y, point.y);
+    bounds[0].z = std::min(bounds[0].z, point.z);
+
+    bounds[1].x = std::max(bounds[1].x, point.x);
+    bounds[1].y = std::max(bounds[1].y, point.y);
+    bounds[1].z = std::max(bounds[1].z, point.z);
+}
+
 
 Vec3 AABB::getCenter() const {
-    return Vec3((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2);
+    return Vec3((bounds[0].x + bounds[1].x) / 2, (bounds[0].y + bounds[1].y) / 2, (bounds[0].z + bounds[1].z) / 2);
 }
 
 Vec3 AABB::getSize() const {
-    return max - min;
+    return bounds[1] - bounds[0];
 }
 
 inline std::string AABB::toString() const {
     std::stringstream ss;
-    ss << "Min: (" << min.x << ", " << min.y << ", " << min.z << ")\n";
-    ss << "Max: (" << max.x << ", " << max.y << ", " << max.z << ")\n";
+    ss << "bounds[0]: (" << bounds[0].x << ", " << bounds[0].y << ", " << bounds[0].z << ")\n";
+    ss << "bounds[1]: (" << bounds[1].x << ", " << bounds[1].y << ", " << bounds[1].z << ")\n";
     return ss.str();
 }

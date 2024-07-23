@@ -35,19 +35,20 @@ void Raytracer::runScene(const std::string& filePath, const std::string& sceneNa
     bool bWriteBmp = true;
     std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneName);
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneName, settings);
     Renderer renderer {settings, scene};
     
     CRTSceneLoader::loadCrtscene(settings, filePath, *scene, image) ? void() : exit(1);
     auto truck = MoveAnimation::Make(MoveType::Truck, 3, 0, 24);
     //scene->animator.addAnimation(scene->camera, truck);
-    fs::create_directories("out/" + sceneName);
+    std::string directory = "out/" + settings.projectDir + "/" + sceneName;
+    fs::create_directories(directory);
     std::vector<Image> imageComponents {};
 
     do {
         renderer.renderScene(image, imageComponents);
 
-        std::string filename = "out/" + sceneName + "/" + std::to_string(scene->animator.getCurrentFrame());
+        std::string filename = directory + "/" + std::to_string(scene->animator.getCurrentFrame());
 
         std::cout << filename << std::endl << scene->metrics.toString() << std::endl;
         std::cout << "---" << std::endl;
@@ -69,16 +70,28 @@ void Raytracer::runScene(const std::string& filePath, const std::string& sceneNa
 int Raytracer::run()
 {
     using path = std::filesystem::path;
-    std::vector<Metrics> metricsList = {};
-    for (const auto& entry : fs::directory_iterator(settings.sceneLibraryDir + "/" + settings.projectDir)) {
-        if (path ext = entry.path().extension(); ext != ".crtscene") {
-            continue;
-        }
+    using dir =  std::filesystem::directory_entry;
+    std::vector<path> scenePaths = {};
 
-        std::string sceneName = entry.path().filename().string();
+    if (settings.loadEntireProject()) {
+        for (const dir& entry : fs::directory_iterator(settings.sceneLibraryDir + "/" + settings.projectDir)) {
+            if (path ext = entry.path().extension(); ext == ".crtscene") {
+                scenePaths.push_back(entry.path());
+            }
+        }
+    }
+    else {
+        for (const std::string& sceneFile : settings.targetScenes) {
+            scenePaths.push_back(path(settings.sceneLibraryDir + "/" + settings.projectDir + "/" + sceneFile));
+        }
+    }
+
+    std::vector<Metrics> metricsList = {};
+    for (const auto& scenePath : scenePaths) {
+        std::string sceneName = scenePath.filename().string();
         sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
         Metrics metrics {};
-        runScene(entry.path().string(), sceneName, metrics);
+        runScene(scenePath.string(), sceneName, metrics);
         metricsList.push_back(metrics);
     }
     writeMetrics(metricsList);

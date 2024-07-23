@@ -14,6 +14,7 @@ enum class TraceHitType {
     // planeFacingRay = PARALLEL
     PARALLEL,                   // rayIntersectsPlane = false, withinTriangle = false
     SMOOTH_SHADING_PARALLEL
+
 };
 
 std::string toString(TraceHitType hitType);

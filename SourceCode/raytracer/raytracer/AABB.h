@@ -2,16 +2,23 @@
 #include <string>
 #include "CRTTypes.h"
 
+class TraceHit;
+class Scene;
+class Ray;
+class Triangle;
 class AABB {
-    AABB(const Vec3& min, const Vec3& max) : min(min), max(max) {}
+public:
+    AABB(const Vec3& min, const Vec3& max) : bounds{min, max} {}
 
     bool intersects(const AABB& other) const;
 
-    bool intersect(const Ray& ray) const;
+    void intersect(const Scene& scene, const Ray& ray, TraceHit& out) const;
+
+    bool check(const Ray& ray) const;
 
     bool contains(const Vec3& point) const;
 
-    void expand(const Vec3& point);
+    void expandWithTriangle(const Scene& scene, const Triangle& triangle, const size_t triangleRef);
 
     Vec3 getCenter() const;
 
@@ -19,6 +26,9 @@ class AABB {
 
     std::string toString() const;
 
+    Vec3 bounds[2] {Vec3{0.f, 0.f, 0.f}, Vec3{0.f, 0.f, 0.f}};
 private:
-    Vec3 min, max;
+    std::vector<size_t> triangleRefs {};
+
+    void expandWithPoint(const Vec3& point);
 };
