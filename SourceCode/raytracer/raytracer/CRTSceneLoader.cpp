@@ -35,7 +35,7 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
 
     std::map<std::string, size_t> idxFromTextureName;
     if (!parseBackgroundColor(j, scene) ||
-        !parseImageSettings(j, image) ||
+        !parseImageSettings(j, image, settings) ||
         !parseCameraSettings(j, scene) ||
         !parseTextures(j, scene, settings, idxFromTextureName) ||
         !parseMaterials(j, scene, idxFromTextureName) ||
@@ -205,11 +205,29 @@ bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
     }
 }
 
-inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image) {
+inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image, const Settings& settings) {
     const auto& jImgSettings = j.at("settings").at("image_settings");
     size_t width = jImgSettings.at("width").get<size_t>();
     size_t height = jImgSettings.at("height").get<size_t>();
+
     image = Image(width, height);
+
+    if (settings.debugPixel) {
+        // Narrow down the pixel to debug
+        image.startPixelY = settings.debugPixelY;
+        image.endPixelY = settings.debugPixelY + 1;
+        image.startPixelX = settings.debugPixelX;
+        image.endPixelX = settings.debugPixelX + 1;
+    }
+
+    if (jImgSettings.contains("bucket_size")) {
+        image.bucketSize = jImgSettings.at("bucket_size").get<size_t>();
+    }
+
+    if(settings.forceSingleThreaded) {
+        image.bucketSize = width * height;
+    }
+
     return true;
 }
 

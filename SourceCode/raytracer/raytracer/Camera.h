@@ -24,7 +24,7 @@ public:
     /*
     * return unit ray in world space, originating from pixel (x,y) on the screen
     */
-    void emplaceTask(const Image& image, int x, int y, std::queue<TraceTask>& queue) const
+    void emplaceTask(const Image& image, size_t x, size_t y, std::queue<TraceTask>& queue) const
     {
         Ray ray = rayFromPixel(image, x, y);
         queue.emplace(ray, x, y);

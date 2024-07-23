@@ -14,9 +14,17 @@ public:
         width(_width),
         height(_height),
         aspectRatio(static_cast<float>(width) / static_cast<float>(height)),
-        data(_width * _height)
+        data(_width * _height),
+        endPixelY(_height),
+        endPixelX(_width)
     {}
     std::vector<Color> data;
+    size_t bucketSize = 24;
+    size_t startPixelY = 0;
+    size_t startPixelX = 0;
+    size_t endPixelY;
+    size_t endPixelX;
+
 
     auto getWidth() const { return width; }
     auto getHeight() const { return height; }

@@ -3,6 +3,8 @@
 #include <tuple>
 #include <queue>
 #include <cmath>
+#include <thread>
+#include <functional>
 
 #include "Camera.h"
 #include "CRTTypes.h"
@@ -22,57 +24,83 @@ class Renderer {
         static constexpr const char* generateQueue = "RENDER_GENERATE_QUEUE";
         static constexpr const char* processQueue = "RENDER_PROCESS_QUEUE";
         static constexpr const char* flatten = "RENDER_FLATTEN";
-    }; 
+    };
 
 public:
     const Settings& settings;
 private:
+    // TODO perf: reserve space for the queue
+    using TraceQueue = std::queue<TraceTask>;
     ImageQueue imageQueue{ 0, 0, {0.f, 0.f, 0.f} };
-    std::queue<TraceTask> traceQueue {};
     std::shared_ptr<Scene> scene;
+    std::vector<TraceQueue> queueBuckets;
 public:
-    Renderer(const Settings& settings, std::shared_ptr<Scene> scene) : settings(settings), scene(scene) {}
+    Renderer(const Settings& settings, std::shared_ptr<Scene> scene) : settings(settings), scene(scene) { }
 
     /*
     * @parameter imageComponents: depth slices of the image, useful for debugging
     */
     void renderScene(Image& image, std::vector<Image>& imageComponents)
     {
-        // TODO perf: reserve space for the queue
         scene->metrics.startTimer(Timers::all);
         if (settings.debugLight) {
             scene->showLightDebug();
         }
 
         // Prepare Primary Queue
-        if (settings.debugPixel) {
-            Ray ray = scene->camera.rayFromPixel(image, settings.debugPixelX, settings.debugPixelY);
-            TraceTask task { .ray = ray,
-                             .pixelX = settings.debugPixelX,
-                             .pixelY = settings.debugPixelY };
-            traceQueue.push(task);
-        }
-        else {
-            scene->metrics.startTimer(Timers::generateQueue);
-            for (int y = 0; y < image.getHeight(); ++y) {
-                for (int x = 0; x < image.getWidth(); ++x) {
-                    scene->camera.emplaceTask(image, x, y, traceQueue);
-                }
+        scene->metrics.startTimer(Timers::generateQueue);
+
+        size_t numPixels = image.getWidth() * image.getHeight();
+        if (numPixels % image.bucketSize != 0) throw std::invalid_argument("numBuckets must divide image size");
+        size_t numBuckets = numPixels / image.bucketSize;
+
+        queueBuckets.resize(numBuckets);
+        for (size_t y = image.startPixelY; y < image.endPixelY; ++y) {
+            for (size_t x = image.startPixelX; x < image.endPixelX; ++x) {
+                size_t bucketId = (y * image.getWidth() + x) / image.bucketSize;
+                TraceQueue& queue = queueBuckets[bucketId];
+                scene->camera.emplaceTask(image, x, y, queue);
             }
-            scene->metrics.stopTimer(Timers::generateQueue);
         }
+
+        scene->metrics.stopTimer(Timers::generateQueue);
         imageQueue = { image.getWidth(), image.getHeight(), scene->bgColor };
 
         scene->metrics.startTimer(Timers::processQueue);
-        processTraceQueue();
+        launchBuckets();
         scene->metrics.stopTimer(Timers::processQueue);
-        flattenImage(image, imageComponents);
 
+        flattenImage(image, imageComponents);
         scene->metrics.stopTimer(Timers::all);
     }
 private:
 
-    void processTraceQueue()
+    void launchBuckets()
+    {
+        const size_t numThreads = std::thread::hardware_concurrency();
+        std::vector<std::thread> threads;
+        std::atomic<size_t> nextQueueIndex{ numThreads };
+
+        for (size_t threadId = 0; threadId < numThreads; ++threadId) {
+            threads.emplace_back(&Renderer::workerThread, this, threadId, std::ref(nextQueueIndex));
+        }
+
+        for (auto& thread : threads) {
+            if (thread.joinable()) {
+                thread.join();
+            }
+        }
+    }
+
+    void workerThread(size_t initialIndex, std::atomic<size_t>& nextQueueIndex) {
+        size_t queueIndex = initialIndex;
+        while (queueIndex < queueBuckets.size()) {
+            processTraceQueue(queueBuckets[queueIndex]);
+            queueIndex = nextQueueIndex.fetch_add(1);
+        }
+    }
+
+    void processTraceQueue(TraceQueue& traceQueue)
     {
         while (!traceQueue.empty()) {
             TraceTask task = traceQueue.front();
@@ -80,11 +108,11 @@ private:
             traceQueue.pop();
             TraceHit hit{};
             scene->intersect(ray, hit);
-            processXData(task, hit);
+            processXData(task, hit, traceQueue);
         }
     }
 
-    void processXData(TraceTask& task, TraceHit& hit) {
+    void processXData(TraceTask& task, TraceHit& hit, TraceQueue& traceQueue) {
         if (!hit.successful()) {
             return;
         }
@@ -104,11 +132,11 @@ private:
             scene->metrics.record("HIT_MATERIAL_CONSTANT");
             break;
         case Material::Type::REFLECTIVE:
-            shadeReflective(task, hit);
+            shadeReflective(task, hit, traceQueue);
             scene->metrics.record("HIT_MATERIAL_REFLECTIVE");
             break;
         case Material::Type::REFRACTIVE:
-            shadeRefractive(task, hit);
+            shadeRefractive(task, hit, traceQueue);
             scene->metrics.record("HIT_MATERIAL_REFRACTIVE");
             break;
         case Material::Type::DEBUG_NORMAL:
@@ -150,7 +178,7 @@ private:
         assert(imageQueue(task.pixelX, task.pixelY).size() > 0);
     }
 
-    void shadeReflective(TraceTask& task, const TraceHit& hit)
+    void shadeReflective(TraceTask& task, const TraceHit& hit, TraceQueue& traceQueue)
     {
         auto& material = scene->materials[hit.materialIndex];
         float originalWeight = task.weight;
@@ -165,7 +193,7 @@ private:
         }
     }
 
-    void shadeRefractive(TraceTask& task, TraceHit& hit)
+    void shadeRefractive(TraceTask& task, TraceHit& hit, TraceQueue& traceQueue)
     {
 #ifndef NDEBUG
         auto oldRay = task.ray;
@@ -189,7 +217,7 @@ private:
         bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-settings.bias), hit.n, etai, etat);
 
         if (hasRefraction) {
-             float fresnelFactor = schlickApprox(task.ray.direction, hit.n, etai, etat);
+            float fresnelFactor = schlickApprox(task.ray.direction, hit.n, etai, etat);
 
             refractionTask.weight *= (1.f - fresnelFactor);
             if (refractionTask.weight > epsilon) {
@@ -199,12 +227,12 @@ private:
             }
 
             reflectiveTask.weight *= fresnelFactor;
-            shadeReflective(reflectiveTask, hit); // shadeReflective takes care of shadeDiffuse
+            shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
 
             scene->metrics.record("shadeRefractive_REFRACTED_YES");
         }
         else {
-            shadeReflective(reflectiveTask, hit); // shadeReflective takes care of shadeDiffuse
+            shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
             scene->metrics.record("shadeRefractive_REFRACTED_NO(TIR)");
         }
 

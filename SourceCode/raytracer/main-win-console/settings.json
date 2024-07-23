@@ -1,22 +1,28 @@
 {
     "sceneLibraryDir": "sceneLibrary",
     "projectDir": "hw13",
-    "targetScenes": [],
-
-    "maxDepth": 4,
-    "bias": 0.0001,
-    "forceSingleThread": false,
-
-    "debugPixel": false,
+    "targetScenes": ["scene0.crtscene"],
+    "outputDir": "out",
+    
+    "maxDepth": 16,
+    "bias": 0.001,
+    "numBuckets": 12,
+    
+    "debugPixel": true,
     "debugPixelX": 0,
     "debugPixelY": 0,
-
+    
     "debugLight": false,
     "debugImageQueue": false,
     "debugAccelStructure": false,
-
+    
     "overrideResolution": true,
     "resolutionX": 300,
-    "resolutionY": 200
-
+    "resolutionY": 200,
+    
+    "bWritePng": true,
+    "bWriteBmp": true,
+    
+    "forceNoAccelStructure": false,
+    "bForceNumBuckets": false
 }

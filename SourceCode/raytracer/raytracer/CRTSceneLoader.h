@@ -21,7 +21,7 @@ public:
 private:
     static bool parseLight(const json& j, Scene& scene);
     static bool parseBackgroundColor(const json& j, Scene& scene);
-    static bool parseImageSettings(const json& j, Image& image);
+    static bool parseImageSettings(const json& j, Image& image, const Settings& settings);
     static bool parseCameraSettings(const json& j, Scene& scene);
     static bool parseTextures(const json& j, Scene& scene, const Settings& settings, std::map<std::string, size_t>& idxFromTextureName);
     static bool parseMaterials(const json& j, Scene& scene, const std::map<std::string, size_t>& idxFromTextureName);

@@ -7,7 +7,7 @@ public:
     size_t settingsId = 0;
 
     // File paths
-    std::string sceneLibraryDir = "scene_library";
+    std::string sceneLibraryDir = "sceneLibrary";
     std::string projectDir = "hw13";
     std::vector<std::string> targetScenes {"scene0.crtscene"};
     std::string outputDir = "out";
@@ -35,8 +35,8 @@ public:
     bool bWriteBmp = true;
 
     // Optimization Settings
-    bool forceSingleThread = false;
     bool forceNoAccelStructure = false;
+    bool forceSingleThreaded = false;
 
     // Functions
     std::string iterationName() const;
