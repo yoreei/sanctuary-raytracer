@@ -49,7 +49,7 @@
 	],
 	
 	"materials": [{
-		"type": "debug_normal",
+		"type": "diffuse",
 			"albedo": [
 				1, 0, 0
 			],

@@ -1,4 +1,5 @@
 #pragma warning( disable : 4365 )
+#include<limits>
 
 #include "Scene.h"
 #include "TraceHit.h"
@@ -123,6 +124,15 @@ void Scene::generateAccelerationStructure()
         const Triangle& tri = triangles[triRef];
         accelStruct.expandWithTriangle(*this, tri, triRef);
     }
+
+    if (settings.forceNoAccelStructure) {
+        // Make accelStruct inifinitely big
+        constexpr float maxF = std::numeric_limits<float>::max();
+        constexpr float minF = std::numeric_limits<float>::lowest();
+        accelStruct.bounds[0] = Vec3{minF, minF, minF};
+        accelStruct.bounds[1] = Vec3{maxF, maxF, maxF};
+    }
+
     metrics.stopTimer(Timers::generateAccelerationStructure);
     std::cout << "accelStruct[0]: " << accelStruct.bounds[0]<< " accelStruct[1]: " << accelStruct.bounds[1] << std::endl;
 }

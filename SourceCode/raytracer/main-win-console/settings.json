@@ -13,10 +13,10 @@
 
     "debugLight": false,
     "debugImageQueue": false,
+    "debugAccelStructure": false,
 
     "overrideResolution": true,
     "resolutionX": 300,
-    "resolutionY": 200,
+    "resolutionY": 200
 
-    "debugAccelStructure": true
 }

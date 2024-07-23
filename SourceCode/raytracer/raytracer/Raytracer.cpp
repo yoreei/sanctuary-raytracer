@@ -28,11 +28,8 @@ void Raytracer::writeFile(const std::string& filename, const std::string& data) 
     ppmFileStream.close();
 }
 
-void Raytracer::runScene(const std::string& filePath, const std::string& sceneName, Metrics& metrics)
+void Raytracer::runScene(const std::string& filePath, const std::string& sceneName)
 {
-    // TODO: Make these configurable
-    bool bWritePng = true;
-    bool bWriteBmp = true;
     std::cout << "Running scene: " << sceneName << std::endl;
     Image image {};
     std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneName, settings);
@@ -41,30 +38,24 @@ void Raytracer::runScene(const std::string& filePath, const std::string& sceneNa
     CRTSceneLoader::loadCrtscene(settings, filePath, *scene, image) ? void() : exit(1);
     auto truck = MoveAnimation::Make(MoveType::Truck, 3, 0, 24);
     //scene->animator.addAnimation(scene->camera, truck);
-    std::string directory = "out/" + settings.projectDir + "/" + sceneName;
+    std::string directory = "out/" + settings.iterationName() + "/" + settings.projectDir + "/" + sceneName;
     fs::create_directories(directory);
     std::vector<Image> imageComponents {};
 
     do {
+        size_t frameNumber = scene->animator.getCurrentFrame();
         renderer.renderScene(image, imageComponents);
 
-        std::string filename = directory + "/" + std::to_string(scene->animator.getCurrentFrame());
-
-        std::cout << filename << std::endl << scene->metrics.toString() << std::endl;
-        std::cout << "---" << std::endl;
-        std::cout << GlobalDebug::toString();
-        std::cout << "---" << std::endl;
-
-        image.writeImage(filename, bWritePng, bWriteBmp);
+        image.writeImage(settings.framePathNoExt(sceneName, frameNumber), settings.bWritePng, settings.bWriteBmp);
         for (size_t i = 0; i < imageComponents.size(); i++) {
-            imageComponents[i].writeImage(filename + "_depth_" + std::to_string(i), bWritePng, bWriteBmp);
+            imageComponents[i].writeImage(settings.framePathNoExt(sceneName, frameNumber) + "_depth_" + std::to_string(i), settings.bWritePng, settings.bWriteBmp);
         }
+        logFrame(settings.framePathNoExt(sceneName, frameNumber), *scene, image);
 
-        if (settings.debugPixel) {
-            std::cout << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
-        }
     } while (scene->animator.update());
-    metrics = scene->metrics;
+
+    // write last frame metrics:
+
 }
 
 int Raytracer::run()
@@ -86,22 +77,34 @@ int Raytracer::run()
         }
     }
 
-    std::vector<Metrics> metricsList = {};
     for (const auto& scenePath : scenePaths) {
         std::string sceneName = scenePath.filename().string();
         sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
-        Metrics metrics {};
-        runScene(scenePath.string(), sceneName, metrics);
-        metricsList.push_back(metrics);
+        runScene(scenePath.string(), sceneName);
     }
-    writeMetrics(metricsList);
 
     return 0;
 }
 
-void Raytracer::writeMetrics(const std::vector<Metrics>& metricsList) {
-    std::ofstream metricsFileStream("out/metrics.txt", std::ios::out);
-    for (const auto& metrics : metricsList) {
-        metricsFileStream << metrics.toString() << std::endl << std::endl;
+void Raytracer::logFrame(const std::string& filenameNoExt, const Scene& scene, const Image& image) {
+    std::ofstream fileStream(filenameNoExt + ".log", std::ios::out);
+    std::string metricsString = scene.metrics.toString();
+    std::string globalDebugString = GlobalDebug::toString();
+
+    fileStream << metricsString << std::endl;
+    fileStream << std::endl;
+    fileStream << globalDebugString << std::endl;
+    fileStream << std::endl;
+
+    std::cout << metricsString << std::endl;
+    std::cout << std::endl;
+    std::cout << globalDebugString << std::endl;
+    std::cout << std::endl;
+
+    if (settings.debugPixel) {
+        std::cout << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
+
+        fileStream << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
     }
+
 }
