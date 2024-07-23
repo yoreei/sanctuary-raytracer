@@ -102,3 +102,17 @@ bool Ray::refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR) {
     assert(dot(direction, dbgOldDirection) > 0);
     return true;
 }
+
+void Vec3::componentMax(const Vec3& vec0, const Vec3& vec1, Vec3& vec2Output)
+{
+    vec2Output.x = std::max({ vec0.x, vec1.x, vec2Output.x });
+    vec2Output.y = std::max({ vec0.y, vec1.y, vec2Output.y });
+    vec2Output.z = std::max({ vec0.z, vec1.z, vec2Output.z });
+}
+
+void Vec3::componentMin(const Vec3& vec0, const Vec3& vec1, Vec3& vec2Output)
+{
+    vec2Output.x = std::min({ vec0.x, vec1.x, vec2Output.x });
+    vec2Output.y = std::min({ vec0.y, vec1.y, vec2Output.y });
+    vec2Output.z = std::min({ vec0.z, vec1.z, vec2Output.z });
+}

@@ -10,28 +10,13 @@
 #include "Metrics.h"
 #include "TraceHit.h"
 
-bool AABB::intersects(const AABB& other) const {
+bool AABB::intersect(const AABB& other) const {
     return (bounds[0].x <= other.bounds[1].x && bounds[1].x >= other.bounds[0].x) &&
         (bounds[0].y <= other.bounds[1].y && bounds[1].y >= other.bounds[0].y) &&
         (bounds[0].z <= other.bounds[1].z && bounds[1].z >= other.bounds[0].z);
 }
 
-
-void AABB::intersect(const Scene& scene, const Ray& ray, TraceHit& out) const {
-    out.t = std::numeric_limits<float>::max();
-    TraceHit hit {};
-
-    for (const size_t& triangleRef : triangleRefs) {
-        const Triangle& tri = scene.triangles[triangleRef];
-        // TODO: Separate plane intersection & triangle uv intersection tests?
-        tri.intersect(scene, ray, hit);
-        if (hit.successful() && hit.t < out.t) {
-            out = hit;
-        }
-    }
-}
-
-bool AABB::check(const Ray& r) const {
+bool AABB::intersect(const Ray& r) const {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
     
     tmin = (bounds[r.sign[0]].x - r.origin.x) * r.invdir.x;
@@ -60,6 +45,24 @@ bool AABB::check(const Ray& r) const {
 
     return true;
 }
+
+void AABB::traverse(const Scene& scene, const Ray& ray, TraceHit& out) const {
+    out.t = std::numeric_limits<float>::max();
+    out.type = TraceHitType::OUT_OF_BOUNDS;
+    TraceHit hit {};
+
+    for (const size_t& triRef : triangleRefs) {
+        const Triangle& tri = scene.triangles[triRef];
+        if (!scene.triangleAABBs[triRef].intersect(ray)) continue;
+
+        zzz why are all triangleAABB intersections false
+        tri.intersect(scene, ray, hit);
+        if (hit.successful() && hit.t < out.t) {
+            out = hit;
+        }
+    }
+}
+
 
 bool AABB::contains(const Vec3& point) const {
     return (point.x >= bounds[0].x && point.x <= bounds[1].x) &&
@@ -102,3 +105,4 @@ inline std::string AABB::toString() const {
     ss << "bounds[1]: (" << bounds[1].x << ", " << bounds[1].y << ", " << bounds[1].z << ")\n";
     return ss.str();
 }
+

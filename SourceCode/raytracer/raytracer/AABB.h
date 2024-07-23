@@ -8,13 +8,15 @@ class Ray;
 class Triangle;
 class AABB {
 public:
+    AABB() = default;
+
     AABB(const Vec3& min, const Vec3& max) : bounds{min, max} {}
 
-    bool intersects(const AABB& other) const;
+    bool intersect(const AABB& other) const;
 
-    void intersect(const Scene& scene, const Ray& ray, TraceHit& out) const;
+    bool intersect(const Ray& ray) const;
 
-    bool check(const Ray& ray) const;
+    void traverse(const Scene& scene, const Ray& ray, TraceHit& out) const;
 
     bool contains(const Vec3& point) const;
 

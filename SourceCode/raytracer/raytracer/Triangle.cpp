@@ -257,4 +257,23 @@ bool Triangle::signOfVolume(const Vec3& a, const Vec3& b, const Vec3& c, const V
     return dot(cross(b-a,c-a),d-a) > 0.f;
 }
 
+void Triangle::buildAABB(const std::vector<Vec3>& vertices, Vec3* bounds) const
+{
+    const Vec3& v0 = vertices[v[0]];
+    const Vec3& v1 = vertices[v[1]];
+    const Vec3& v2 = vertices[v[2]];
+
+    Vec3& min = bounds[0];
+    Vec3& max = bounds[1];
+
+    min.x = std::min({v0.x, v1.x, v2.x});
+    min.y = std::min({v0.y, v1.y, v2.y});
+    min.z = std::min({v0.z, v1.z, v2.z});
+
+    max.x = std::max({v0.x, v1.x, v2.x});
+    max.y = std::max({v0.y, v1.y, v2.y});
+    max.z = std::max({v0.z, v1.z, v2.z});
+}
+
+
 

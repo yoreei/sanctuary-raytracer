@@ -18,23 +18,23 @@ int main()
 
     // Manually specify multiple iterations based on settings file
 
-    settingsList.push_back(settingsList.back());
-    Settings& lastSettings = settingsList.back();
-    lastSettings.forceSingleThreaded = true;
-    lastSettings.forceNoAccelStructure = false;
-    lastSettings.settingsId += 1;
+    //settingsList.push_back(settingsList.back());
+    //Settings& lastSettings = settingsList.back();
+    //lastSettings.forceSingleThreaded = true;
+    //lastSettings.forceNoAccelStructure = false;
+    //lastSettings.settingsId += 1;
 
-    settingsList.push_back(settingsList.back());
-    Settings& lastSettings2 = settingsList.back();
-    lastSettings2.forceSingleThreaded = false;
-    lastSettings2.forceNoAccelStructure = true;
-    lastSettings2.settingsId += 1;
+    //settingsList.push_back(settingsList.back());
+    //Settings& lastSettings2 = settingsList.back();
+    //lastSettings2.forceSingleThreaded = false;
+    //lastSettings2.forceNoAccelStructure = true;
+    //lastSettings2.settingsId += 1;
 
-    settingsList.push_back(settingsList.back());
-    Settings& lastSettings3 = settingsList.back();
-    lastSettings3.forceSingleThreaded = true;
-    lastSettings3.forceNoAccelStructure = true;
-    lastSettings3.settingsId += 1;
+    //settingsList.push_back(settingsList.back());
+    //Settings& lastSettings3 = settingsList.back();
+    //lastSettings3.forceSingleThreaded = true;
+    //lastSettings3.forceNoAccelStructure = true;
+    //lastSettings3.settingsId += 1;
 
     for (Settings& settings : settingsList) {
         std::cout << "Running iteration " << settings.iterationName() << std::endl;

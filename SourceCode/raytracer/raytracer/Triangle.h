@@ -54,6 +54,8 @@ public:
 
     bool signOfVolume(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) const;
 
+    void buildAABB(const std::vector<Vec3>& vertices, Vec3* bounds) const;
+
 private:
     Vec3 normal{};
 };

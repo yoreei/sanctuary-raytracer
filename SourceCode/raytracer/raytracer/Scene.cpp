@@ -39,17 +39,16 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
 }
 
 void Scene::intersect(const Ray& ray, TraceHit& out) const {
-    // debugAccelStructure
     if (settings.debugAccelStructure) {
-        if (accelStruct.check(ray)) {
+        if (accelStruct.intersect(ray)) {
             out.type = TraceHitType::SUCCESS;
             out.n = {0.f, 1.f, 0.f};
         }
         return;
     }
 
-    if (accelStruct.check(ray)) {
-        accelStruct.intersect(*this, ray, out);
+    if (accelStruct.intersect(ray)) {
+        accelStruct.traverse(*this, ray, out);
     }
 }
 
@@ -80,6 +79,7 @@ MeshObject& Scene::addObject(
     assert(triangles.size() > 0);
     assert(vertices.size() > 0);
 
+    isDirty = true;
     return ref;
 }
 
@@ -98,6 +98,7 @@ void Scene::merge(const Scene& other)
     //size_t uvsPadding = moveElement<Vec3>(uvs, scene.uvs);
     //size_t vertexNormalsPadding = moveElement<Vec3>(vertexNormals, scene.vertexNormals);
     //size_t verticesPadding = moveElement<Vec3>(vertices, scene.vertices);
+    //isDirty = true;
 }
 
 void Scene::showLightDebug() {
@@ -117,22 +118,34 @@ void Scene::showLightDebug() {
     //addObjects(lightObjects);
 }
 
-void Scene::generateAccelerationStructure()
+void Scene::build()
 {
-    metrics.startTimer(Timers::generateAccelerationStructure);
-    for (size_t triRef = 0; triRef < triangles.size(); ++triRef) {
-        const Triangle& tri = triangles[triRef];
-        accelStruct.expandWithTriangle(*this, tri, triRef);
+    metrics.startTimer(Timers::buildScene);
+
+    triangleAABBs.clear();
+    triangleAABBs.resize(triangles.size());
+
+    accelStruct.bounds[0] = Vec3::MakeMax();
+    accelStruct.bounds[1] = Vec3::MakeLowest();
+
+    for (size_t i = 0; i < triangles.size(); ++i) {
+        const Triangle& tri = triangles[i];
+        tri.buildAABB(vertices, triangleAABBs[i].bounds);
+
+        Vec3::componentMin(triangleAABBs[i].bounds[0], triangleAABBs[i].bounds[1], accelStruct.bounds[0]);
+        Vec3::componentMax(triangleAABBs[i].bounds[0], triangleAABBs[i].bounds[1], accelStruct.bounds[1]);
     }
+
 
     if (settings.forceNoAccelStructure) {
         // Make accelStruct inifinitely big
-        constexpr float maxF = std::numeric_limits<float>::max();
-        constexpr float minF = std::numeric_limits<float>::lowest();
-        accelStruct.bounds[0] = Vec3{minF, minF, minF};
-        accelStruct.bounds[1] = Vec3{maxF, maxF, maxF};
+        accelStruct.bounds[0] = Vec3::MakeLowest();
+        accelStruct.bounds[1] = Vec3::MakeMax();
     }
 
-    metrics.stopTimer(Timers::generateAccelerationStructure);
     std::cout << "accelStruct[0]: " << accelStruct.bounds[0]<< " accelStruct[1]: " << accelStruct.bounds[1] << std::endl;
+    triangleAABBsDirty = false;
+    isDirty = false;
+
+    metrics.stopTimer(Timers::buildScene);
 }

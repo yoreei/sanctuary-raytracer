@@ -115,13 +115,17 @@ public:
         z = std::clamp(z, min, max);
     }
 
-    static Vec3 minVec() {
-        return Vec3{ std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min() };
+    static Vec3 MakeLowest() {
+        return Vec3{ std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest() };
     }
 
-    static Vec3 maxVec() {
+    static Vec3 MakeMax() {
         return Vec3{ std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
     }
+
+    static void componentMax(const Vec3& vec0, const Vec3& vec1, Vec3& vec2Output);
+
+    static void componentMin(const Vec3& vec0, const Vec3& vec1, Vec3& vec2Output);
 
 };
 

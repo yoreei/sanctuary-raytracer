@@ -1,12 +1,11 @@
 {
     "sceneLibraryDir": "sceneLibrary",
     "projectDir": "hw13",
-    "targetScenes": ["scene0.crtscene"],
+    "targetScenes": [],
     "outputDir": "out",
     
     "maxDepth": 16,
     "bias": 0.001,
-    "numBuckets": 12,
     
     "debugPixel": false,
     "debugPixelX": 0,

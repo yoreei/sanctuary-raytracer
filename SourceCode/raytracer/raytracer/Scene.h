@@ -24,7 +24,7 @@ class TraceHit;
 class Scene
 {
 public:
-    Scene (const std::string& name, const Settings& settings) : fileName(name), metrics(name), animator(*this), settings(settings) {}
+    Scene(const std::string& name, const Settings& settings) : fileName(name), metrics(name), animator(*this), settings(settings) {}
 
     Scene(Scene&&) noexcept = default;
     Scene& operator=(Scene&&) noexcept = default;
@@ -33,11 +33,10 @@ public:
     Scene& operator=(const Scene&) = delete;
 
     std::string fileName = "";
-    Camera camera {};
+    Camera camera{};
     const Settings settings;
-    mutable Metrics metrics {};
+    mutable Metrics metrics{};
     Animator animator;
-    AABB accelStruct { {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f} };
 
     /* meshObjects reference trinagles. Triangles reference vertices */
     std::vector<Light> lights {};
@@ -45,18 +44,20 @@ public:
     std::vector<Material> materials {};
     std::vector<Texture> textures {};
     std::vector<Triangle> triangles {};
+    std::vector<AABB> triangleAABBs {};
     std::vector<Vec3> uvs {};
     std::vector<Vec3> vertexNormals {};
     std::vector<Vec3> vertices {};
     // IMPORTANT: update `Scene::addObjects()` if adding new members
     // IMPORTANT: keep alphabetical order
-    
-    Vec3 bgColor = {0.f, 0.f, 0.f};
+
+    Vec3 bgColor = { 0.f, 0.f, 0.f };
 
     bool isOccluded(const Vec3& start, const Vec3& end) const;
 
     void intersect(const Ray& ray, TraceHit& out) const;
 
+    /* @brief: Marks scene dirty. Do not forget to `build` the scene after addObject! */
     MeshObject& addObject(
         std::vector<Vec3>& objVertices,
         std::vector<Triangle>& objTriangles,
@@ -70,12 +71,18 @@ public:
     */
     void showLightDebug();
 
-    void generateAccelerationStructure();
+    /* @brief: build acceleration structures. Marks scene clean. */
+    void build();
 
     struct Timers {
-        static constexpr const char* generateAccelerationStructure = "generateAccelerationStructure";
+        static constexpr const char* buildScene = "buildScene";
     };
 
-private:
+    bool getIsDirty() const { return isDirty; }
 
+private:
+    AABB accelStruct{ {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f} };
+    bool isDirty = true; /* Scene is dirty if objects are added or removed */
+
+    bool triangleAABBsDirty = true;
 };

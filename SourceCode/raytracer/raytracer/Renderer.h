@@ -43,6 +43,7 @@ public:
     void renderScene(Image& image, std::vector<Image>& imageComponents)
     {
         scene->metrics.startTimer(Timers::all);
+        if (scene->getIsDirty()) throw std::invalid_argument("Scene is dirty, cannot render");
         if (settings.debugLight) {
             scene->showLightDebug();
         }

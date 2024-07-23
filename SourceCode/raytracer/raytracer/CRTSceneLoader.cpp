@@ -48,7 +48,7 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         image = Image(settings.resolutionX, settings.resolutionY);
     }
 
-    scene.generateAccelerationStructure();
+    scene.build();
 
    return true;
 }
