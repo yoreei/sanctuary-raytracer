@@ -117,7 +117,6 @@ private:
             return;
         }
         if (task.depth >= settings.maxDepth) {
-            scene->metrics.record("REACHED_MAX_DEPTH");
             return;
         }
 
@@ -125,23 +124,18 @@ private:
         switch (material.type) {
         case Material::Type::DIFFUSE:
             shadeDiffuse(task, hit);
-            scene->metrics.record("HIT_MATERIAL_DIFFUSE");
             break;
         case Material::Type::CONSTANT:
             shadeConstant(task, hit);
-            scene->metrics.record("HIT_MATERIAL_CONSTANT");
             break;
         case Material::Type::REFLECTIVE:
             shadeReflective(task, hit, traceQueue);
-            scene->metrics.record("HIT_MATERIAL_REFLECTIVE");
             break;
         case Material::Type::REFRACTIVE:
             shadeRefractive(task, hit, traceQueue);
-            scene->metrics.record("HIT_MATERIAL_REFRACTIVE");
             break;
         case Material::Type::DEBUG_NORMAL:
             shadeNormal(task, hit);
-            scene->metrics.record("HIT_MATERIAL_DEBUG_NORMAL");
             break;
         case Material::Type::DEBUG_UV:
             shadeUv(task, hit);
@@ -263,9 +257,7 @@ private:
     * @return: x,y,z clamped to 1.f
     */
     Vec3 clampOverexposure(const Vec3& overexposed) const {
-        scene->metrics.startTimer("slow_overexposure");
         Vec3 slow = clampOverexposureSlow(overexposed);
-        scene->metrics.startTimer("slow_overexposure");
         return slow;
     }
 

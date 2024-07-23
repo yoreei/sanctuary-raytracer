@@ -8,7 +8,7 @@
     "bias": 0.001,
     "numBuckets": 12,
     
-    "debugPixel": true,
+    "debugPixel": false,
     "debugPixelX": 0,
     "debugPixelY": 0,
     
@@ -16,7 +16,7 @@
     "debugImageQueue": false,
     "debugAccelStructure": false,
     
-    "overrideResolution": true,
+    "overrideResolution": false,
     "resolutionX": 300,
     "resolutionY": 200,
     
@@ -24,5 +24,5 @@
     "bWriteBmp": true,
     
     "forceNoAccelStructure": false,
-    "bForceNumBuckets": false
+    "forceSingleThreaded": false
 }

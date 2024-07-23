@@ -28,8 +28,6 @@ void AABB::intersect(const Scene& scene, const Ray& ray, TraceHit& out) const {
         if (hit.successful() && hit.t < out.t) {
             out = hit;
         }
-
-        scene.metrics.record(::toString(hit.type));
     }
 }
 
