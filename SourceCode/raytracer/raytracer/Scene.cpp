@@ -40,14 +40,14 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
 
 void Scene::intersect(const Ray& ray, TraceHit& out) const {
     if (settings.debugAccelStructure) {
-        if (accelStruct.intersect(ray)) {
+        if (accelStruct.hasIntersection(ray)) {
             out.type = TraceHitType::SUCCESS;
             out.n = {0.f, 1.f, 0.f};
         }
         return;
     }
 
-    if (accelStruct.intersect(ray)) {
+    if (accelStruct.hasIntersection(ray)) {
         accelStruct.traverse(*this, ray, out);
     }
 }

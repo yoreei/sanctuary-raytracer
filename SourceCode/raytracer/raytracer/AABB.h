@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <array>
+#include <memory>
+
 #include "CRTTypes.h"
 
 class TraceHit;
@@ -12,10 +15,11 @@ public:
 
     AABB(const Vec3& min, const Vec3& max) : bounds{min, max} {}
 
-    bool intersect(const AABB& other) const;
+    bool hasIntersection(const AABB& other) const;
 
-    bool intersect(const Ray& ray) const;
+    bool hasIntersection(const Ray& ray) const;
 
+    /* @brief Assumes hasIntersection(ray) == true */
     void traverse(const Scene& scene, const Ray& ray, TraceHit& out) const;
 
     bool contains(const Vec3& point) const;
@@ -31,6 +35,10 @@ public:
     Vec3 bounds[2] {Vec3{0.f, 0.f, 0.f}, Vec3{0.f, 0.f, 0.f}};
 private:
     std::vector<size_t> triangleRefs {};
+
+    bool isLeaf() const { return child[0] == nullptr; }
+
+    std::array<std::unique_ptr<AABB>, 2> child {nullptr, nullptr};
 
     void expandWithPoint(const Vec3& point);
 };

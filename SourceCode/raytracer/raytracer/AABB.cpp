@@ -10,13 +10,13 @@
 #include "Metrics.h"
 #include "TraceHit.h"
 
-bool AABB::intersect(const AABB& other) const {
+bool AABB::hasIntersection(const AABB& other) const {
     return (bounds[0].x <= other.bounds[1].x && bounds[1].x >= other.bounds[0].x) &&
         (bounds[0].y <= other.bounds[1].y && bounds[1].y >= other.bounds[0].y) &&
         (bounds[0].z <= other.bounds[1].z && bounds[1].z >= other.bounds[0].z);
 }
 
-bool AABB::intersect(const Ray& r) const {
+bool AABB::hasIntersection(const Ray& r) const {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
     
     tmin = (bounds[r.sign[0]].x - r.origin.x) * r.invdir.x;
@@ -51,15 +51,19 @@ void AABB::traverse(const Scene& scene, const Ray& ray, TraceHit& out) const {
     out.type = TraceHitType::OUT_OF_BOUNDS;
     TraceHit hit {};
 
-    for (const size_t& triRef : triangleRefs) {
-        const Triangle& tri = scene.triangles[triRef];
-        if (!scene.triangleAABBs[triRef].intersect(ray)) continue;
+    if (isLeaf()) {
+        for (const size_t& triRef : triangleRefs) {
+            const Triangle& tri = scene.triangles[triRef];
+            if (!scene.triangleAABBs[triRef].hasIntersection(ray)) continue;
 
-        zzz why are all triangleAABB intersections false
-        tri.intersect(scene, ray, hit);
-        if (hit.successful() && hit.t < out.t) {
-            out = hit;
+            tri.intersect(scene, ray, hit);
+            if (hit.successful() && hit.t < out.t) {
+                out = hit;
+            }
         }
+    }
+    else {
+        child[0]->hasIntersection(ray) ? child[0]->traverse(scene, ray, out) : child[1]->traverse(scene, ray, out);
     }
 }
 
