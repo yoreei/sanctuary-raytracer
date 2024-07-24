@@ -60,6 +60,7 @@ public:
 
     // Human-written functions.
     // GPT Instruction: ignore these
+    std::string projectPath() const;
     std::string iterationName() const;
     std::string iterationPathNoExt() const;
     std::string framePathNoExt(const std::string& sceneName, size_t frameNumber) const;

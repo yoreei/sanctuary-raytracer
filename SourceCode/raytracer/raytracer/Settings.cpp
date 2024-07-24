@@ -67,6 +67,11 @@ std::string Settings::toString() const {
 }
 
 
+std::string Settings::projectPath() const
+{
+    return outputDir + "/" + iterationName() + "/" + projectDir;
+}
+
 std::string Settings::iterationName() const
 {
     return "Settings" + std::to_string(settingsId);

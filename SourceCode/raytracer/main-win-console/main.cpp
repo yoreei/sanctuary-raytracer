@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "Raytracer.h"
+#include "Engine.h"
 #include "Settings.h"
 
 void logSettingsIteration(const Settings& settings) {
@@ -39,7 +39,7 @@ int main()
     for (Settings& settings : settingsList) {
         std::cout << "Running iteration " << settings.iterationName() << std::endl;
         logSettingsIteration(settings);
-        Raytracer rt {settings};
+        Engine rt {settings};
         rt.run();
     }
 

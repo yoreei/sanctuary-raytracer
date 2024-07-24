@@ -26,11 +26,6 @@ bool Animator::update()
     return currentFrame < endFrame;
 }
 
-int Animator::getCurrentFrame() const
-{
-    return currentFrame;
-}
-
 void Animator::addAnimation(SceneObject& object, const std::shared_ptr<Animation>& animation)
 {
     object.animations.push_back(animation);

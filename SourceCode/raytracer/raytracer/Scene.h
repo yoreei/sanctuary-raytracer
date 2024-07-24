@@ -24,7 +24,7 @@ class TraceHit;
 class Scene
 {
 public:
-    Scene(const std::string& name, const Settings& settings) : fileName(name), metrics(name), animator(*this), settings(settings) {}
+    Scene(const std::string& name, const Settings* settings) : fileName(name), metrics(name), animator(*this), settings(settings) {}
 
     Scene(Scene&&) noexcept = default;
     Scene& operator=(Scene&&) noexcept = default;
@@ -34,7 +34,7 @@ public:
 
     std::string fileName = "";
     Camera camera{};
-    const Settings settings;
+    const Settings* settings;
     mutable Metrics metrics{};
     Animator animator;
 
@@ -73,6 +73,9 @@ public:
 
     /* @brief: build acceleration structures. Marks scene clean. */
     void build();
+    
+    /* @brief: advance animations */
+    bool update();
 
     struct Timers {
         static constexpr const char* buildScene = "buildScene";

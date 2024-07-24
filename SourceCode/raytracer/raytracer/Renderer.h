@@ -27,20 +27,24 @@ class Renderer {
     };
 
 public:
-    const Settings& settings;
 private:
     // TODO perf: reserve space for the queue
     using TraceQueue = std::queue<TraceTask>;
     ImageQueue imageQueue{ 0, 0, {0.f, 0.f, 0.f} };
-    std::shared_ptr<Scene> scene;
-    std::vector<TraceQueue> queueBuckets;
+    std::vector<TraceQueue> queueBuckets {};
+
+    // Dependencies
+    const Scene* scene;
+    const Settings* settings;
+    Image* image;
+    std::vector<Image>* auxImages;
 public:
-    Renderer(const Settings& settings, std::shared_ptr<Scene> scene) : settings(settings), scene(scene) { }
+    Renderer(const Settings* settings, const Scene* scene, Image* image, std::vector<Image>* auxImages) : settings(settings), scene(scene), image(image), auxImages(auxImages) { }
 
     /*
     * @parameter imageComponents: depth slices of the image, useful for debugging
     */
-    void renderScene(Image& image, std::vector<Image>& imageComponents)
+    void render()
     {
         scene->metrics.startTimer(Timers::all);
         if (scene->getIsDirty()) throw std::invalid_argument("Scene is dirty, cannot render");
@@ -364,16 +368,16 @@ private:
         imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }
 
-    void flattenImage(Image& image, std::vector<Image>& imageComponents)
+    void flattenImage()
     {
-        if (settings.debugImageQueue) {
+        if (settings->debugImageQueue) {
             ImageQueue imageQueueCopy = imageQueue;
-            imageQueue.flatten(image);
-            imageQueueCopy.slice(imageComponents);
+            imageQueue.flatten(*image);
+            imageQueueCopy.slice(*auxImages);
         }
         else {
             scene->metrics.startTimer(Timers::flatten);
-            imageQueue.flatten(image);
+            imageQueue.flatten(*image);
             scene->metrics.stopTimer(Timers::flatten);
         }
     }
