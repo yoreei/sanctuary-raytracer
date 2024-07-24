@@ -10,6 +10,25 @@
 #include "Metrics.h"
 #include "TraceHit.h"
 
+AABB AABB::MakeEnclosingAABB(std::vector<AABB> aabbs)
+{
+    Vec3 min = Vec3::MakeMax();
+    Vec3 max = Vec3::MakeLowest();
+
+    for (const auto& aabb : aabbs)
+    {
+        min.x = std::min(min.x, aabb.bounds[0].x);
+        min.y = std::min(min.y, aabb.bounds[0].y);
+        min.z = std::min(min.z, aabb.bounds[0].z);
+
+        max.x = std::max(max.x, aabb.bounds[1].x);
+        max.y = std::max(max.y, aabb.bounds[1].y);
+        max.z = std::max(max.z, aabb.bounds[1].z);
+    }
+
+    return {min, max};
+}
+
 bool AABB::hasIntersection(const AABB& other) const {
     return (bounds[0].x <= other.bounds[1].x && bounds[1].x >= other.bounds[0].x) &&
         (bounds[0].y <= other.bounds[1].y && bounds[1].y >= other.bounds[0].y) &&
@@ -46,26 +65,18 @@ bool AABB::hasIntersection(const Ray& r) const {
     return true;
 }
 
-void AABB::traverse(const Scene& scene, const Ray& ray, TraceHit& out) const {
-    out.t = std::numeric_limits<float>::max();
-    out.type = TraceHitType::OUT_OF_BOUNDS;
-    TraceHit hit {};
-
-    if (isLeaf()) {
-        for (const size_t& triRef : triangleRefs) {
-            const Triangle& tri = scene.triangles[triRef];
-            if (!scene.triangleAABBs[triRef].hasIntersection(ray)) continue;
-
-            tri.intersect(scene, ray, hit);
-            if (hit.successful() && hit.t < out.t) {
-                out = hit;
-            }
-        }
-    }
-    else {
-        child[0]->hasIntersection(ray) ? child[0]->traverse(scene, ray, out) : child[1]->traverse(scene, ray, out);
+size_t AABB::getMaxAxis() const
+{
+    Vec3 extents = bounds[1] - bounds[0];
+    if (extents.x > extents.y && extents.x > extents.z) {
+        return 0; // x-axis
+    } else if (extents.y > extents.z) {
+        return 1; // y-axis
+    } else {
+        return 2; // z-axis
     }
 }
+
 
 
 bool AABB::contains(const Vec3& point) const {
@@ -74,16 +85,7 @@ bool AABB::contains(const Vec3& point) const {
         (point.z >= bounds[0].z && point.z <= bounds[1].z);
 }
 
-void AABB::expandWithTriangle(const Scene& scene, const Triangle& triangle, const size_t triangleRef)
-{
-    for (size_t i = 0; i < 3; ++i) {
-        const Vec3& vertex = scene.vertices[triangle.v[i]];
-        this->expandWithPoint(vertex);
-        triangleRefs.push_back(triangleRef);
-    }
-}
-
-void AABB::expandWithPoint(const Vec3& point)
+void AABB::expand(const Vec3& point)
 {
     bounds[0].x = std::min(bounds[0].x, point.x);
     bounds[0].y = std::min(bounds[0].y, point.y);
@@ -110,3 +112,10 @@ inline std::string AABB::toString() const {
     return ss.str();
 }
 
+float AABB::volume() const {
+    float width = bounds[1].x - bounds[0].x;
+    float height = bounds[1].y - bounds[0].y;
+    float depth = bounds[1].z - bounds[0].z;
+
+    return width * height * depth;
+}

@@ -207,6 +207,7 @@
     <ClCompile Include="GlobalDebugData.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="ImageQueue.cpp" />
+    <ClCompile Include="KDTreeNode.cpp" />
     <ClCompile Include="MeshObject.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="stb_image.cpp" />
@@ -232,6 +233,7 @@
     <ClInclude Include="GlobalDebugData.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="ImageQueue.h" />
+    <ClInclude Include="KDTreeNode.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TraceHit.h" />

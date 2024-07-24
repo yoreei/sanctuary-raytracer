@@ -1,12 +1,71 @@
-#include <string>
-#include <fstream>
-
-#include "json.hpp"
+// Settings.cpp
 
 #include "Settings.h"
+#include <fstream>
+#include <string>
+#include "json.hpp"
 
-using json = nlohmann::json;
-using ordered_json = nlohmann::ordered_json;
+// Function to load settings from a JSON file
+Settings Settings::load(const std::string& filename) {
+    Settings settings;
+    std::ifstream file(filename);
+    nlohmann::json json;
+    file >> json;
+
+    settings.sceneLibraryDir = json.at("sceneLibraryDir");
+    settings.projectDir = json.at("projectDir");
+    settings.targetScenes = json.at("targetScenes").get<std::vector<std::string>>();
+    settings.outputDir = json.at("outputDir");
+    settings.maxDepth = json.at("maxDepth");
+    settings.bias = json.at("bias");
+    settings.debugPixel = json.at("debugPixel");
+    settings.debugPixelX = json.at("debugPixelX");
+    settings.debugPixelY = json.at("debugPixelY");
+    settings.debugLight = json.at("debugLight");
+    settings.debugImageQueue = json.at("debugImageQueue");
+    settings.debugAccelStructure = json.at("debugAccelStructure");
+    settings.overrideResolution = json.at("overrideResolution");
+    settings.resolutionX = json.at("resolutionX");
+    settings.resolutionY = json.at("resolutionY");
+    settings.bWritePng = json.at("bWritePng");
+    settings.bWriteBmp = json.at("bWriteBmp");
+    settings.forceNoAccelStructure = json.at("forceNoAccelStructure");
+    settings.forceSingleThreaded = json.at("forceSingleThreaded");
+    settings.maxTrianglesPerLeaf = json.at("maxTrianglesPerLeaf");
+    settings.accelTreeMaxDepth = json.at("accelTreeMaxDepth");
+
+    return settings;
+}
+
+// Function to convert settings to a JSON-formatted string
+std::string Settings::toString() const {
+    nlohmann::json json;
+
+    json["sceneLibraryDir"] = sceneLibraryDir;
+    json["projectDir"] = projectDir;
+    json["targetScenes"] = targetScenes;
+    json["outputDir"] = outputDir;
+    json["maxDepth"] = maxDepth;
+    json["bias"] = bias;
+    json["debugPixel"] = debugPixel;
+    json["debugPixelX"] = debugPixelX;
+    json["debugPixelY"] = debugPixelY;
+    json["debugLight"] = debugLight;
+    json["debugImageQueue"] = debugImageQueue;
+    json["debugAccelStructure"] = debugAccelStructure;
+    json["overrideResolution"] = overrideResolution;
+    json["resolutionX"] = resolutionX;
+    json["resolutionY"] = resolutionY;
+    json["bWritePng"] = bWritePng;
+    json["bWriteBmp"] = bWriteBmp;
+    json["forceNoAccelStructure"] = forceNoAccelStructure;
+    json["forceSingleThreaded"] = forceSingleThreaded;
+    json["maxTrianglesPerLeaf"] = maxTrianglesPerLeaf;
+    json["accelTreeMaxDepth"] = accelTreeMaxDepth;
+
+    return json.dump();
+}
+
 
 std::string Settings::iterationName() const
 {
@@ -16,78 +75,6 @@ std::string Settings::iterationName() const
 bool Settings::loadEntireProject() const
 {
     return targetScenes.empty();
-}
-
-std::vector<Settings> Settings::load(const std::string& filename)
-{
-    std::ifstream file(filename);
-    if (!file) {
-        throw std::runtime_error("Failed to load CRTScene file: " + filename);
-    }
-
-    Settings settings;
-    json j;
-    file >> j;
-
-    settings.sceneLibraryDir = j.value("sceneLibraryDir", "scene_library");
-    settings.projectDir = j.value("projectDir", "hw13");
-    settings.targetScenes = j.value("targetScenes", std::vector<std::string>{"scene0.crtscene"});
-    settings.outputDir = j.value("outputDir", "out");
-
-    settings.maxDepth = j.value("maxDepth", 16);
-    settings.bias = j.value("bias", 0.001f);
-
-    settings.debugPixel = j.value("debugPixel", true);
-    settings.debugPixelX = j.value("debugPixelX", 0);
-    settings.debugPixelY = j.value("debugPixelY", 0);
-
-    settings.debugLight = j.value("debugLight", false);
-    settings.debugImageQueue = j.value("debugImageQueue", false);
-    settings.debugAccelStructure = j.value("debugAccelStructure", false);
-
-    settings.overrideResolution = j.value("overrideResolution", false);
-    settings.resolutionX = j.value("resolutionX", 300);
-    settings.resolutionY = j.value("resolutionY", 200);
-
-    settings.bWritePng = j.value("bWritePng", true);
-    settings.bWriteBmp = j.value("bWriteBmp", true);
-
-    settings.forceNoAccelStructure = j.value("forceNoAccelStructure", false);
-    settings.forceSingleThreaded = j.value("forceSingleThreaded", false);
-
-    return { settings };
-}
-
-std::string Settings::toString() const {
-    ordered_json j;
-
-    j["sceneLibraryDir"] = sceneLibraryDir;
-    j["projectDir"] = projectDir;
-    j["targetScenes"] = targetScenes;
-    j["outputDir"] = outputDir;
-
-    j["maxDepth"] = maxDepth;
-    j["bias"] = bias;
-
-    j["debugPixel"] = debugPixel;
-    j["debugPixelX"] = debugPixelX;
-    j["debugPixelY"] = debugPixelY;
-
-    j["debugLight"] = debugLight;
-    j["debugImageQueue"] = debugImageQueue;
-    j["debugAccelStructure"] = debugAccelStructure;
-
-    j["overrideResolution"] = overrideResolution;
-    j["resolutionX"] = resolutionX;
-    j["resolutionY"] = resolutionY;
-
-    j["bWritePng"] = bWritePng;
-    j["bWriteBmp"] = bWriteBmp;
-
-    j["forceNoAccelStructure"] = forceNoAccelStructure;
-    j["forceSingleThreaded"] = forceSingleThreaded;
-
-    return j.dump(4);  // 4 spaces for pretty print
 }
 
 std::string Settings::iterationPathNoExt() const {

@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-#include "AABB.h"
+#include "KDTreeNode.h"
 #include "Animator.h"
 #include "Animation.h"
 #include "CRTTypes.h"
@@ -81,7 +81,7 @@ public:
     bool getIsDirty() const { return isDirty; }
 
 private:
-    AABB accelStruct{ {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f} };
+    KDTreeNode accelStruct {};
     bool isDirty = true; /* Scene is dirty if objects are added or removed */
 
     bool triangleAABBsDirty = true;

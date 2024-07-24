@@ -14,7 +14,7 @@ void logSettingsIteration(const Settings& settings) {
 
 int main() 
 {
-    std::vector<Settings> settingsList = Settings::load("settings.json");
+    std::vector<Settings> settingsList = {Settings::load("settings.json")};
 
     // Manually specify multiple iterations based on settings file
 

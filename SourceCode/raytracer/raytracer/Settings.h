@@ -1,9 +1,19 @@
+/*
+* filename: Settings.h
+*
+* GPT Prompt: Generate the corresponding implementation file (Settings.cpp) with all functions implemented as per this header file. The output should consist only of valid C++ code, including necessary comments, and should not contain any explanations or additional text. Ensure all code is syntactically correct and complete.
+*
+* Comment to Human: Copy and paste this header into a GPT to receive implementation
+*/
+
 #pragma once
 #include <string>
+#include <vector>
 
 class Settings {
 public:
-    // Unique ID for each render iteration
+    // Unique ID for each render iteration. Not read from file
+    /* GPT Instruction: Do NOT parse settingsId from file */
     size_t settingsId = 0;
 
     // File paths
@@ -37,12 +47,21 @@ public:
     // Optimization Settings
     bool forceNoAccelStructure = false;
     bool forceSingleThreaded = false;
+    size_t maxTrianglesPerLeaf = 4;
+    size_t accelTreeMaxDepth = 12345;
 
-    // Functions
+    // GPT Generated Functions
+    /* GPT Instruction: parse each element using json.at(elem). Do not check if `elem` exists */
+    /* @brief: Will not catch exceptions from nlohmann::json if any key is missing */
+    static Settings load(const std::string& filename = "settings.json");
+    
+    /* Format back to Json-formatted string */
+    std::string toString() const;
+
+    // Human-written functions.
+    // GPT Instruction: ignore these
     std::string iterationName() const;
     std::string iterationPathNoExt() const;
     std::string framePathNoExt(const std::string& sceneName, size_t frameNumber) const;
     bool loadEntireProject() const;
-    static std::vector<Settings> load(const std::string& filename);
-    std::string toString() const;
 };

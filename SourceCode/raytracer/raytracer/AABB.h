@@ -5,7 +5,6 @@
 
 #include "CRTTypes.h"
 
-class TraceHit;
 class Scene;
 class Ray;
 class Triangle;
@@ -15,16 +14,19 @@ public:
 
     AABB(const Vec3& min, const Vec3& max) : bounds{min, max} {}
 
+    static AABB MakeEnclosingAABB(std::vector<AABB> aabbs);
+
     bool hasIntersection(const AABB& other) const;
 
     bool hasIntersection(const Ray& ray) const;
 
-    /* @brief Assumes hasIntersection(ray) == true */
-    void traverse(const Scene& scene, const Ray& ray, TraceHit& out) const;
+    size_t getMaxAxis() const;
+
+    float volume() const;
 
     bool contains(const Vec3& point) const;
 
-    void expandWithTriangle(const Scene& scene, const Triangle& triangle, const size_t triangleRef);
+    void expand(const Vec3& point);
 
     Vec3 getCenter() const;
 
@@ -33,12 +35,4 @@ public:
     std::string toString() const;
 
     Vec3 bounds[2] {Vec3{0.f, 0.f, 0.f}, Vec3{0.f, 0.f, 0.f}};
-private:
-    std::vector<size_t> triangleRefs {};
-
-    bool isLeaf() const { return child[0] == nullptr; }
-
-    std::array<std::unique_ptr<AABB>, 2> child {nullptr, nullptr};
-
-    void expandWithPoint(const Vec3& point);
 };

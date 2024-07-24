@@ -15,13 +15,15 @@
     "debugImageQueue": false,
     "debugAccelStructure": false,
     
-    "overrideResolution": false,
-    "resolutionX": 300,
-    "resolutionY": 200,
+    "overrideResolution": true,
+    "resolutionX": 800,
+    "resolutionY": 600,
     
     "bWritePng": true,
     "bWriteBmp": true,
     
     "forceNoAccelStructure": false,
-    "forceSingleThreaded": false
+    "forceSingleThreaded": false,
+    "maxTrianglesPerLeaf": 10,
+    "accelTreeMaxDepth": 10
 }

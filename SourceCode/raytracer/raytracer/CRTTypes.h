@@ -31,6 +31,20 @@ public:
 
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
+    float& axis(size_t i) {
+        if (i == 0) return x; 
+        if (i == 1) return y; 
+        if (i == 2) return z; 
+        throw std::runtime_error("Vec3::axis: bad parameter"); 
+    }
+
+    const float& axis(size_t i) const {
+        if (i == 0) return x; 
+        if (i == 1) return y; 
+        if (i == 2) return z; 
+        throw std::runtime_error("Vec3::axis: bad parameter"); 
+    }
+
     Vec3 operator+(const Vec3& other) const {
         return Vec3(x + other.x, y + other.y, z + other.z);
     }

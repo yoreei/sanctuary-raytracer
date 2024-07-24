@@ -39,17 +39,7 @@ bool Scene::isOccluded(const Vec3& start, const Vec3& end) const {
 }
 
 void Scene::intersect(const Ray& ray, TraceHit& out) const {
-    if (settings.debugAccelStructure) {
-        if (accelStruct.hasIntersection(ray)) {
-            out.type = TraceHitType::SUCCESS;
-            out.n = {0.f, 1.f, 0.f};
-        }
-        return;
-    }
-
-    if (accelStruct.hasIntersection(ray)) {
-        accelStruct.traverse(*this, ray, out);
-    }
+    accelStruct.traverse(*this, ray, out);
 }
 
 MeshObject& Scene::addObject(
@@ -125,25 +115,25 @@ void Scene::build()
     triangleAABBs.clear();
     triangleAABBs.resize(triangles.size());
 
-    accelStruct.bounds[0] = Vec3::MakeMax();
-    accelStruct.bounds[1] = Vec3::MakeLowest();
-
     for (size_t i = 0; i < triangles.size(); ++i) {
         const Triangle& tri = triangles[i];
         tri.buildAABB(vertices, triangleAABBs[i].bounds);
-
-        Vec3::componentMin(triangleAABBs[i].bounds[0], triangleAABBs[i].bounds[1], accelStruct.bounds[0]);
-        Vec3::componentMax(triangleAABBs[i].bounds[0], triangleAABBs[i].bounds[1], accelStruct.bounds[1]);
     }
 
+    auto triangleRefs = std::vector<size_t>(triangles.size());
+    for (size_t i = 0; i < triangles.size(); ++i) {
+        triangleRefs[i] = i;
+    }
+
+    accelStruct = KDTreeNode(AABB::MakeEnclosingAABB(triangleAABBs));
+    accelStruct.build(std::move(triangleRefs), triangleAABBs, settings.maxTrianglesPerLeaf, settings.accelTreeMaxDepth); 
 
     if (settings.forceNoAccelStructure) {
-        // Make accelStruct inifinitely big
-        accelStruct.bounds[0] = Vec3::MakeLowest();
-        accelStruct.bounds[1] = Vec3::MakeMax();
+        accelStruct.aabb.expand(Vec3::MakeLowest());
+        accelStruct.aabb.expand(Vec3::MakeMax());
     }
 
-    std::cout << "accelStruct[0]: " << accelStruct.bounds[0]<< " accelStruct[1]: " << accelStruct.bounds[1] << std::endl;
+    std::cout<<std::endl<<accelStruct.toString()<<std::endl;
     triangleAABBsDirty = false;
     isDirty = false;
 
