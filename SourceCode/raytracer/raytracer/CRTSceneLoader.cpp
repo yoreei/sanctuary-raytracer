@@ -6,7 +6,6 @@
 #include "json.hpp"
 #include "stb_image.h"
 
-#include "Animation.h"
 #include "CRTSceneLoader.h"
 #include "Scene.h"
 #include "Image.h"
@@ -107,27 +106,6 @@ bool CRTSceneLoader::validateCrtscene(const json& j) {
                 return false;
             }
         }
-        else if (key == "animations") {
-            //	"animations": [{
-            //	"type": "truck",
-            //	"start_frame": 0,
-            //	"end_frame": 10,
-            //	"delta": 5
-            //}],
-            if (!val.is_array()) {
-                std::cerr << "Error loading animations: animations is not an array\n";
-                return false;
-            }
-            for (const auto& jAnim : val) {
-                if (!jAnim.contains("type") ||
-                    !jAnim.contains("start_frame") ||
-                    !jAnim.contains("end_frame")
-                    ) {
-                    std::cerr << "Error loading animation: type or start_frame or end_frame not found\n";
-                    return false;
-                }
-            }
-        }
         else if (key == "textures") {}
         else {
             std::cerr << "Error loading CRTScene: unknown key: " << key << '\n';
@@ -166,25 +144,6 @@ bool CRTSceneLoader::parseLight(const json& j, Scene& scene)
         }
     }
     return true;
-}
-
-std::shared_ptr<Animation> CRTSceneLoader::parseAnimation(const json& j, size_t idx) {
-    assert(j.is_object());
-    assert(j.contains("animations"));
-    const auto& jAnims = j.at("animations");
-    const auto& jAnim = jAnims[idx];
-    int startFrame = jAnim.at("start_frame");
-    int endFrame = jAnim.at("end_frame");
-    std::string type = jAnim.at("type");
-    if (type == "truck") {
-        float delta = jAnim.at("delta");
-        auto truckAnim = MoveAnimation::Make(MoveType::Truck, delta, startFrame, endFrame);
-        return truckAnim;
-    }
-    else {
-        std::cerr << "Error loading animation: unknown type: " << type << '\n';
-        return nullptr;
-    }
 }
 
 bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
@@ -242,15 +201,6 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
     Matrix3x3 camMat = Camera::DefaultMatrix * rotateMat;
 
     scene.camera = Camera{ 90.f, camPos, camMat };
-
-    if (jCam.contains("animation_indexes")) {
-        const auto& animation_indexes = jCam.at("animation_indexes");
-        for (size_t i = 0; i < animation_indexes.size(); ++i) {
-            int animationIdx = animation_indexes[i];
-            auto anim = parseAnimation(j, animationIdx);
-            scene.animator.addAnimation(scene.camera, anim);
-        }
-    }
 
     return true;
 }

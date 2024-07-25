@@ -126,16 +126,41 @@ void Scene::build()
     }
 
     accelStruct = KDTreeNode(AABB::MakeEnclosingAABB(triangleAABBs));
-    accelStruct.build(std::move(triangleRefs), triangleAABBs, settings.maxTrianglesPerLeaf, settings.accelTreeMaxDepth); 
+    accelStruct.build(std::move(triangleRefs), triangleAABBs, settings->maxTrianglesPerLeaf, settings->accelTreeMaxDepth);
 
-    if (settings.forceNoAccelStructure) {
+    if (settings->forceNoAccelStructure) {
         accelStruct.aabb.expand(Vec3::MakeLowest());
         accelStruct.aabb.expand(Vec3::MakeMax());
     }
 
-    std::cout<<std::endl<<accelStruct.toString()<<std::endl;
+    std::cout << std::endl << accelStruct.toString() << std::endl;
     triangleAABBsDirty = false;
     isDirty = false;
 
     metrics.stopTimer(Timers::buildScene);
+}
+
+void Scene::updateAnimations() {
+    for (auto& [index, animComponent] : lightAnimations) {
+        Light& light = lights[index];
+
+        animComponent.intensity.evaluate(light.intensity);
+        animComponent.pos.evaluate(light.pos);
+        animComponent.mat.evaluate(light.mat);
+    }
+
+    for (auto& [index, animComponent] : cameraAnimations) {
+        animComponent.fieldOfView.evaluate(camera.fov);
+        animComponent.pos.evaluate(camera.pos);
+        animComponent.mat.evaluate(camera.mat);
+    }
+
+    for (auto& [index, animComponent] : meshAnimations) {
+        MeshObject& meshObject = meshObjects[index];
+        Vec3 pos = meshObject.pos;
+        animComponent.pos.evaluate(pos);
+        meshObject.translateTo(pos);
+        // rotate
+        std::cerr << "updateAnimations not fully implemented\n";
+    }
 }

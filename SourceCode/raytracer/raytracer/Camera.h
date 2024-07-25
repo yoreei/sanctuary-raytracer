@@ -20,6 +20,7 @@ public:
     auto getUp() const { return mat.col(1); }
     auto getRight() const { return mat.col(0); }
 
+    float fov = 90.0f; // Field of view in degrees
 
     /*
     * return unit ray in world space, originating from pixel (x,y) on the screen
@@ -100,5 +101,4 @@ protected:
     }
 
 private:
-    float fov = 90.0f; // Field of view in degrees
 };

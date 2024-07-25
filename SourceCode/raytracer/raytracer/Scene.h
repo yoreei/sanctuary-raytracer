@@ -1,10 +1,10 @@
 #pragma once
 
 #include <fstream>
+#include <unordered_map>
 
 #include "KDTreeNode.h"
-#include "Animator.h"
-#include "Animation.h"
+#include "AnimationComponent.h"
 #include "CRTTypes.h"
 #include "Camera.h"
 #include "Image.h"
@@ -15,6 +15,7 @@
 #include "Settings.h"
 #include "Triangle.h"
 #include "Texture.h"
+#include "Globals.h"
 
 #include "json.hpp"
 
@@ -24,7 +25,7 @@ class TraceHit;
 class Scene
 {
 public:
-    Scene(const std::string& name, const Settings* settings) : fileName(name), metrics(name), animator(*this), settings(settings) {}
+    Scene(const std::string& name, const Settings* settings) : fileName(name), metrics(name), settings(settings) {}
 
     Scene(Scene&&) noexcept = default;
     Scene& operator=(Scene&&) noexcept = default;
@@ -36,11 +37,10 @@ public:
     Camera camera{};
     const Settings* settings;
     mutable Metrics metrics{};
-    Animator animator;
 
-    /* meshObjects reference trinagles. Triangles reference vertices */
+    // Entities
     std::vector<Light> lights {};
-    std::vector<MeshObject> meshObjects {};
+    std::vector<MeshObject> meshObjects {}; /* meshObjects reference trinagles. Triangles reference vertices */
     std::vector<Material> materials {};
     std::vector<Texture> textures {};
     std::vector<Triangle> triangles {};
@@ -48,6 +48,11 @@ public:
     std::vector<Vec3> uvs {};
     std::vector<Vec3> vertexNormals {};
     std::vector<Vec3> vertices {};
+
+    // Components
+    std::unordered_map<int, AnimationComponent> lightAnimations {}; // Key: index in lights vector
+    std::unordered_map<int, AnimationComponent> meshAnimations {};  // Key: index in meshObjects vector
+    std::unordered_map<int, AnimationComponent> cameraAnimations {}; // size <= 1
     // IMPORTANT: update `Scene::addObjects()` if adding new members
     // IMPORTANT: keep alphabetical order
 
@@ -73,9 +78,6 @@ public:
 
     /* @brief: build acceleration structures. Marks scene clean. */
     void build();
-    
-    /* @brief: advance animations */
-    bool update();
 
     struct Timers {
         static constexpr const char* buildScene = "buildScene";
@@ -83,8 +85,10 @@ public:
 
     bool getIsDirty() const { return isDirty; }
 
+    void updateAnimations();
+
 private:
-    KDTreeNode accelStruct {};
+    KDTreeNode accelStruct{};
     bool isDirty = true; /* Scene is dirty if objects are added or removed */
 
     bool triangleAABBsDirty = true;

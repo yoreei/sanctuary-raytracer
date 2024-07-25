@@ -1,6 +1,6 @@
 #include <string>
 #include <sstream>
-#include "GlobalDebugData.h"
+#include "Globals.h"
 
 namespace GlobalDebug {
 
@@ -18,3 +18,12 @@ namespace GlobalDebug {
     }
 
 } // namespace GlobalDebug
+
+uint64_t GFrameNumber = 0;
+uint64_t GEndFrame = 0;
+
+void GResetGlobals()
+{
+    GFrameNumber = 0;
+    GEndFrame = 0;
+}

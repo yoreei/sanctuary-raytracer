@@ -2,7 +2,6 @@
 #include <memory>
 
 #include "CRTTypes.h"
-#include "Animation.h"
 
 class SceneObject {
 public:
@@ -11,7 +10,19 @@ public:
     }
     Vec3 pos{ 0.f, 0.f, 0.f };
     Matrix3x3 mat = SceneObject::DefaultMatrix;
-    std::vector<std::shared_ptr<Animation>> animations {};
+
+    void rotate(Vec3 rotVec)
+    {
+        rotVec;
+        throw std::runtime_error("not impl");
+
+    }
+
+    void translateTo(Vec3 absPos)
+    {
+        absPos;
+        throw std::runtime_error("not impl");
+    }
 
     inline const static Matrix3x3 DefaultMatrix = { {1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, -1.f } };
 };

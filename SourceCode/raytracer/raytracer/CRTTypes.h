@@ -235,12 +235,30 @@ public:
         return result;
     }
 
+    Matrix3x3 operator+(const Matrix3x3& other) const {
+        return {{
+                (*this)(0,0) + other(0,0), (*this)(0, 1) + other(0,1), (*this)(0,2) + other(0,2),
+                (*this)(1,0) + other(1,0), (*this)(1, 1) + other(1,1), (*this)(1,2) + other(1,2),
+                (*this)(2,0) + other(2,0), (*this)(2, 1) + other(2,1), (*this)(2,2) + other(2,2),
+
+            }};
+    }
+
     Vec3 operator*(const Vec3& vec) const {
         Vec3 result;
         result.x = (*this)(0, 0) * vec.x + (*this)(0, 1) * vec.y + (*this)(0, 2) * vec.z;
         result.y = (*this)(1, 0) * vec.x + (*this)(1, 1) * vec.y + (*this)(1, 2) * vec.z;
         result.z = (*this)(2, 0) * vec.x + (*this)(2, 1) * vec.y + (*this)(2, 2) * vec.z;
         return result;
+    }
+
+    Matrix3x3 operator*(const float num) const {
+        return {{
+                (*this)(0,0) * num, (*this)(0, 1) * num, (*this)(0, 2) * num,
+                (*this)(1,0) * num, (*this)(1, 1) * num, (*this)(1, 2) * num,
+                (*this)(2,0) * num, (*this)(2, 1) * num, (*this)(2, 2) * num,
+
+            }};
     }
 
     Matrix3x3& operator*=(const Matrix3x3& other) {

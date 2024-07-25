@@ -1,5 +1,5 @@
 #include "CRTTypes.h"
-#include "GlobalDebugData.h"
+#include "Globals.h"
 
 bool Ray::compareRefract(const Vec3 point, const Vec3& N, float etai, float etat)
 {

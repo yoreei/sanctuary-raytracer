@@ -7,7 +7,6 @@
 #include <filesystem>
 
 #include "Engine.h"
-#include "Animator.h"
 #include "Image.h"
 #include "CRTTypes.h"
 #include "Triangle.h"
@@ -17,8 +16,8 @@
 #include "CRTSceneLoader.h"
 #include "Renderer.h"
 #include "Settings.h"
-
-#include "GlobalDebugData.h"
+#include "Scripts.h"
+#include "Globals.h"
 
 namespace fs = std::filesystem;
 
@@ -33,16 +32,21 @@ void Engine::tick()
     std::string directory = settings.projectPath() + "/" + scene.fileName;
     fs::create_directories(directory);
 
-    do {
+    while (GFrameNumber <= GEndFrame) {
         renderer.render();
         writeFrame();
+        scene.updateAnimations();
+        ++GFrameNumber;
+    }
 
-    } while (scene.update());
 }
 
 void Engine::loadScene(const std::string& filePath, const std::string& sceneName) {
     std::cout << "Loading scene: " << sceneName << std::endl;
+    GResetGlobals();
+    scene.fileName = sceneName;
     CRTSceneLoader::loadCrtscene(settings, filePath, scene, image) ? void() : exit(1);
+    Scripts::onSceneLoaded(scene);
     std::cout << "Scene " << sceneName << " loaded\n";
 }
 
@@ -69,6 +73,7 @@ int Engine::runAllScenes()
         std::string sceneName = scenePath.filename().string();
         sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
         loadScene(scenePath.string(), sceneName);
+        scene.metrics = Metrics{}; // reset metrics
         tick();
 
     }
@@ -77,15 +82,13 @@ int Engine::runAllScenes()
 }
 
 void Engine::writeFrame() const {
-
-    size_t frameNumber = scene.animator.getCurrentFrame();
-    image.writeImage(settings.framePathNoExt(sceneName, frameNumber), settings.bWritePng, settings.bWriteBmp);
-    for (size_t i = 0; i < imageComponents.size(); i++) {
-        imageComponents[i].writeImage(settings.framePathNoExt(sceneName, frameNumber) + "_depth_" + std::to_string(i), settings.bWritePng, settings.bWriteBmp);
+    std::string framePathNoExt = settings.framePathNoExt(scene.fileName, GFrameNumber);
+    image.writeImage(framePathNoExt, settings.bWritePng, settings.bWriteBmp);
+    for (size_t i = 0; i < auxImages.size(); i++) {
+        auxImages[i].writeImage(framePathNoExt + "_depth_" + std::to_string(i), settings.bWritePng, settings.bWriteBmp);
     }
-    logFrame(settings.framePathNoExt(sceneName, frameNumber), *scene, image);
 
-    std::ofstream fileStream(filenameNoExt + ".log", std::ios::out);
+    std::ofstream fileStream(framePathNoExt + ".log", std::ios::out);
     std::string metricsString = scene.metrics.toString();
     std::string globalDebugString = GlobalDebug::toString();
 

@@ -48,34 +48,31 @@ public:
     {
         scene->metrics.startTimer(Timers::all);
         if (scene->getIsDirty()) throw std::invalid_argument("Scene is dirty, cannot render");
-        if (settings.debugLight) {
-            scene->showLightDebug();
-        }
 
         // Prepare Primary Queue
         scene->metrics.startTimer(Timers::generateQueue);
 
-        size_t numPixels = image.getWidth() * image.getHeight();
-        if (numPixels % image.bucketSize != 0) throw std::invalid_argument("numBuckets must divide image size");
-        size_t numBuckets = numPixels / image.bucketSize;
+        size_t numPixels = image->getWidth() * image->getHeight();
+        if (numPixels % image->bucketSize != 0) throw std::invalid_argument("numBuckets must divide image size");
+        size_t numBuckets = numPixels / image->bucketSize;
 
         queueBuckets.resize(numBuckets);
-        for (size_t y = image.startPixelY; y < image.endPixelY; ++y) {
-            for (size_t x = image.startPixelX; x < image.endPixelX; ++x) {
-                size_t bucketId = (y * image.getWidth() + x) / image.bucketSize;
+        for (size_t y = image->startPixelY; y < image->endPixelY; ++y) {
+            for (size_t x = image->startPixelX; x < image->endPixelX; ++x) {
+                size_t bucketId = (y * image->getWidth() + x) / image->bucketSize;
                 TraceQueue& queue = queueBuckets[bucketId];
-                scene->camera.emplaceTask(image, x, y, queue);
+                scene->camera.emplaceTask(*image, x, y, queue);
             }
         }
 
         scene->metrics.stopTimer(Timers::generateQueue);
-        imageQueue = { image.getWidth(), image.getHeight(), scene->bgColor };
+        imageQueue = { image->getWidth(), image->getHeight(), scene->bgColor };
 
         scene->metrics.startTimer(Timers::processQueue);
         launchBuckets();
         scene->metrics.stopTimer(Timers::processQueue);
 
-        flattenImage(image, imageComponents);
+        flattenImage();
         scene->metrics.stopTimer(Timers::all);
     }
 private:
@@ -121,7 +118,7 @@ private:
         if (!hit.successful()) {
             return;
         }
-        if (task.depth >= settings.maxDepth) {
+        if (task.depth >= settings->maxDepth) {
             return;
         }
 
@@ -168,9 +165,9 @@ private:
             return;
         }
 
-        Material& material = scene->materials[hit.materialIndex];
+        const Material& material = scene->materials[hit.materialIndex];
         Vec3 albedo = material.getAlbedo(*scene, hit);
-        Vec3 light = hitLight(hit.biasP(settings.bias), hit.n); // overexposure x,y,z > 1.f
+        Vec3 light = hitLight(hit.biasP(settings->bias), hit.n); // overexposure x,y,z > 1.f
         Vec3 overexposedColor = multiply(light, albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
         imageQueue(task.pixelX, task.pixelY).push({ diffuseComponent, task.weight });
@@ -186,7 +183,7 @@ private:
 
         task.weight = originalWeight * material.reflectivity;
         if (task.weight > epsilon) {
-            task.ray.reflect(hit.biasP(settings.bias), hit.n);
+            task.ray.reflect(hit.biasP(settings->bias), hit.n);
             ++task.depth;
             traceQueue.push(task);
         }
@@ -213,7 +210,7 @@ private:
         TraceTask& refractionTask = task;
         TraceTask reflectiveTask = task;
 
-        bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-settings.bias), hit.n, etai, etat);
+        bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-settings->bias), hit.n, etai, etat);
 
         if (hasRefraction) {
             float fresnelFactor = schlickApprox(task.ray.direction, hit.n, etai, etat);
@@ -239,7 +236,7 @@ private:
         // assert refractP is farther away from ray.origin than hit.p
         Vec3 oP = hit.p - oldRay.origin;
         float oPLen = oP.lengthSquared();
-        Vec3 oReflect = hit.biasP(settings.bias) - oldRay.origin;
+        Vec3 oReflect = hit.biasP(settings->bias) - oldRay.origin;
         float oReflectLen = oReflect.lengthSquared();
         assert(oReflectLen < oPLen + 10 * epsilon);
 #endif

@@ -10,3 +10,9 @@ namespace GlobalDebug
 
     std::string toString();
 }
+
+// Only Engine should write to GFrameNumber
+extern uint64_t GFrameNumber;
+extern uint64_t GEndFrame;
+
+extern void GResetGlobals();

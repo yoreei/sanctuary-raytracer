@@ -16,8 +16,8 @@
     "debugAccelStructure": false,
     
     "overrideResolution": true,
-    "resolutionX": 800,
-    "resolutionY": 600,
+    "resolutionX": 300,
+    "resolutionY": 200,
     
     "bWritePng": true,
     "bWriteBmp": true,

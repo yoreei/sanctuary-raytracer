@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include "Settings.h"
+#include "Image.h"
+#include "Renderer.h"
 
 class Metrics;
 class Scene;

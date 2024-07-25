@@ -40,7 +40,7 @@ int main()
         std::cout << "Running iteration " << settings.iterationName() << std::endl;
         logSettingsIteration(settings);
         Engine rt {settings};
-        rt.run();
+        rt.runAllScenes();
     }
 
     return 0;
