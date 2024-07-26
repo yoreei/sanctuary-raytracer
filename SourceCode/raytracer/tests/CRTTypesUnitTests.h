@@ -23,13 +23,13 @@ namespace CRTTypesUnitTests
         assert(c.equal({ -15.f, -2.f, 39.f }));
 
         l = c.length();
-        assert(fequal(l, 41.833f));
+        assert(fEqual(l, 41.833f));
 
         A = { 3.f,-3.f,1.f };
         B = { -12.f, 12.f, -4.f };
         A.cross(B, c);
         assert(c.equal({ 0.f, 0.f, 0.f }));
         l = c.length();
-        assert(fequal(l, 0.f));
+        assert(fEqual(l, 0.f));
     }
 } // namespace CRTTypesUnitTests

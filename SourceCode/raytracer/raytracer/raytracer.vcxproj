@@ -199,6 +199,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AABB.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CRTMath.cpp" />
     <ClCompile Include="CRTSceneLoader.cpp" />
     <ClCompile Include="CRTTypes.cpp" />
@@ -207,6 +208,7 @@
     <ClCompile Include="ImageQueue.cpp" />
     <ClCompile Include="KDTreeNode.cpp" />
     <ClCompile Include="MeshObject.cpp" />
+    <ClCompile Include="SceneObject.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="stb_image.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -230,6 +232,7 @@
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="ImageQueue.h" />
+    <ClInclude Include="json_fwd.h" />
     <ClInclude Include="KDTreeNode.h" />
     <ClInclude Include="Scripts.h" />
     <ClInclude Include="stb_image.h" />

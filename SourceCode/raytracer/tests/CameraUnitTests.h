@@ -11,6 +11,17 @@ namespace CameraUnitTests
 {
     void run()
     {
+        Camera cam {};
+        cam.setDir({0.f, 0.f, -1.f});
+        assert(cam.mat.isOrthonormal());
+        assert(cam.getUp().equal(Vec3{0.f, 1.f, 0.f}));
+
+        cam.setDir({0.f, 1.f, 0.f});
+        assert(cam.mat.isOrthonormal());
+
+        cam.setDir({1.f, 0.f, 0.f});
+        assert(cam.mat.isOrthonormal());
+
         /*
         Camera cam;
         UnitTestData::loadCamera1(cam);

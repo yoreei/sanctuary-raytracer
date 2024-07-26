@@ -389,9 +389,7 @@ void CRTSceneLoader::parseUvs(const json& jObj, const size_t expectedSize, std::
         }
     }
     else {
-        for (size_t i = 0; i < expectedSize; ++i) {
-            uvs.emplace_back(0.f, 0.f, 0.f);
-        }
+        uvs.resize(expectedSize, Vec3{0.f, 0.f, 0.f});
     }
 
     assert(uvs.size() == expectedSize);

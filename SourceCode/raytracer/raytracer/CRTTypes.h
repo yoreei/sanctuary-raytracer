@@ -12,6 +12,7 @@
 #include <array>
 
 #include "Utils.h"
+#include "json_fwd.h"
 
 inline bool fEqual(float a, float b, float maxDiff = epsilon) {
     return std::abs(a - b) < maxDiff;
@@ -44,6 +45,8 @@ public:
         if (i == 2) return z; 
         throw std::runtime_error("Vec3::axis: bad parameter"); 
     }
+
+    nlohmann::ordered_json toJson() const;
 
     Vec3 operator+(const Vec3& other) const {
         return Vec3(x + other.x, y + other.y, z + other.z);
@@ -108,6 +111,10 @@ public:
         Vec3 result = *this;
         result.normalize();
         return result;
+    }
+
+    bool isUnit() const {
+        return getUnit().equal(*this);
     }
 
     void normalize() {
@@ -176,6 +183,27 @@ inline Vec3 lerp(const Vec3& a, const Vec3& b, float t) {
     };
 }
 
+inline Vec3 slerp(const Vec3& vec0, const Vec3& vec1, float t) {
+    assert(vec0.isUnit());
+    assert(vec1.isUnit());
+
+    float dot = vec0.dot(vec1);
+    dot = std::clamp(dot, -1.f, 1.f);
+    float theta = std::acos(dot);
+
+    // Special case which preserves numerical stability
+    if (std::fabs(theta) < epsilon) {
+        return lerp(vec0, vec1, t);
+    }
+
+    float sinTheta = std::sin(theta);
+
+    float factor0 = std::sin((1 - t) * theta) / sinTheta;
+    float factor1 = std::sin(t * theta) / sinTheta;
+
+    return vec0 * factor0 + vec1 * factor1;
+}
+
 inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
     os << vec.toString();
     return os;
@@ -222,6 +250,8 @@ public:
         return data[row * 3 + col];
     }
 
+    nlohmann::ordered_json toJson() const;
+
     Matrix3x3 operator*(const Matrix3x3& other) const {
         Matrix3x3 result;
         for (size_t row = 0; row < 3; ++row) {
@@ -266,13 +296,31 @@ public:
         return *this;
     }
 
-    Vec3 col(uint8_t num) const
+    Vec3 getCol(size_t num) const
     {
         if (num > 2) {
-            throw std::out_of_range("Matrix3x3::col: Index out of range: " + num);
+            throw std::out_of_range("Matrix3x3::getCol: Index out of range: " + std::to_string(num));
         }
         return Vec3{ data[num], data[num + size_t(3)], data[num + size_t(6)] };
     }
+
+    void setCol(size_t num, const Vec3& vec)
+    {
+        if (num > 2) {
+            throw std::out_of_range("Matrix3x3::setCol: Index out of range: " + std::to_string(num));
+        }
+        data[num] = vec.x;
+        data[num + size_t(3)] = vec.y;
+        data[num + size_t(6)] = vec.z;
+    }
+
+    Vec3 row(uint8_t num) const
+    {
+        if (num > 2) {
+            throw std::out_of_range("Matrix3x3::row: Index out of range: " + std::to_string(num));
+        }
+        return Vec3{ data[num * 3], data[num * 3 + 1], data[num * 3 + 2] };
+     }
 
     static Matrix3x3 identity() {
         return Matrix3x3();
@@ -303,8 +351,8 @@ public:
         return result;
     }
 
-    /* Rotate around X. pitch */
-    static Matrix3x3 Tilt(float deg) {
+    /* Rotate around X. pitch. Cinema 'tilt' */
+    static Matrix3x3 Pitch(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);
         float sinv = sin(rad);
@@ -316,8 +364,8 @@ public:
         } };
     }
 
-    /* Rotate around Y. yaw */
-    static Matrix3x3 Pan(float deg) {
+    /* Rotate around Y. yaw. Cinema 'pan' */
+    static Matrix3x3 Yaw(float deg) {
         float rad = radFromDeg * deg;
         float cosv = cos(rad);
         float sinv = sin(rad);
@@ -344,7 +392,21 @@ public:
         } };
     }
 
+    bool isOrthonormal() const {
+        Vec3 col0 = getCol(0);
+        Vec3 col1 = getCol(1);
+        Vec3 col2 = getCol(2);
+        
+        bool unitVectors = col0.isUnit() &&
+                           col1.isUnit() && 
+                           col2.isUnit();
 
+        bool perpendicular = fEqual(col0.dot(col1), 0.0f) &&
+                             fEqual(col0.dot(col2), 0.0f) &&
+                             fEqual(col1.dot(col2), 0.0f);
+
+        return unitVectors && perpendicular;
+    }
 
     std::string toString() const {
         std::string result = "";
@@ -379,11 +441,7 @@ public:
     }
 
     /*
-    * @param cosi: allows us to share a dot product calculation with the refract method
-    expectation from caller:
-        cosi = dot(direction, normal)
-        float cosi = std::clamp(-1.f, 1.f, cosi);
-    * @param normal: expected to face the ray.
+    * @param N: expected to face the ray.
     */
     void reflect(const Vec3& point, const Vec3& N) {
         float cosi = dot(direction, N);
@@ -395,19 +453,7 @@ public:
     bool compareRefract(const Vec3 point, const Vec3& N, float etai, float etat);
     /*
     * algorithm from Scratchapixel
-    * @param cosi: Cos of incidence.
-        allows us to share a dot product calculation with the refract method
-    * @param normal: expected to face the ray.
-    expectation from caller:
-        cosi = dot(direction, normal)
-        float cosi = std::clamp(-1.f, 1.f, cosi);
-
-        float etai = 1, etat = ior;
-        Vec3f n = N;
-        if (cosi < 0) { cosi = -cosi; }
-        else { std::swap(etai, etat); n = -N; }
-        float eta = etai / etat;
-
+    * @param N: expected to face the ray.
     */
     bool refractSP(const Vec3 point, const Vec3& N, float etai, float etat);
 

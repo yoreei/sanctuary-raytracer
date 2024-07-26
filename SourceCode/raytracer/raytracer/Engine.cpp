@@ -33,21 +33,24 @@ void Engine::tick()
     fs::create_directories(directory);
 
     while (GFrameNumber <= GEndFrame) {
+        std::cout << ">>> Frame: " << GFrameNumber << std::endl;
+        std::cout << scene.camera.toJson().dump(4) << std::endl;
+        Scripts::onTick(scene);
+        scene.updateAnimations();
         renderer.render();
         writeFrame();
-        scene.updateAnimations();
         ++GFrameNumber;
     }
 
 }
 
 void Engine::loadScene(const std::string& filePath, const std::string& sceneName) {
-    std::cout << "Loading scene: " << sceneName << std::endl;
+    std::cout << ">> Loading scene: " << sceneName << std::endl;
     GResetGlobals();
     scene.fileName = sceneName;
     CRTSceneLoader::loadCrtscene(settings, filePath, scene, image) ? void() : exit(1);
     Scripts::onSceneLoaded(scene);
-    std::cout << "Scene " << sceneName << " loaded\n";
+    std::cout << ">> Scene " << sceneName << " loaded\n";
 }
 
 int Engine::runAllScenes()
@@ -107,6 +110,7 @@ void Engine::writeFrame() const {
 
         fileStream << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
     }
+    std::cout <<std::endl;
 
 }
 

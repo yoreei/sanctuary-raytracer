@@ -1,5 +1,6 @@
 #include "CRTTypes.h"
 #include "Globals.h"
+#include "json.hpp"
 
 bool Ray::compareRefract(const Vec3 point, const Vec3& N, float etai, float etat)
 {
@@ -20,22 +21,6 @@ bool Ray::compareRefract(const Vec3 point, const Vec3& N, float etai, float etat
     return result;
 }
 
-/*
-* algorithm from Scratchapixel
-* @param cosi: Cos of incidence.
-allows us to share a dot product calculation with the refract method
-* @param normal: expected to face the ray.
-expectation from caller:
-cosi = dot(direction, normal)
-float cosi = std::clamp(-1.f, 1.f, cosi);
-
-float etai = 1, etat = ior;
-Vec3f n = N;
-if (cosi < 0) { cosi = -cosi; }
-else { std::swap(etai, etat); n = -N; }
-float eta = etai / etat;
-
-*/
 
 bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
 {
@@ -103,6 +88,14 @@ bool Ray::refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR) {
     return true;
 }
 
+nlohmann::ordered_json Vec3::toJson() const {
+    nlohmann::ordered_json j{};
+    j["x"] = x;
+    j["y"] = y;
+    j["z"] = z;
+    return j;
+}
+
 void Vec3::componentMax(const Vec3& vec0, const Vec3& vec1, Vec3& vec2Output)
 {
     vec2Output.x = std::max({ vec0.x, vec1.x, vec2Output.x });
@@ -116,3 +109,12 @@ void Vec3::componentMin(const Vec3& vec0, const Vec3& vec1, Vec3& vec2Output)
     vec2Output.y = std::min({ vec0.y, vec1.y, vec2Output.y });
     vec2Output.z = std::min({ vec0.z, vec1.z, vec2Output.z });
 }
+
+nlohmann::ordered_json Matrix3x3::toJson() const {
+    nlohmann::ordered_json j;
+    j["row0"] = row(0).toJson();
+    j["row1"] = row(1).toJson();
+    j["row2"] = row(2).toJson();
+    return j;
+}
+

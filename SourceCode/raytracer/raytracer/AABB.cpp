@@ -9,6 +9,7 @@
 #include "Scene.h"
 #include "Metrics.h"
 #include "TraceHit.h"
+#include "CRTTypes.h"
 
 AABB AABB::MakeEnclosingAABB(std::vector<AABB> aabbs)
 {

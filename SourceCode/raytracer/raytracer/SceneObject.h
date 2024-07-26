@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "CRTTypes.h"
+#include "json_fwd.h"
 
 class SceneObject {
 public:
@@ -24,5 +25,6 @@ public:
         throw std::runtime_error("not impl");
     }
 
+    nlohmann::ordered_json toJson() const;
     inline const static Matrix3x3 DefaultMatrix = { {1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, -1.f } };
 };

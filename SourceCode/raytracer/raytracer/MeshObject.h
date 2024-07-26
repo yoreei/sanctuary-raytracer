@@ -23,4 +23,5 @@ public:
     Material& getMaterial(Scene& scene) const;
 
     void setMaterialIdx(Scene& scene, size_t materialIdx);
+
 };

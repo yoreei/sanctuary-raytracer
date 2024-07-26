@@ -7,33 +7,34 @@
 
 namespace Scripts {
     void onSceneLoaded(Scene& scene) {
-        GEndFrame = zzzzzzzzzzzzzzzzz
+        float endFrame = 24;
+        GEndFrame = uint64_t(endFrame);
 
         std::vector<Keyframe<Vec3>> posKfs {
             {0.f, {0.f, 14.f, 26.f}},
-            {2.f, {0.f, 14.f, 0.f}},
+            {endFrame, {0.f, 14.f, 0.f}},
         };
-        Matrix3x3 mat0 = {{
-			1.f, 0.f, 0.f,
-			0.f, 0.906307757f, -0.422618270f,
-			0.f, 0.422618270f, 0.906307757f
-            }};
 
-        Vec3 dir = { -1.f, -0.4f, 0.f };
-        dir.normalize();
-        Vec3 right = Matrix3x3::Pan(-90.f) * dir;
-        Vec3 up = Matrix3x3::Tilt(90.f) * dir;
+        Camera cam0 = scene.camera;
+        cam0.pos = posKfs[0].value;
+        cam0.lookAt({0.f, 0.f, 0.f});
 
-        Matrix3x3 mat1 = Matrix3x3::fromCols(right, up, dir);
+        Camera cam1 = scene.camera;
+        cam1.pos = posKfs[1].value;
+        cam1.lookAt({0.f, 0.f, 0.f});
 
-        std::vector<Keyframe<Matrix3x3>> matKfs {
-            {0.f, mat0},
-            {4.f, mat1},
+        std::vector<Keyframe<Vec3>> dirKfs {
+            {0.f, cam0.getDir()},
+            {endFrame, cam1.getDir()},
         };
         scene.cameraAnimations[0] = AnimationComponent{};
         scene.cameraAnimations[0].pos = AnimationCurve{posKfs};
-        scene.cameraAnimations[0].mat = AnimationCurve{matKfs};
+        scene.cameraAnimations[0].dir = AnimationCurve{dirKfs};
 
+    }
+
+    void onTick(Scene& scene) {
+        scene;
 
     }
 

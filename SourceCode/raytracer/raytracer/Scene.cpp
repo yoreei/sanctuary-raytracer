@@ -144,21 +144,25 @@ void Scene::updateAnimations() {
     for (auto& [index, animComponent] : lightAnimations) {
         Light& light = lights[index];
 
-        animComponent.intensity.evaluate(light.intensity);
-        animComponent.pos.evaluate(light.pos);
-        animComponent.mat.evaluate(light.mat);
+        animComponent.intensity.evaluateLerp(light.intensity);
+        animComponent.pos.evaluateLerp(light.pos);
+        Vec3 newDir;
+        animComponent.dir.evaluateSlerp(newDir);
+        camera.setDir(newDir);
     }
 
     for (auto& [index, animComponent] : cameraAnimations) {
-        animComponent.fieldOfView.evaluate(camera.fov);
-        animComponent.pos.evaluate(camera.pos);
-        animComponent.mat.evaluate(camera.mat);
+        //animComponent.fieldOfView.evaluate(camera.fov);
+        animComponent.pos.evaluateLerp(camera.pos);
+        Vec3 newDir;
+        animComponent.dir.evaluateSlerp(newDir);
+        camera.setDir(newDir);
     }
 
     for (auto& [index, animComponent] : meshAnimations) {
         MeshObject& meshObject = meshObjects[index];
         Vec3 pos = meshObject.pos;
-        animComponent.pos.evaluate(pos);
+        animComponent.pos.evaluateLerp(pos);
         meshObject.translateTo(pos);
         // rotate
         std::cerr << "updateAnimations not fully implemented\n";
