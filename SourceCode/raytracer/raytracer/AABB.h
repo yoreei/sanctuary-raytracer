@@ -20,6 +20,8 @@ public:
 
     bool hasIntersection(const Ray& ray) const;
 
+    float distanceToAxis(size_t axis, const Vec3& point) const;
+
     size_t getMaxAxis() const;
 
     float volume() const;

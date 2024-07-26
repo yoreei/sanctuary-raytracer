@@ -12,6 +12,7 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
     out.t = std::numeric_limits<float>::max();
     out.type = TraceHitType::OUT_OF_BOUNDS;
 
+    // Early out
     if (!aabb.hasIntersection(ray)) return;
 
     if (isLeaf()) {
@@ -27,7 +28,7 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
         }
     }
     else {
-        std::array<const KDTreeNode*, 2> sortedChildren = sortChildrenClosest(ray);
+        std::array<const KDTreeNode*, 2> sortedChildren = closestChildren(ray.origin);
 
         for (const KDTreeNode* childPtr : sortedChildren) {
             childPtr->traverse(scene, ray, out);
@@ -36,17 +37,12 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
     }
 }
 
-std::array<const KDTreeNode*, 2> KDTreeNode::sortChildrenClosest(const Ray& ray) const {
+std::array<const KDTreeNode*, 2> KDTreeNode::closestChildren(const Vec3& point) const {
     assert(axisSplit >= 0 && axisSplit <= 2);
 
-    float distance0Bounds0 = child[0]->aabb.bounds[0].axis(axisSplit) - ray.origin.axis(axisSplit);
-    float distance0Bounds1 = child[0]->aabb.bounds[1].axis(axisSplit) - ray.origin.axis(axisSplit);
-    float distance1Bounds0 = child[1]->aabb.bounds[0].axis(axisSplit) - ray.origin.axis(axisSplit);
-    float distance1Bounds1 = child[1]->aabb.bounds[1].axis(axisSplit) - ray.origin.axis(axisSplit);
-    float distance0Min = std::min(distance0Bounds0, distance0Bounds1);
-    float distance1Min = std::min(distance1Bounds0, distance1Bounds1);
-
-    if (distance0Min <= distance1Min) {
+    float dist0 = child[0]->aabb.distanceToAxis(axisSplit, point);
+    float dist1 = child[1]->aabb.distanceToAxis(axisSplit, point);
+    if (dist0 < dist1) {
         return {child[0].get(), child[1].get()};
     } else {
         return {child[1].get(), child[0].get()};
@@ -99,8 +95,8 @@ void KDTreeNode::build(std::vector<size_t>&& newTriangleRefs, const std::vector<
 
     // 3. Else, Create Children
     child[0] = std::make_unique<KDTreeNode>(child0Aabb);
-    child[0]->build(std::move(triangleRefs0), triangleAABBs, maxTrianglesPerLeaf, maxDepth, depth + 1);
     child[1] = std::make_unique<KDTreeNode>(child1Aabb);
+    child[0]->build(std::move(triangleRefs0), triangleAABBs, maxTrianglesPerLeaf, maxDepth, depth + 1);
     child[1]->build(std::move(triangleRefs1), triangleAABBs, maxTrianglesPerLeaf, maxDepth, depth + 1);
 }
 

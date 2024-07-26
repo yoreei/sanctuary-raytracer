@@ -66,6 +66,15 @@ bool AABB::hasIntersection(const Ray& r) const {
     return true;
 }
 
+float AABB::distanceToAxis(size_t axis, const Vec3& point) const
+{
+    float distanceBounds0 = bounds[0].axis(axis) - point.axis(axis);
+    float distanceBounds1 = bounds[1].axis(axis) - point.axis(axis);
+    float distance = std::min(distanceBounds0, distanceBounds1);
+
+    return distance;
+}
+
 size_t AABB::getMaxAxis() const
 {
     Vec3 extents = bounds[1] - bounds[0];

@@ -5,6 +5,7 @@
 #include "CameraUnitTests.h"
 #include "Benchmarks.h"
 #include "SceneUnitTests.h"
+#include "KDTreeUnitTests.h"
 //#include "RendererIntegrationTests.h"
 
 int main()
@@ -13,6 +14,7 @@ int main()
     TriangleUnitTests::run();
     CameraUnitTests::run();
     SceneUnitTests::run();
+    KDTreeUnitTests::run();
     Benchmarks::run();
 
     //RendererIntegrationTests::run();

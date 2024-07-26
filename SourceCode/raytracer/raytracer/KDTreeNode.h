@@ -27,19 +27,19 @@ public:
 
     void traverse(const Scene& scene, const Ray& ray, TraceHit& out) const;
 
-    std::array<const KDTreeNode*, 2> sortChildrenClosest(const Ray& ray) const;
+    std::array<const KDTreeNode*, 2> closestChildren(const Vec3& point) const;
 
     ordered_json toJson() const;
 
     std::string toString() const;
 
     AABB aabb {};
+
+    std::array<std::unique_ptr<KDTreeNode>, 2> child {nullptr, nullptr};
 private:
     std::vector<size_t> triangleRefs {};
 
     bool isLeaf() const { return child[0] == nullptr; }
-
-    std::array<std::unique_ptr<KDTreeNode>, 2> child {nullptr, nullptr};
 
     int axisSplit = -1;
 };

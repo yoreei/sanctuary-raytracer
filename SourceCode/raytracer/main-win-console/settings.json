@@ -7,9 +7,9 @@
     "maxDepth": 16,
     "bias": 0.001,
     
-    "debugPixel": false,
-    "debugPixelX": 0,
-    "debugPixelY": 0,
+    "debugPixel": true,
+    "debugPixelX": 150,
+    "debugPixelY": 70,
     
     "debugLight": false,
     "debugImageQueue": false,
