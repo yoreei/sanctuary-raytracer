@@ -21,6 +21,7 @@ namespace GlobalDebug {
 
 uint64_t GFrameNumber = 0;
 uint64_t GEndFrame = 0;
+Metrics GMetrics {};
 
 void GResetGlobals()
 {

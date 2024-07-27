@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "CRTTypes.h"
+#include "Metrics.h"
 
 namespace GlobalDebug
 {
@@ -16,3 +17,5 @@ extern uint64_t GFrameNumber;
 extern uint64_t GEndFrame;
 
 extern void GResetGlobals();
+
+extern Metrics GMetrics;

@@ -7,6 +7,13 @@
 
 using ordered_json = nlohmann::ordered_json;
 
+using Counters = std::unordered_map<std::string, int>;
+
+class PerThreadMetrics {
+public:
+     Counters xCounts;
+};
+
 class Timer {
 public:
     void start() {
@@ -35,8 +42,19 @@ public:
         timers[timerKey].stop();
     }
 
-    void record(std::string s) {
-        xCounts[s]++;
+    /* thread safe */
+    void record(std::string s, std::thread::id threadId = std::this_thread::get_id()) {
+        // We perform double-check locking to ensure lock-free metrics recording after the initial wave
+
+        if (threads.find(threadId) == threads.end()) { // Fast Path
+            std::lock_guard<std::mutex> lock(recordMutex); // Slow path
+
+            if (threads.find(threadId) == threads.end()) {
+                threads[threadId] = PerThreadMetrics();
+            }
+        }
+        
+        threads[threadId].xCounts[s]++;
     }
 
     ordered_json toJson() const {
@@ -48,11 +66,18 @@ public:
             const Timer& timer = pair.second;
             j["timers"][timerName] = timer.duration.count();
         }
+
+        auto summedCounters = Counters{};
+        for (const auto& [_, thread] : threads) {
+            _;
+            for (auto& [key, val] : thread.xCounts) {
+                summedCounters[key] += val;
+            }
+        }
+
         j["counters"] = {};
-        for (const auto& pair : xCounts) {
-            const std::string& counterName = pair.first;
-            const int& counterValue = pair.second;
-            j["counters"][counterName] = counterValue;
+        for (const auto& [key, val] : summedCounters) {
+            j["counters"][key] = val;
         }
         return j;
     }
@@ -61,8 +86,15 @@ public:
         return toJson().dump(4);
     }
 
+    void clear() {
+        threads.clear();
+        timers.clear();
+        name.clear();
+    }
+
 private:
-    std::unordered_map<std::string, int> xCounts;
+    std::unordered_map<std::thread::id, PerThreadMetrics> threads {};
     std::unordered_map<std::string, Timer> timers {};
+    std::mutex recordMutex;
     std::string name {};
 };

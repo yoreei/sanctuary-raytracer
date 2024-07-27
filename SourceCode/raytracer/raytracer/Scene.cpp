@@ -110,7 +110,7 @@ void Scene::showLightDebug() {
 
 void Scene::build()
 {
-    metrics.startTimer(Timers::buildScene);
+    GMetrics.startTimer(Timers::buildScene);
 
     triangleAABBs.clear();
     triangleAABBs.resize(triangles.size());
@@ -120,14 +120,12 @@ void Scene::build()
         tri.buildAABB(vertices, triangleAABBs[i].bounds);
     }
 
-    auto triangleRefs = std::vector<size_t>(triangles.size());
+    std::vector<size_t> triangleRefs = std::vector<size_t>(triangles.size());
     for (size_t i = 0; i < triangles.size(); ++i) {
         triangleRefs[i] = i;
     }
 
     accelStruct = KDTreeNode(AABB::MakeEnclosingAABB(triangleAABBs), 0);
-    //std::cout << "hardcoding initial AABB size\n";
-    //accelStruct = KDTreeNode(AABB({-6.f, -5.f, -15.f}, {-2.f, 0.f, 5.f}), 0);
     accelStruct.build(std::move(triangleRefs), triangleAABBs, settings->maxTrianglesPerLeaf, settings->accelTreeMaxDepth);
 
     if (settings->forceNoAccelStructure) {
@@ -139,7 +137,7 @@ void Scene::build()
     triangleAABBsDirty = false;
     isDirty = false;
 
-    metrics.stopTimer(Timers::buildScene);
+    GMetrics.stopTimer(Timers::buildScene);
 }
 
 void Scene::updateAnimations() {

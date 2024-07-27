@@ -74,8 +74,8 @@ int Engine::runAllScenes()
     for (const auto& scenePath : scenePaths) {
         std::string sceneName = scenePath.filename().string();
         sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
+        GMetrics.clear();
         loadScene(scenePath.string(), sceneName);
-        scene.metrics = Metrics{}; // reset metrics
         tick();
 
     }
@@ -91,7 +91,7 @@ void Engine::writeFrame() const {
     }
 
     std::ofstream fileStream(framePathNoExt + ".log", std::ios::out);
-    std::string metricsString = scene.metrics.toString();
+    std::string metricsString = GMetrics.toString();
     std::string globalDebugString = GlobalDebug::toString();
 
     fileStream << metricsString << std::endl;
