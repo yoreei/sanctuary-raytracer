@@ -125,7 +125,9 @@ void Scene::build()
         triangleRefs[i] = i;
     }
 
-    accelStruct = KDTreeNode(AABB::MakeEnclosingAABB(triangleAABBs));
+    accelStruct = KDTreeNode(AABB::MakeEnclosingAABB(triangleAABBs), 0);
+    //std::cout << "hardcoding initial AABB size\n";
+    //accelStruct = KDTreeNode(AABB({-6.f, -5.f, -15.f}, {-2.f, 0.f, 5.f}), 0);
     accelStruct.build(std::move(triangleRefs), triangleAABBs, settings->maxTrianglesPerLeaf, settings->accelTreeMaxDepth);
 
     if (settings->forceNoAccelStructure) {
@@ -133,7 +135,7 @@ void Scene::build()
         accelStruct.aabb.expand(Vec3::MakeMax());
     }
 
-    std::cout << std::endl << accelStruct.toString() << std::endl;
+    // std::cout << std::endl << accelStruct.toString() << std::endl; todo remove
     triangleAABBsDirty = false;
     isDirty = false;
 

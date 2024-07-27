@@ -13,7 +13,9 @@ enum class TraceHitType {
     SMOOTH_SHADING_BACKFACE,
     // planeFacingRay = PARALLEL
     PARALLEL,                   // rayIntersectsPlane = false, withinTriangle = false
-    SMOOTH_SHADING_PARALLEL
+    SMOOTH_SHADING_PARALLEL,
+    // OTHER
+    AABB_PRUNE,
 
 };
 
@@ -30,6 +32,8 @@ public:
     float v = 0.f;    // Texture V coordinate
     size_t materialIndex = 0;
     TraceHitType type = TraceHitType::OUT_OF_BOUNDS;
+    /* ADDED on top of hit albedo. Used, e.g. for debugging Aabbs or light effects */
+    Vec3 traceColor = {0.f, 0.f, 0.f};
     bool successful() const { return type == TraceHitType::SUCCESS || type == TraceHitType::INSIDE_REFRACTIVE; }
     Vec3 biasP(float bias) const { return p + n * bias; }
 };

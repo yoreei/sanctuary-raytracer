@@ -17,6 +17,9 @@ using json = nlohmann::json;
 
 [[nodiscard]]
 bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& filePath, Scene& scene, Image& image) {
+    // Ensure Scene is clean:
+    scene = Scene{scene.fileName, &settings};
+
     std::ifstream file(filePath);
     if (!file) {
         throw std::runtime_error("Failed to load CRTScene file: " + filePath);
@@ -43,13 +46,9 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         return false;
     }
 
-    if (settings.overrideResolution) {
-        image = Image(settings.resolutionX, settings.resolutionY);
-    }
-
     scene.build();
 
-   return true;
+    return true;
 }
 
 bool CRTSceneLoader::validateCrtscene(const json& j) {
@@ -166,10 +165,16 @@ bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
 
 inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image, const Settings& settings) {
     const auto& jImgSettings = j.at("settings").at("image_settings");
-    size_t width = jImgSettings.at("width").get<size_t>();
-    size_t height = jImgSettings.at("height").get<size_t>();
 
-    image = Image(width, height);
+    if (settings.overrideResolution) {
+        image = Image{ settings.resolutionX, settings.resolutionY };
+    }
+    else {
+        size_t width = jImgSettings.at("width").get<size_t>();
+        size_t height = jImgSettings.at("height").get<size_t>();
+
+        image = Image{ width, height };
+    }
 
     if (settings.debugPixel) {
         // Narrow down the pixel to debug
@@ -183,8 +188,8 @@ inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image, cons
         image.bucketSize = jImgSettings.at("bucket_size").get<size_t>();
     }
 
-    if(settings.forceSingleThreaded) {
-        image.bucketSize = width * height;
+    if (settings.forceSingleThreaded || settings.debugPixel) {
+        image.bucketSize = image.getWidth() * image.getHeight();
     }
 
     return true;
@@ -333,17 +338,17 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
 }
 
 void CRTSceneLoader::calculateVertexNormals(const std::vector<Vec3>& vertices, const std::vector<Triangle>& triangles, std::vector<Vec3>& vertexNormals) {
-        // Vec3{0.f, 0.f, 0.f} is important for summation
-    vertexNormals.resize(vertices.size(), Vec3{0.f, 0.f, 0.f});
-    for(size_t i = 0; i < vertices.size(); ++i) {
+    // Vec3{0.f, 0.f, 0.f} is important for summation
+    vertexNormals.resize(vertices.size(), Vec3{ 0.f, 0.f, 0.f });
+    for (size_t i = 0; i < vertices.size(); ++i) {
         std::vector<size_t> attachedTriangles {};
         genAttachedTriangles(i, triangles, attachedTriangles);
-        for(size_t triIndex : attachedTriangles) {
+        for (size_t triIndex : attachedTriangles) {
             vertexNormals[i] += triangles[triIndex].getNormal();
         }
     }
 
-    for(size_t i = 0; i < vertexNormals.size(); ++i) {
+    for (size_t i = 0; i < vertexNormals.size(); ++i) {
         auto& normal = vertexNormals[i];
         normal.normalize();
     }
@@ -351,9 +356,9 @@ void CRTSceneLoader::calculateVertexNormals(const std::vector<Vec3>& vertices, c
 }
 
 void CRTSceneLoader::genAttachedTriangles(const size_t vertexIndex, const std::vector<Triangle>& triangles, std::vector<size_t>& attachedTriangles) {
-    for(size_t i = 0; i < triangles.size(); ++i) {
+    for (size_t i = 0; i < triangles.size(); ++i) {
         const Triangle& tri = triangles[i];
-        if(tri.hasVertex(vertexIndex)) {
+        if (tri.hasVertex(vertexIndex)) {
             attachedTriangles.push_back(i);
         }
     }
@@ -372,7 +377,7 @@ inline bool CRTSceneLoader::parseVertices(const json& jObj, std::vector<Vec3>& v
         float z = jVertices[i + 2].get<float>();
         vertices.emplace_back(x, y, z);
     }
- 
+
     return true;
 }
 
@@ -389,7 +394,7 @@ void CRTSceneLoader::parseUvs(const json& jObj, const size_t expectedSize, std::
         }
     }
     else {
-        uvs.resize(expectedSize, Vec3{0.f, 0.f, 0.f});
+        uvs.resize(expectedSize, Vec3{ 0.f, 0.f, 0.f });
     }
 
     assert(uvs.size() == expectedSize);
@@ -436,7 +441,7 @@ struct TestImage {
     size_t width, height;
     std::vector<TestPixel> data;
 
-    TestImage(size_t w, size_t h) : width(w), height(h), data(w * h) {}
+    TestImage(size_t w, size_t h) : width(w), height(h), data(w* h) {}
 };
 
 void CRTSceneLoader::loadJpgBitmap(std::string filePath, Image& bitmap)
@@ -451,7 +456,7 @@ void CRTSceneLoader::loadJpgBitmap(std::string filePath, Image& bitmap)
     if (ok != 1) {
         throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
     }
-    Image img {size_t(width), size_t(height)};
+    Image img{ size_t(width), size_t(height) };
 
     unsigned char* stbi_ptr = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
     if (stbi_ptr == nullptr || channels < 3 || channels > 4) {
@@ -467,7 +472,7 @@ void CRTSceneLoader::loadJpgBitmap(std::string filePath, Image& bitmap)
 
     stbi_image_free(stbi_ptr);
 
-    bitmap = std::move(img); 
+    bitmap = std::move(img);
 }
 
 void CRTSceneLoader::debugPrintNormals(const Scene& scene)

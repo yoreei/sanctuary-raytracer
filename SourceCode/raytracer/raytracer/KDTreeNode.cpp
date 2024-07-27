@@ -12,17 +12,24 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
     out.t = std::numeric_limits<float>::max();
     out.type = TraceHitType::OUT_OF_BOUNDS;
 
+    traverseRecursive(scene, ray, out);
+}
+
+void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit& out) const {
     // Early out
-    if (!aabb.hasIntersection(ray)) return;
+    if (!aabb.hasIntersection(ray)) {
+        // out.type = TraceHitType::AABB_PRUNE; wrong, overrides success!
+        return;
+    }
 
     if (isLeaf()) {
         for (const size_t& triRef : triangleRefs) {
             const Triangle& tri = scene.triangles[triRef];
             if (!scene.triangleAABBs[triRef].hasIntersection(ray)) continue;
 
-            TraceHit tryHit {};
+            TraceHit tryHit{};
             tri.intersect(scene, ray, tryHit);
-            if (tryHit.successful() && tryHit.t < out.t) {
+            if (tryHit.successful() && tryHit.t < out.t && aabb.contains(tryHit.p)) {
                 out = tryHit;
             }
         }
@@ -30,10 +37,25 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
     else {
         std::array<const KDTreeNode*, 2> sortedChildren = closestChildren(ray.origin);
 
-        for (const KDTreeNode* childPtr : sortedChildren) {
-            childPtr->traverse(scene, ray, out);
-            if (out.successful()) return;
+        for (size_t i = 0; i < sortedChildren.size(); ++i) {
+            const KDTreeNode* childPtr = sortedChildren[i];
+            childPtr->traverseRecursive(scene, ray, out);
+            processAabbDebug(scene, i, out);
+
+            if (out.successful()) {
+                break;
+            }
         }
+    }
+}
+
+void KDTreeNode::processAabbDebug(const Scene& scene, size_t childIdx, TraceHit& out) const
+{
+    if (out.type != TraceHitType::AABB_PRUNE && scene.settings->showAabbs) {
+        Vec3 traceDebugColor = { 0.f, 0.f, 0.f };
+        traceDebugColor.axis(childIdx % 3) += 0.3f;
+        out.traceColor += traceDebugColor;
+        std::cout << "traversing child: " << childIdx << std::endl;
     }
 }
 
@@ -43,18 +65,19 @@ std::array<const KDTreeNode*, 2> KDTreeNode::closestChildren(const Vec3& point) 
     float dist0 = child[0]->aabb.distanceToAxis(axisSplit, point);
     float dist1 = child[1]->aabb.distanceToAxis(axisSplit, point);
     if (dist0 < dist1) {
-        return {child[0].get(), child[1].get()};
-    } else {
-        return {child[1].get(), child[0].get()};
+        return { child[0].get(), child[1].get() };
+    }
+    else {
+        return { child[1].get(), child[0].get() };
     }
 }
 
 void KDTreeNode::build(std::vector<size_t>&& newTriangleRefs, const std::vector<AABB>& triangleAABBs, size_t maxTrianglesPerLeaf, size_t maxDepth, size_t depth)
 {
     // Required: newTriangleRefs intersect aabb
-     
+
     // 0.1 Recursion Root (Make Leaf)
-    if (depth >= maxDepth || newTriangleRefs.size() <= maxTrianglesPerLeaf) {
+    if (depth >= maxDepth /* || newTriangleRefs.size() <= maxTrianglesPerLeaf */) {
         triangleRefs = std::move(newTriangleRefs);
         return; // Leaf
     }
@@ -94,14 +117,14 @@ void KDTreeNode::build(std::vector<size_t>&& newTriangleRefs, const std::vector<
     assert(triangleRefs0.size() + triangleRefs1.size() >= newTriangleRefs.size());
 
     // 3. Else, Create Children
-    child[0] = std::make_unique<KDTreeNode>(child0Aabb);
-    child[1] = std::make_unique<KDTreeNode>(child1Aabb);
+    child[0] = std::make_unique<KDTreeNode>(child0Aabb, 0);
+    child[1] = std::make_unique<KDTreeNode>(child1Aabb, 1);
     child[0]->build(std::move(triangleRefs0), triangleAABBs, maxTrianglesPerLeaf, maxDepth, depth + 1);
     child[1]->build(std::move(triangleRefs1), triangleAABBs, maxTrianglesPerLeaf, maxDepth, depth + 1);
 }
 
 ordered_json KDTreeNode::toJson() const {
-    ordered_json j {};
+    ordered_json j{};
 
     j["min"] = { aabb.bounds[0].x, aabb.bounds[0].y, aabb.bounds[0].z };
     j["max"] = { aabb.bounds[1].x, aabb.bounds[1].y, aabb.bounds[1].z };

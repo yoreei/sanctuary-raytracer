@@ -53,22 +53,13 @@
 			"albedo": [
 				1, 0, 0
 			],
-			"smooth_shading": false,
-			"occludes": false
-		},
-		{
-		"type": "diffuse",
-			"albedo": [
-				0, 1, 0
-			],
-			"smooth_shading": false,
-			"occludes": false
-		}		
+			"smooth_shading": false
+		}
 	],
 	
 	"objects": [
 		{		
-			"material_index": 1,
+			"material_index": 0,
 			"vertices": [
 				-15, -5, 15,
 				15, -5, 15,

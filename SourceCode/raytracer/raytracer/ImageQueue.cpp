@@ -1,4 +1,6 @@
 #include "ImageQueue.h"
+
+#include <algorithm>
 #include "Image.h"
 #include "CRTTypes.h"
 
@@ -23,8 +25,15 @@ void ImageQueue::flatten(Image& image)
         Vec3 unitColor = bgColor;
         while (!data[i].empty()) {
             ColorContrib& layer= data[i].front();
-            unitColor = lerp(unitColor, layer.color, layer.weight);
+            if (layer.blendType == BlendType::NORMAL) {
+                unitColor = lerp(unitColor, layer.color, layer.weight);
+            }
+            else if (layer.blendType == BlendType::ADDITIVE) {
+                unitColor = (unitColor + layer.color);
+                unitColor.clamp(0.f, 1.f);
+            }
             data[i].pop();
+
         }
         image.data[i] = Color::fromUnit(unitColor);
     }
@@ -62,4 +71,3 @@ size_t ImageQueue::maxDepth() const
     return max;
 }
 
-ColorContrib::ColorContrib(Vec3 color, float weight) : color(color), weight(weight) {}

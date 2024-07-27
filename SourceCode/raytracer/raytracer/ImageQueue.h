@@ -3,12 +3,16 @@
 #include <queue>
 #include "CRTTypes.h"
 
+enum class BlendType {
+    NORMAL, /* Source Over */
+    ADDITIVE,
+};
 /* A single ray's contribution to the final pixel color */
 class ColorContrib {
 public:
-    ColorContrib(Vec3 color, float weight);
-    Vec3 color;
-    float weight;
+    Vec3 color = { 0.f, 0.f, 0.f };
+    float weight = 1.f;
+    BlendType blendType = BlendType::NORMAL;
 };
 
 class Image;

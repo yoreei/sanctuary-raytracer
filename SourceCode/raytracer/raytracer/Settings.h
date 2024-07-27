@@ -35,6 +35,8 @@ public:
     bool debugImageQueue = false;
     bool debugAccelStructure = false;
 
+    bool showAabbs = false;
+
     // Resolution settings
     bool overrideResolution = false;
     size_t resolutionX = 300;

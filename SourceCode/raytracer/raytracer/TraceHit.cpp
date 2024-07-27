@@ -8,6 +8,7 @@ std::string toString(TraceHitType hitType) {
     case TraceHitType::PLANE_BEHIND_RAY_ORIGIN: return "PLANE_BEHIND_RAY_ORIGIN";
     case TraceHitType::PLANE_BACKFACE: return "PLANE_BACKFACE";
     case TraceHitType::PARALLEL: return "PARALLEL";
+    case TraceHitType::AABB_PRUNE: return "AABB_PRUNE";
     default: return "UNKNOWN";
     }
 }

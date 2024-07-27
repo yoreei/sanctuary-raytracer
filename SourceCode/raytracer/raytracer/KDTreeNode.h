@@ -15,7 +15,7 @@ class KDTreeNode
     using ordered_json = nlohmann::ordered_json;
 public:
     KDTreeNode() = default;
-    KDTreeNode(const AABB& aabb) : aabb(aabb) {}
+    KDTreeNode(const AABB& aabb, size_t childId) : aabb(aabb), childId(childId) {}
     KDTreeNode(const KDTreeNode&) = delete;
     KDTreeNode& operator=(const KDTreeNode&) = delete;
     KDTreeNode(KDTreeNode&&) = default;
@@ -27,7 +27,11 @@ public:
 
     void traverse(const Scene& scene, const Ray& ray, TraceHit& out) const;
 
+    void traverseRecursive(const Scene& scene, const Ray& ray, TraceHit& out) const;
+
     std::array<const KDTreeNode*, 2> closestChildren(const Vec3& point) const;
+
+    void processAabbDebug(const Scene& scene, size_t childIdx, TraceHit& out) const;
 
     ordered_json toJson() const;
 
@@ -42,5 +46,7 @@ private:
     bool isLeaf() const { return child[0] == nullptr; }
 
     int axisSplit = -1;
+
+    size_t childId = 0;
 };
 

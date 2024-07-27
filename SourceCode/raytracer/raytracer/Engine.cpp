@@ -34,7 +34,6 @@ void Engine::tick()
 
     while (GFrameNumber <= GEndFrame) {
         std::cout << ">>> Frame: " << GFrameNumber << std::endl;
-        std::cout << scene.camera.toJson().dump(4) << std::endl;
         Scripts::onTick(scene);
         scene.updateAnimations();
         renderer.render();

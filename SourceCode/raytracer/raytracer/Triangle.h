@@ -40,7 +40,7 @@ public:
 
     static TraceHitType getTraceHitType(const Vec3& n, const Vec3& rayDir);
 
-    static void assertTraceHitType(TraceHitType type, const Scene& scene, size_t materialIndex);
+    static void assertHit(const Scene& scene, const TraceHit& hit);
 
     Triangle swappedTriangle() const;
 

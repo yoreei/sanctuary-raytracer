@@ -7,23 +7,25 @@
     "maxDepth": 16,
     "bias": 0.001,
     
-    "debugPixel": true,
-    "debugPixelX": 150,
-    "debugPixelY": 70,
+    "debugPixel": false,
+    "debugPixelX": 90,
+    "debugPixelY": 150,
     
     "debugLight": false,
     "debugImageQueue": false,
     "debugAccelStructure": false,
+
+    "showAabbs": false,
     
     "overrideResolution": true,
-    "resolutionX": 300,
-    "resolutionY": 200,
+    "resolutionX": 800,
+    "resolutionY": 600,
     
     "bWritePng": true,
     "bWriteBmp": true,
     
     "forceNoAccelStructure": false,
     "forceSingleThreaded": false,
-    "maxTrianglesPerLeaf": 10,
-    "accelTreeMaxDepth": 10
+    "maxTrianglesPerLeaf": 8,
+    "accelTreeMaxDepth": 0
 }

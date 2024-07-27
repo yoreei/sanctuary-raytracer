@@ -11,7 +11,6 @@
 #include "Image.h"
 #include "Scene.h"
 #include "Triangle.h"
-#include "Tasks.h"
 #include "TraceHit.h"
 #include "ImageQueue.h"
 
@@ -149,6 +148,21 @@ private:
             throw std::invalid_argument("not handled");
             break;
         }
+        postProcessTraceColor(task, hit);
+    }
+
+    void postProcessTraceColor(TraceTask& task, const TraceHit& hit)
+    {
+        if (hit.traceColor.equal(Vec3{0.f, 0.f, 0.f})) {
+            return;
+        }
+
+        imageQueue(task.pixelX, task.pixelY).push( 
+            ColorContrib { 
+                .color = hit.traceColor, 
+                .weight = 1.f, /* weight should not matter */ 
+                .blendType = BlendType::ADDITIVE,
+            });
     }
 
     void shadeConstant(TraceTask& task, const TraceHit& hit)

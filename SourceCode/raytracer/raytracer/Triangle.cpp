@@ -91,6 +91,7 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& hit) cons
     else {
         hit.type = TraceHitType::PARALLEL;
     }
+
 }
 
 /*
@@ -158,7 +159,7 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
         hit.materialIndex = this->materialIndex;
         hit.n = hitNormal(scene, hit);
         hit.type = getTraceHitType(hit.n, ray.direction);
-        assertTraceHitType(hit.type, scene, materialIndex);
+        assertHit(scene, hit);
         return;
     }
     else {
@@ -180,16 +181,19 @@ TraceHitType Triangle::getTraceHitType(const Vec3& n, const Vec3& rayDir) {
     }
 }
 
-void Triangle::assertTraceHitType(TraceHitType type, const Scene& scene, size_t materialIndex) {
+void Triangle::assertHit(const Scene& scene, const TraceHit& hit) {
     // This function should be optimized away by the compiler in release builds
     // Suppress unused parameter warnings:
-    type;
     scene;
-    materialIndex;
+    hit;
 #ifndef NDEBUG
-    if (type == TraceHitType::SMOOTH_SHADING_BACKFACE || type == TraceHitType::SMOOTH_SHADING_PARALLEL) {
-        assert(scene.materials[materialIndex].smoothShading);
+    if (hit.type == TraceHitType::SMOOTH_SHADING_BACKFACE || hit.type == TraceHitType::SMOOTH_SHADING_PARALLEL) {
+        assert(scene.materials[hit.materialIndex].smoothShading);
     }
+    if (hit.successful()){
+        assert(hit.t >= 0);
+    }
+    
 #endif
 }
 

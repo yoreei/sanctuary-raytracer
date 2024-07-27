@@ -24,6 +24,7 @@ Settings Settings::load(const std::string& filename) {
     settings.debugLight = json.at("debugLight");
     settings.debugImageQueue = json.at("debugImageQueue");
     settings.debugAccelStructure = json.at("debugAccelStructure");
+    settings.showAabbs = json.at("showAabbs");
     settings.overrideResolution = json.at("overrideResolution");
     settings.resolutionX = json.at("resolutionX");
     settings.resolutionY = json.at("resolutionY");
@@ -53,6 +54,7 @@ std::string Settings::toString() const {
     json["debugLight"] = debugLight;
     json["debugImageQueue"] = debugImageQueue;
     json["debugAccelStructure"] = debugAccelStructure;
+    json["showAabbs"] = showAabbs;
     json["overrideResolution"] = overrideResolution;
     json["resolutionX"] = resolutionX;
     json["resolutionY"] = resolutionY;

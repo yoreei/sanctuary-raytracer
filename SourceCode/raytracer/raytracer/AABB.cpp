@@ -68,8 +68,8 @@ bool AABB::hasIntersection(const Ray& r) const {
 
 float AABB::distanceToAxis(size_t axis, const Vec3& point) const
 {
-    float distanceBounds0 = bounds[0].axis(axis) - point.axis(axis);
-    float distanceBounds1 = bounds[1].axis(axis) - point.axis(axis);
+    float distanceBounds0 = std::fabs(bounds[0].axis(axis) - point.axis(axis));
+    float distanceBounds1 = std::fabs(bounds[1].axis(axis) - point.axis(axis));
     float distance = std::min(distanceBounds0, distanceBounds1);
 
     return distance;
@@ -90,9 +90,9 @@ size_t AABB::getMaxAxis() const
 
 
 bool AABB::contains(const Vec3& point) const {
-    return (point.x >= bounds[0].x && point.x <= bounds[1].x) &&
-        (point.y >= bounds[0].y && point.y <= bounds[1].y) &&
-        (point.z >= bounds[0].z && point.z <= bounds[1].z);
+    return (point.x >= bounds[0].x - epsilon && point.x <= bounds[1].x + epsilon) &&
+           (point.y >= bounds[0].y - epsilon && point.y <= bounds[1].y + epsilon) &&
+           (point.z >= bounds[0].z - epsilon && point.z <= bounds[1].z + epsilon);
 }
 
 void AABB::expand(const Vec3& point)
