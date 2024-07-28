@@ -37,7 +37,7 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
     }
 
     std::map<std::string, size_t> idxFromTextureName;
-    if (!parseBackgroundColor(j, scene) ||
+    if (!parseSettings(j, scene, settings) ||
         !parseImageSettings(j, image, settings) ||
         !parseCameraSettings(j, scene) ||
         !parseTextures(j, scene, settings, idxFromTextureName) ||
@@ -47,12 +47,6 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         return false;
     }
 
-    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0001.png", scene.cubemap.images[0]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0002.png", scene.cubemap.images[1]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0003.png", scene.cubemap.images[2]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0004.png", scene.cubemap.images[3]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0005.png", scene.cubemap.images[4]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0006.png", scene.cubemap.images[5]);
 
     scene.build();
 
@@ -153,22 +147,21 @@ bool CRTSceneLoader::parseLight(const json& j, Scene& scene)
     return true;
 }
 
-bool CRTSceneLoader::parseBackgroundColor(const json& j, Scene& scene) {
-    try {
-        const auto& jBgColor = j.at("settings").at("background_color");
+bool CRTSceneLoader::parseSettings(const json& j, Scene& scene, const Settings& settings) {
+    const auto& jSettings = j.at("settings");
+    const auto& jBgColor = jSettings.at("background_color");
+    scene.bgColor = Vec3{ jBgColor[0], jBgColor[1], jBgColor[2] };
 
-        if (!jBgColor.is_array() || jBgColor.size() != 3) {
-            std::cerr << "Error loading background_color: background_color is not an array or not of size 3\n";
-            return false;
-        }
+    std::string sceneTime = Utils::jsonGetDefault<std::string>(jSettings, "skybox", std::string("day_1"));
 
-        scene.bgColor = Vec3{ jBgColor[0], jBgColor[1], jBgColor[2] };
-        return true;
-    }
-    catch (const json::exception& e) {
-        std::cerr << "Error loading background_color: " << e.what() << '\n';
-        return false;
-    }
+    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0001.png", scene.cubemap.images[0]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0002.png", scene.cubemap.images[1]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0003.png", scene.cubemap.images[2]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0004.png", scene.cubemap.images[3]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0005.png", scene.cubemap.images[4]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0006.png", scene.cubemap.images[5]);
+
+    return true;
 }
 
 inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image, const Settings& settings) {

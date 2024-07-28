@@ -44,16 +44,6 @@ public:
 
     /* thread safe */
     void record(std::string s, std::thread::id threadId = std::this_thread::get_id()) {
-        // We perform double-check locking to ensure lock-free metrics recording after the initial wave
-
-        if (threads.find(threadId) == threads.end()) { // Fast Path
-            std::lock_guard<std::mutex> lock(recordMutex); // Slow path
-
-            if (threads.find(threadId) == threads.end()) {
-                threads[threadId] = PerThreadMetrics();
-            }
-        }
-        
         threads[threadId].xCounts[s]++;
     }
 
@@ -92,9 +82,14 @@ public:
         name.clear();
     }
 
+    void reserveThread(std::thread::id threadId = std::this_thread::get_id()) {
+        std::lock_guard<std::mutex> lock(reserveThreadMutex);
+        threads[threadId] = PerThreadMetrics();
+    }
+
 private:
     std::unordered_map<std::thread::id, PerThreadMetrics> threads {};
     std::unordered_map<std::string, Timer> timers {};
-    std::mutex recordMutex;
+    std::mutex reserveThreadMutex;
     std::string name {};
 };

@@ -29,7 +29,7 @@ public:
 private:
     // TODO perf: reserve space for the queue
     using TraceQueue = std::queue<TraceTask>;
-    ShadingSamples shadingSamples{ 0, 0, {0.f, 0.f, 0.f} };
+    ShadingSamples shadingSamples{ 0, 0 };
     std::vector<TraceQueue> queueBuckets {};
 
     // Dependencies
@@ -65,7 +65,7 @@ public:
         }
 
         GSceneMetrics.stopTimer(Timers::generateQueue);
-        shadingSamples = { image->getWidth(), image->getHeight(), scene->bgColor };
+        shadingSamples = { image->getWidth(), image->getHeight()};
 
         GSceneMetrics.startTimer(Timers::processQueue);
         launchBuckets();
@@ -94,6 +94,7 @@ private:
     }
 
     void workerThread(size_t initialIndex, std::atomic<size_t>& nextQueueIndex) {
+        GSceneMetrics.reserveThread();
         size_t queueIndex = initialIndex;
         while (queueIndex < queueBuckets.size()) {
             processTraceQueue(queueBuckets[queueIndex]);

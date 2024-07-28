@@ -25,7 +25,7 @@ class ShadingSamples
 {
 public:
     // TODO: refactor width, height to pixelHandle
-    ShadingSamples(size_t width, size_t height, const Vec3& bgColor);
+    ShadingSamples(size_t width, size_t height);
 
     /* @ouput image: flattened image */
     void flatten(Image& image);
@@ -37,7 +37,5 @@ public:
     std::vector<PixelQueue> data;
     size_t width;
     size_t height;
-private:
-    Vec3 bgColor;
 };
 

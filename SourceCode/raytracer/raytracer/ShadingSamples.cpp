@@ -4,7 +4,7 @@
 #include "Image.h"
 #include "CRTTypes.h"
 
-ShadingSamples::ShadingSamples(size_t width, size_t height, const Vec3& bgColor): width(width), height(height), bgColor(bgColor)
+ShadingSamples::ShadingSamples(size_t width, size_t height): width(width), height(height)
 {
     data.resize(width * height, {});
 }
@@ -21,13 +21,19 @@ PixelQueue& ShadingSamples::operator()(size_t x, size_t y)
 void ShadingSamples::flatten(Image& image)
 {
     assert(image.getWidth() == width && image.getHeight() == height);
-    for (int i = 0; i < width * height; i++) {
-        Vec3 unitColor = bgColor;
+
+    // for each pixel
+    for (size_t i = 0; i < width * height; ++i) {
+        Vec3 unitColor = {0.f, 1.f, 0.f}; // should not appear in final image. TODO remove
+
+        // and each shade color
         while (!data[i].empty()) {
             ColorContrib& layer= data[i].front();
+
             if (layer.blendType == BlendType::NORMAL) {
                 unitColor = lerp(unitColor, layer.color, layer.weight);
             }
+
             else if (layer.blendType == BlendType::ADDITIVE) {
                 unitColor = (unitColor + layer.color);
                 unitColor.clamp(0.f, 1.f);
