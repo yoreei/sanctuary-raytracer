@@ -39,7 +39,7 @@ int main()
         rt.runAllScenes();
     }
 
-    std::cout << "\n\n\nGBestSettings:\n\n\n";
-    std::cout << GBestSettings << std::endl;
+    //std::cout << "\n\n\nGBestSettings:\n\n\n";
+    //std::cout << GBestSettings << std::endl;
     return 0;
 }

@@ -205,7 +205,7 @@
     <ClCompile Include="CRTTypes.cpp" />
     <ClCompile Include="Globals.cpp" />
     <ClCompile Include="Image.cpp" />
-    <ClCompile Include="ImageQueue.cpp" />
+    <ClCompile Include="ShadingSamples.cpp" />
     <ClCompile Include="KDTreeNode.cpp" />
     <ClCompile Include="MeshObject.cpp" />
     <ClCompile Include="SceneObject.cpp" />
@@ -230,7 +230,7 @@
     <ClInclude Include="CRTTypes.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Image.h" />
-    <ClInclude Include="ImageQueue.h" />
+    <ClInclude Include="ShadingSamples.h" />
     <ClInclude Include="json_fwd.h" />
     <ClInclude Include="KDTreeNode.h" />
     <ClInclude Include="Scripts.h" />

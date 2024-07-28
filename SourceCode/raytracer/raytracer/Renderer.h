@@ -12,7 +12,7 @@
 #include "Scene.h"
 #include "Triangle.h"
 #include "TraceHit.h"
-#include "ImageQueue.h"
+#include "ShadingSamples.h"
 
 #include "perlin-noise.h"
 
@@ -29,7 +29,7 @@ public:
 private:
     // TODO perf: reserve space for the queue
     using TraceQueue = std::queue<TraceTask>;
-    ImageQueue imageQueue{ 0, 0, {0.f, 0.f, 0.f} };
+    ShadingSamples shadingSamples{ 0, 0, {0.f, 0.f, 0.f} };
     std::vector<TraceQueue> queueBuckets {};
 
     // Dependencies
@@ -65,7 +65,7 @@ public:
         }
 
         GSceneMetrics.stopTimer(Timers::generateQueue);
-        imageQueue = { image->getWidth(), image->getHeight(), scene->bgColor };
+        shadingSamples = { image->getWidth(), image->getHeight(), scene->bgColor };
 
         GSceneMetrics.startTimer(Timers::processQueue);
         launchBuckets();
@@ -115,6 +115,7 @@ private:
 
     void processXData(TraceTask& task, TraceHit& hit, TraceQueue& traceQueue) {
         if (!hit.successful()) {
+            shadeSky(task, hit);
             return;
         }
         if (task.depth >= settings->maxDepth) {
@@ -157,7 +158,7 @@ private:
             return;
         }
 
-        imageQueue(task.pixelX, task.pixelY).push( 
+        shadingSamples(task.pixelX, task.pixelY).push( 
             ColorContrib { 
                 .color = hit.traceColor, 
                 .weight = 1.f, /* weight should not matter */ 
@@ -165,11 +166,24 @@ private:
             });
     }
 
+    void shadeSky(const TraceTask& task, const TraceHit& hit) {
+        hit;
+        GSceneMetrics.record("ShadeSky");
+        float t = 0.5f * (task.ray.direction.y + 1.f);
+        Vec3 white{1.f, 1.f, 1.f};
+        Vec3 blue{0.5f, 0.7f, 1.f};
+        Vec3 skyColor = lerp(white, blue, t);
+
+        if (task.weight > epsilon) {
+            shadingSamples(task.pixelX, task.pixelY).push({ skyColor, task.weight });
+        }
+    }
+    
     void shadeConstant(TraceTask& task, const TraceHit& hit)
     {
         auto& material = scene->materials[hit.materialIndex];
         if (task.weight > epsilon) {
-            imageQueue(task.pixelX, task.pixelY).push({ material.getAlbedo(*scene, hit), task.weight });
+            shadingSamples(task.pixelX, task.pixelY).push({ material.getAlbedo(*scene, hit), task.weight });
         }
     }
 
@@ -184,8 +198,8 @@ private:
         Vec3 light = hitLight(hit.biasP(settings->bias), hit.n); // overexposure x,y,z > 1.f
         Vec3 overexposedColor = multiply(light, albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
-        imageQueue(task.pixelX, task.pixelY).push({ diffuseComponent, task.weight });
-        assert(imageQueue(task.pixelX, task.pixelY).size() > 0);
+        shadingSamples(task.pixelX, task.pixelY).push({ diffuseComponent, task.weight });
+        assert(shadingSamples(task.pixelX, task.pixelY).size() > 0);
     }
 
     void shadeReflective(TraceTask& task, const TraceHit& hit, TraceQueue& traceQueue)
@@ -362,7 +376,7 @@ private:
         assert(hit.baryU <= 1.f && hit.baryU >= 0);
         assert(hit.baryV <= 1.f && hit.baryV >= 0);
         Vec3 unitColor = { hit.baryU, 0.f, hit.baryV };
-        imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
+        shadingSamples(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }
 
     void shadeUv(const TraceTask& task, const TraceHit& hit)
@@ -370,25 +384,25 @@ private:
         assert(hit.u <= 1.f && hit.u >= 0);
         assert(hit.v <= 1.f && hit.u >= 0);
         Vec3 unitColor = { hit.u, 0.f, hit.v };
-        imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
+        shadingSamples(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }
 
     void shadeNormal(TraceTask& task, const TraceHit& hit)
     {
         Vec3 unitColor = hit.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
-        imageQueue(task.pixelX, task.pixelY).push({ unitColor, task.weight });
+        shadingSamples(task.pixelX, task.pixelY).push({ unitColor, task.weight });
     }
 
     void flattenImage()
     {
-        if (settings->debugImageQueue) {
-            ImageQueue imageQueueCopy = imageQueue;
-            imageQueue.flatten(*image);
-            imageQueueCopy.slice(*auxImages);
+        if (settings->enableShadingSamples) {
+            ShadingSamples shadingSamplesCopy = shadingSamples;
+            shadingSamples.flatten(*image);
+            shadingSamplesCopy.slice(*auxImages);
         }
         else {
             GSceneMetrics.startTimer(Timers::flatten);
-            imageQueue.flatten(*image);
+            shadingSamples.flatten(*image);
             GSceneMetrics.stopTimer(Timers::flatten);
         }
     }

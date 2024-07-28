@@ -1,15 +1,15 @@
-#include "ImageQueue.h"
+#include "ShadingSamples.h"
 
 #include <algorithm>
 #include "Image.h"
 #include "CRTTypes.h"
 
-ImageQueue::ImageQueue(size_t width, size_t height, const Vec3& bgColor): width(width), height(height), bgColor(bgColor)
+ShadingSamples::ShadingSamples(size_t width, size_t height, const Vec3& bgColor): width(width), height(height), bgColor(bgColor)
 {
     data.resize(width * height, {});
 }
 
-PixelQueue& ImageQueue::operator()(size_t x, size_t y)
+PixelQueue& ShadingSamples::operator()(size_t x, size_t y)
 {
     if (x >= width || y >= height)
     {
@@ -18,7 +18,7 @@ PixelQueue& ImageQueue::operator()(size_t x, size_t y)
     return data[y * width + x];
 }
 
-void ImageQueue::flatten(Image& image)
+void ShadingSamples::flatten(Image& image)
 {
     assert(image.getWidth() == width && image.getHeight() == height);
     for (int i = 0; i < width * height; i++) {
@@ -39,7 +39,7 @@ void ImageQueue::flatten(Image& image)
     }
 }
 
-void ImageQueue::slice(std::vector<Image>& images) {
+void ShadingSamples::slice(std::vector<Image>& images) {
     assert(images.size() == 0);
     size_t depth = 0;
     bool bContinue = true;
@@ -62,7 +62,7 @@ void ImageQueue::slice(std::vector<Image>& images) {
     }
 }
 
-size_t ImageQueue::maxDepth() const
+size_t ShadingSamples::maxDepth() const
 {
     size_t max = 0;
     for (const PixelQueue& queue : data) {

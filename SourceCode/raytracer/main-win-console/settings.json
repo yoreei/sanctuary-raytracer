@@ -1,6 +1,6 @@
 {
     "sceneLibraryDir": "sceneLibrary",
-    "projectDir": "hw14",
+    "projectDir": "hw15_project",
     "targetScenes": [],
     "outputDir": "out",
     
@@ -12,20 +12,20 @@
     "debugPixelY": 150,
     
     "debugLight": false,
-    "debugImageQueue": false,
+    "enableShadingSamples": false,
     "debugAccelStructure": false,
 
     "showAabbs": false,
     
     "overrideResolution": true,
-    "resolutionX": 800,
-    "resolutionY": 600,
+    "resolutionX": 300,
+    "resolutionY": 200,
     
     "bWritePng": true,
     "bWriteBmp": true,
     
     "forceNoAccelStructure": false,
     "forceSingleThreaded": false,
-    "maxTrianglesPerLeaf": 2,
-    "accelTreeMaxDepth": 2
+    "maxTrianglesPerLeaf": 4,
+    "accelTreeMaxDepth": 20
 }

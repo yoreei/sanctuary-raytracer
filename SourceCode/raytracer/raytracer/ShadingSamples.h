@@ -21,11 +21,11 @@ using PixelQueue = std::queue<ColorContrib>;
 /*
 * Records each ray's contribution to a pixel. Needs to be flattened to an Image before output.
 */
-class ImageQueue
+class ShadingSamples
 {
 public:
     // TODO: refactor width, height to pixelHandle
-    ImageQueue(size_t width, size_t height, const Vec3& bgColor);
+    ShadingSamples(size_t width, size_t height, const Vec3& bgColor);
 
     /* @ouput image: flattened image */
     void flatten(Image& image);

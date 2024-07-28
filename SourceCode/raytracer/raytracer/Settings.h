@@ -32,7 +32,7 @@ public:
     size_t debugPixelY = 0;
 
     bool debugLight = false;
-    bool debugImageQueue = false;
+    bool enableShadingSamples = false;
     bool debugAccelStructure = false;
 
     bool showAabbs = false;
