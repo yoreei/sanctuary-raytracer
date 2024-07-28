@@ -115,7 +115,10 @@ private:
 
     void processXData(TraceTask& task, TraceHit& hit, TraceQueue& traceQueue) {
         if (!hit.successful()) {
-            shadeSky(task, hit);
+            Vec3 skyColor = scene->cubemap.sample(task.ray);
+            if (task.weight > epsilon) {
+                shadingSamples(task.pixelX, task.pixelY).push({ skyColor, task.weight });
+            }
             return;
         }
         if (task.depth >= settings->maxDepth) {
@@ -166,7 +169,7 @@ private:
             });
     }
 
-    void shadeSky(const TraceTask& task, const TraceHit& hit) {
+    void shadeSimpleSky(const TraceTask& task, const TraceHit& hit) {
         hit;
         GSceneMetrics.record("ShadeSky");
         float t = 0.5f * (task.ray.direction.y + 1.f);

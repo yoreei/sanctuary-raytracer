@@ -12,6 +12,7 @@
 #include "Material.h"
 #include "Texture.h"
 #include "Settings.h"
+#include "Utils.h"
 
 using json = nlohmann::json;
 
@@ -45,6 +46,13 @@ bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& f
         !parseLight(j, scene)) {
         return false;
     }
+
+    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0001.png", scene.cubemap.images[0]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0002.png", scene.cubemap.images[1]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0003.png", scene.cubemap.images[2]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0004.png", scene.cubemap.images[3]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0005.png", scene.cubemap.images[4]);
+    loadBitmap(settings.sceneLibraryDir + "/skybox/industrial_sunset_puresky/0006.png", scene.cubemap.images[5]);
 
     scene.build();
 
@@ -236,7 +244,7 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Set
         tex.filePath = settings.sceneLibraryDir + "/" + settings.projectDir + "/" + tex.filePath;
 
         if (type == TextureType::BITMAP) {
-            loadJpgBitmap(tex.filePath, tex.bitmap);
+            loadBitmap(tex.filePath, tex.bitmap);
         }
 
         idxFromTextureName[name] = i;
@@ -256,10 +264,10 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene, const st
     for (auto& jMaterial : j.at("materials")) {
         scene.materials.emplace_back();
         Material& material = scene.materials.back();
-        material.smoothShading = getDefault<bool>(jMaterial, "smooth_shading", false);
+        material.smoothShading = Utils::jsonGetDefault<bool>(jMaterial, "smooth_shading", false);
         material.type = Material::TypeFromString(jMaterial.at("type"));
-        material.occludes = getDefault<bool>(jMaterial, "occludes", true);
-        material.ior = getDefault<float>(jMaterial, "ior", 1.f);
+        material.occludes = Utils::jsonGetDefault<bool>(jMaterial, "occludes", true);
+        material.ior = Utils::jsonGetDefault<float>(jMaterial, "ior", 1.f);
         material.setAlbedo({ 1.f, 1.f, 1.f });
         if (jMaterial.contains("albedo")) {
             if (jMaterial.at("albedo").is_string()) {
@@ -322,7 +330,7 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
         parseVertices(jObj, vertices);
 
         warnIfMissing(jObj, "material_index");
-        size_t materialIdx = getDefault<size_t>(jObj, "material_index", 0);
+        size_t materialIdx = Utils::jsonGetDefault<size_t>(jObj, "material_index", 0);
         // 0 is the default material index. It is guaranteed to exist
         assert(scene.materials.size() > materialIdx);
         parseTriangles(jObj, vertices, materialIdx, triangles);
@@ -410,23 +418,6 @@ inline bool CRTSceneLoader::parseTriangles(const json& jObj, const std::vector<V
     return true;
 }
 
-template <typename T>
-T CRTSceneLoader::getDefault(const json& j, const std::string& key, T defaultVal) {
-    if (!j.contains(key)) {
-        return defaultVal;
-    }
-    return j.at(key).get<T>();
-}
-
-template <>
-Vec3 CRTSceneLoader::getDefault<Vec3>(const json& j, const std::string& key, Vec3 defaultVal) {
-    if (!j.contains(key)) {
-        return defaultVal;
-    }
-
-    return Vec3FromJson(j.at(key));
-}
-
 void CRTSceneLoader::warnIfMissing(const json& j, const std::string& key) {
     if (!j.contains(key)) {
         std::cerr << "CRTSceneLoader::warnIfMissing: key " << key << " not found\n";
@@ -444,7 +435,7 @@ struct TestImage {
     TestImage(size_t w, size_t h) : width(w), height(h), data(w* h) {}
 };
 
-void CRTSceneLoader::loadJpgBitmap(std::string filePath, Image& bitmap)
+void CRTSceneLoader::loadBitmap(std::string filePath, Image& bitmap)
 {
     std::ifstream file(filePath);
     if (!file) {

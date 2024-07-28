@@ -14,8 +14,8 @@ namespace Scripts {
 
     //}
 
-    void onSceneLoaded(Scene& scene) {
-        scene;
+    //void onSceneLoaded(Scene& scene) {
+    //    scene;
         //float endFrame = 24;
         //GEndFrame = uint64_t(endFrame);
 
@@ -39,8 +39,32 @@ namespace Scripts {
         //scene.cameraAnimations[0] = AnimationComponent{};
         //scene.cameraAnimations[0].pos = AnimationCurve{posKfs};
         //scene.cameraAnimations[0].dir = AnimationCurve{dirKfs};
+    //}
 
+    void onSceneLoaded(Scene& scene) {
+        scene;
+        float endFrame = 10.f;
+        GEndFrame = uint64_t(endFrame);
+
+
+        //std::vector<Keyframe<Vec3>> dirKfs {
+        //    {0.f, {0.f, 0.f, -1.f}},
+        //    {10.f, {-1.f, 0.f, 0.f}},
+        //    {20.f, {0.f, 0.f, 1.f}},
+        //    {30.f, {1.f, 0.f, 0.f}},
+        //    {40.f, {0.f, 1.f, 0.f}},
+        //    {50.f, {0.f, -1.f, 0.f}},
+        //};
+        std::vector<Keyframe<Vec3>> dirKfs {
+            {0.f, scene.camera.getDir()},
+            {endFrame, {0.f, -1.f, 0.f}},
+        };
+
+        scene.cameraAnimations[0] = AnimationComponent{};
+        //scene.cameraAnimations[0].pos = AnimationCurve{posKfs};
+        scene.cameraAnimations[0].dir = AnimationCurve{dirKfs};
     }
+
 
     void onTick(Scene& scene) {
         scene;

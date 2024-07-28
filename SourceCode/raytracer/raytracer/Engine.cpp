@@ -18,6 +18,7 @@
 #include "Settings.h"
 #include "Scripts.h"
 #include "Globals.h"
+#include "Utils.h"
 
 namespace fs = std::filesystem;
 
@@ -40,9 +41,10 @@ void Engine::tick()
         writeFrame();
         ++GFrameNumber;
         auto summedMetrics = GSceneMetrics.toJson();
-        uint64_t triInt = summedMetrics["counters"]["TriangleIntersection"];
-        if ( triInt < GBestTriangleIntersect) {
-            GBestSettings = summedMetrics.dump(4);
+
+        uint64_t triInt = Utils::jsonGetDefault<uint64_t>(summedMetrics["counters"], "TriangleIntersection", 0);
+            if (triInt < GBestTriangleIntersect) {
+                GBestSettings = summedMetrics.dump(4);
         }
     }
 

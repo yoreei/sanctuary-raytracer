@@ -56,6 +56,7 @@ Vec3 Texture::getAlbedo(const TraceHit& hit) const
             throw std::runtime_error("Texture::getAlbedo(): Checkerboard texture error");
     }
     else if (type == TextureType::BITMAP) {
+        // TODO move this to Image
         float u = hit.u;
         float v = hit.v;
         const size_t width = bitmap.getWidth();

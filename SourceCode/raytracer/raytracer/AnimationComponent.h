@@ -58,6 +58,8 @@ struct AnimationCurve {
 
                 float t = (GFrameNumber - startTime) / (stopTime - startTime);
                 outValue = slerp(startValue, stopValue, t);
+
+                assert(outValue.isUnit());
                 return;
             }
         }

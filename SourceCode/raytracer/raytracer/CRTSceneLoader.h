@@ -51,7 +51,7 @@ private:
     static void assignIfExists(const json& j, std::string key, T& out);
     template <>
     void assignIfExists<Vec3>(const json& j, std::string key, Vec3& out);
-    static void loadJpgBitmap(std::string filePath, Image& bitmap);
+    static void loadBitmap(std::string filePath, Image& bitmap);
     static void debugPrintNormals(const Scene& scene);
 };
 

@@ -48,7 +48,7 @@
 	],
 	
 	"materials": [{
-			"type": "reflective",
+			"type": "diffuse",
 			"albedo": [
 				0.8, 0.8, 0.8
 			],

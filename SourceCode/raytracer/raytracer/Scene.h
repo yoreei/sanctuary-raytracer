@@ -7,6 +7,7 @@
 #include "AnimationComponent.h"
 #include "CRTTypes.h"
 #include "Camera.h"
+#include "Cubemap.h"
 #include "Image.h"
 #include "Light.h"
 #include "MeshObject.h"
@@ -36,6 +37,7 @@ public:
     std::string fileName = "";
     Camera camera{};
     const Settings* settings;
+    Cubemap cubemap {};
 
     // Entities
     std::vector<Light> lights {};

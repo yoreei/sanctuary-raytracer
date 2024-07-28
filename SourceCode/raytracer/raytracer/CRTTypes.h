@@ -183,10 +183,19 @@ inline Vec3 lerp(const Vec3& a, const Vec3& b, float t) {
     };
 }
 
-inline Vec3 slerp(const Vec3& vec0, const Vec3& vec1, float t) {
-    assert(vec0.isUnit());
+inline Vec3 slerp(const Vec3& vec0Ref, const Vec3& vec1, float t) {
+    assert(vec0Ref.isUnit());
     assert(vec1.isUnit());
 
+    Vec3 vec0 = vec0Ref;
+    // if opposing, nudge vec0 in arbitrary direction
+    if ((vec0 + vec1).equal({0.f, 0.f, 0.f})) {
+        Vec3 orthogonal = std::fabs(vec0.x) < 1.f ? Vec3(1, 0, 0) : Vec3(0, 1, 0);
+        orthogonal = orthogonal - vec0 * vec0.dot(orthogonal);
+        orthogonal.normalize();
+        vec0 = vec0 + orthogonal * 0.1f;
+        vec0.normalize();
+    }
     float dot = vec0.dot(vec1);
     dot = std::clamp(dot, -1.f, 1.f);
     float theta = std::acos(dot);
@@ -201,7 +210,9 @@ inline Vec3 slerp(const Vec3& vec0, const Vec3& vec1, float t) {
     float factor0 = std::sin((1 - t) * theta) / sinTheta;
     float factor1 = std::sin(t * theta) / sinTheta;
 
-    return vec0 * factor0 + vec1 * factor1;
+    Vec3 result = vec0 * factor0 + vec1 * factor1;
+    assert(result.isUnit());
+    return result;
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {

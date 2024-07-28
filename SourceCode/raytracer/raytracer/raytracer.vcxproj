@@ -203,6 +203,7 @@
     <ClCompile Include="CRTMath.cpp" />
     <ClCompile Include="CRTSceneLoader.cpp" />
     <ClCompile Include="CRTTypes.cpp" />
+    <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Globals.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="ShadingSamples.cpp" />
@@ -220,6 +221,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stb_image_write.cpp" />
     <ClCompile Include="Triangle.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />
@@ -228,6 +230,7 @@
     <ClInclude Include="CRTMath.h" />
     <ClInclude Include="CRTSceneLoader.h" />
     <ClInclude Include="CRTTypes.h" />
+    <ClInclude Include="Cubemap.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="ShadingSamples.h" />
