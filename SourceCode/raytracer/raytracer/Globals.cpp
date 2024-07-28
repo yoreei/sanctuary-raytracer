@@ -1,6 +1,7 @@
 #include <string>
 #include <sstream>
 #include "Globals.h"
+#include <numeric>
 
 namespace GlobalDebug {
 
@@ -21,7 +22,10 @@ namespace GlobalDebug {
 
 uint64_t GFrameNumber = 0;
 uint64_t GEndFrame = 0;
-Metrics GMetrics {};
+Metrics GSceneMetrics {};
+
+extern uint64_t GBestTriangleIntersect = std::numeric_limits<uint64_t>::max();
+extern std::string GBestSettings = "";
 
 void GResetGlobals()
 {

@@ -18,11 +18,19 @@ int main()
 
     // Manually specify multiple iterations based on settings file
 
-    for (int i = 1; i < 15; ++i) {
-        settingsList.push_back(settingsList.back());
-        settingsList.back().settingsId += 1;
-        settingsList.back().accelTreeMaxDepth += 2;
-    }
+    //settingsList.back().accelTreeMaxDepth = 2;
+    //settingsList.back().maxTrianglesPerLeaf = 2;
+
+    //for (int i = 1; i < 30; ++i) {
+    //    for (int j = 0; j < 30; ++j)
+    //    {
+    //        settingsList.push_back(settingsList.back());
+    //        settingsList.back().settingsId += 1;
+    //        settingsList.back().maxTrianglesPerLeaf += 2;
+    //    }
+    //        settingsList.back().accelTreeMaxDepth += 2;
+    //        settingsList.back().maxTrianglesPerLeaf = 2;
+    //}
 
     for (Settings& settings : settingsList) {
         std::cout << "Running iteration " << settings.iterationName() << std::endl;
@@ -31,5 +39,7 @@ int main()
         rt.runAllScenes();
     }
 
+    std::cout << "\n\n\nGBestSettings:\n\n\n";
+    std::cout << GBestSettings << std::endl;
     return 0;
 }

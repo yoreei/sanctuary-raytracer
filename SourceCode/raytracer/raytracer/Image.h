@@ -19,7 +19,7 @@ public:
         endPixelX(_width)
     {}
     std::vector<Color> data;
-    size_t bucketSize = 24;
+    size_t bucketSize = 20;
     size_t startPixelY = 0;
     size_t startPixelX = 0;
     size_t endPixelY;

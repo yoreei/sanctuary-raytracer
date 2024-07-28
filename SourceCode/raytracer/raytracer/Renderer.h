@@ -45,11 +45,11 @@ public:
     */
     void render()
     {
-        GMetrics.startTimer(Timers::all);
+        GSceneMetrics.startTimer(Timers::all);
         if (scene->getIsDirty()) throw std::invalid_argument("Scene is dirty, cannot render");
 
         // Prepare Primary Queue
-        GMetrics.startTimer(Timers::generateQueue);
+        GSceneMetrics.startTimer(Timers::generateQueue);
 
         size_t numPixels = image->getWidth() * image->getHeight();
         if (numPixels % image->bucketSize != 0) throw std::invalid_argument("numBuckets must divide image size");
@@ -64,15 +64,15 @@ public:
             }
         }
 
-        GMetrics.stopTimer(Timers::generateQueue);
+        GSceneMetrics.stopTimer(Timers::generateQueue);
         imageQueue = { image->getWidth(), image->getHeight(), scene->bgColor };
 
-        GMetrics.startTimer(Timers::processQueue);
+        GSceneMetrics.startTimer(Timers::processQueue);
         launchBuckets();
-        GMetrics.stopTimer(Timers::processQueue);
+        GSceneMetrics.stopTimer(Timers::processQueue);
 
         flattenImage();
-        GMetrics.stopTimer(Timers::all);
+        GSceneMetrics.stopTimer(Timers::all);
     }
 private:
 
@@ -215,10 +215,10 @@ private:
         if (hit.type == TraceHitType::INSIDE_REFRACTIVE) {
             hit.n = -hit.n;
             std::swap(etai, etat);
-            GMetrics.record("shadeRefractive_INSIDE");
+            GSceneMetrics.record("shadeRefractive_INSIDE");
         }
         else {
-            GMetrics.record("shadeRefractive_OUTSIDE");
+            GSceneMetrics.record("shadeRefractive_OUTSIDE");
         }
 
         TraceTask& refractionTask = task;
@@ -239,11 +239,11 @@ private:
             reflectiveTask.weight *= fresnelFactor;
             shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
 
-            GMetrics.record("shadeRefractive_REFRACTED_YES");
+            GSceneMetrics.record("shadeRefractive_REFRACTED_YES");
         }
         else {
             shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
-            GMetrics.record("shadeRefractive_REFRACTED_NO(TIR)");
+            GSceneMetrics.record("shadeRefractive_REFRACTED_NO(TIR)");
         }
 
 #ifndef NDEBUG
@@ -387,9 +387,9 @@ private:
             imageQueueCopy.slice(*auxImages);
         }
         else {
-            GMetrics.startTimer(Timers::flatten);
+            GSceneMetrics.startTimer(Timers::flatten);
             imageQueue.flatten(*image);
-            GMetrics.stopTimer(Timers::flatten);
+            GSceneMetrics.stopTimer(Timers::flatten);
         }
     }
 };

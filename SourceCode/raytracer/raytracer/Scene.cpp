@@ -110,7 +110,7 @@ void Scene::showLightDebug() {
 
 void Scene::build()
 {
-    GMetrics.startTimer(Timers::buildScene);
+    GSceneMetrics.startTimer(Timers::buildScene);
 
     triangleAABBs.clear();
     triangleAABBs.resize(triangles.size());
@@ -137,7 +137,7 @@ void Scene::build()
     triangleAABBsDirty = false;
     isDirty = false;
 
-    GMetrics.stopTimer(Timers::buildScene);
+    GSceneMetrics.stopTimer(Timers::buildScene);
 }
 
 void Scene::updateAnimations() {

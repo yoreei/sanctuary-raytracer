@@ -65,9 +65,10 @@ bool Triangle::hasVertex(size_t vertexIndex) const {
     return v[0] == vertexIndex || v[1] == vertexIndex || v[2] == vertexIndex;
 }
 
-void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& hit) const {
+void Triangle::intersect(const Scene& scene, const Ray& ray, size_t triRef, TraceHit& hit) const {
     assert(fEqual(ray.direction.lengthSquared(), 1.f));
-    GMetrics.record("TriangleIntersection");
+    GSceneMetrics.record("TriangleIntersection");
+    if (!scene.triangleAABBs[triRef].hasIntersection(ray)) return;
 
     float rayProj = ray.direction.dot(normal);
 
@@ -78,7 +79,7 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, TraceHit& hit) cons
         auto& material = scene.materials[materialIndex];
         if (material.type == Material::Type::REFRACTIVE) {
             Triangle swapT = swappedTriangle();
-            swapT.intersect(scene, ray, hit);
+            swapT.intersect(scene, ray, triRef, hit);
             if (hit.type == TraceHitType::SUCCESS) {
                 hit.type = TraceHitType::INSIDE_REFRACTIVE;
                 hit.n = -hit.n;

@@ -39,6 +39,11 @@ void Engine::tick()
         renderer.render();
         writeFrame();
         ++GFrameNumber;
+        auto summedMetrics = GSceneMetrics.toJson();
+        uint64_t triInt = summedMetrics["counters"]["TriangleIntersection"];
+        if ( triInt < GBestTriangleIntersect) {
+            GBestSettings = summedMetrics.dump(4);
+        }
     }
 
 }
@@ -74,7 +79,7 @@ int Engine::runAllScenes()
     for (const auto& scenePath : scenePaths) {
         std::string sceneName = scenePath.filename().string();
         sceneName = sceneName.substr(0, sceneName.find(".crtscene"));
-        GMetrics.clear();
+        GSceneMetrics.clear();
         loadScene(scenePath.string(), sceneName);
         tick();
 
@@ -91,7 +96,7 @@ void Engine::writeFrame() const {
     }
 
     std::ofstream fileStream(framePathNoExt + ".log", std::ios::out);
-    std::string metricsString = GMetrics.toString();
+    std::string metricsString = GSceneMetrics.toString();
     std::string globalDebugString = GlobalDebug::toString();
 
     fileStream << metricsString << std::endl;

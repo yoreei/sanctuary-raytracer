@@ -32,7 +32,8 @@ public:
     */
     // TODO return bool
 
-    void intersect(const Scene& scene, const Ray& ray, TraceHit& hit) const;
+
+    void intersect(const Scene& scene, const Ray& ray, size_t triRef, TraceHit& hit) const;
 
     bool boolIntersect(const Scene& scene, const Vec3& start, const Vec3& end) const;
 

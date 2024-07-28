@@ -18,4 +18,8 @@ extern uint64_t GEndFrame;
 
 extern void GResetGlobals();
 
-extern Metrics GMetrics;
+extern Metrics GSceneMetrics;
+
+extern uint64_t GBestTriangleIntersect;
+extern std::string GBestSettings;
+

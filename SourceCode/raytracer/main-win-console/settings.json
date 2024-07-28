@@ -26,6 +26,6 @@
     
     "forceNoAccelStructure": false,
     "forceSingleThreaded": false,
-    "maxTrianglesPerLeaf": 8,
-    "accelTreeMaxDepth": 0
+    "maxTrianglesPerLeaf": 2,
+    "accelTreeMaxDepth": 2
 }

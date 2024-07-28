@@ -18,17 +18,15 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
 void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit& out) const {
     // Early out
     if (!aabb.hasIntersection(ray)) {
-        // out.type = TraceHitType::AABB_PRUNE; wrong, overrides success!
         return;
     }
 
     if (isLeaf()) {
         for (const size_t& triRef : triangleRefs) {
             const Triangle& tri = scene.triangles[triRef];
-            if (!scene.triangleAABBs[triRef].hasIntersection(ray)) continue;
 
             TraceHit tryHit{};
-            tri.intersect(scene, ray, tryHit);
+            tri.intersect(scene, ray, triRef, tryHit);
             if (tryHit.successful() && tryHit.t < out.t && aabb.contains(tryHit.p)) {
                 out = tryHit;
             }
@@ -40,7 +38,6 @@ void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit&
         for (size_t i = 0; i < sortedChildren.size(); ++i) {
             const KDTreeNode* childPtr = sortedChildren[i];
             childPtr->traverseRecursive(scene, ray, out);
-            processAabbDebug(scene, i, out);
 
             if (out.successful()) {
                 break;
@@ -51,12 +48,7 @@ void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit&
 
 void KDTreeNode::processAabbDebug(const Scene& scene, size_t childIdx, TraceHit& out) const
 {
-    if (out.type != TraceHitType::AABB_PRUNE && scene.settings->showAabbs) {
-        Vec3 traceDebugColor = { 0.f, 0.f, 0.f };
-        traceDebugColor.axis(childIdx % 3) += 0.3f;
-        out.traceColor += traceDebugColor;
-        std::cout << "traversing child: " << childIdx << std::endl;
-    }
+    scene; childIdx, out;
 }
 
 std::array<const KDTreeNode*, 2> KDTreeNode::closestChildren(const Vec3& point) const {
@@ -77,7 +69,7 @@ void KDTreeNode::build(std::vector<size_t>&& newTriangleRefs, const std::vector<
     // Required: newTriangleRefs intersect aabb
 
     // 0.1 Recursion Root (Make Leaf)
-    if (depth >= maxDepth /* || newTriangleRefs.size() <= maxTrianglesPerLeaf */) {
+    if (depth >= maxDepth  || newTriangleRefs.size() <= maxTrianglesPerLeaf ) {
         triangleRefs = std::move(newTriangleRefs);
         return; // Leaf
     }
