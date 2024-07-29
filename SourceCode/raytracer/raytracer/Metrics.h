@@ -1,9 +1,11 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <unordered_map>
+#include <mutex>
 #include <chrono>
-#include "json.hpp"
-#include "TraceHit.h"
+#include "json_fwd.h"
 
 using ordered_json = nlohmann::ordered_json;
 
@@ -16,13 +18,8 @@ public:
 
 class Timer {
 public:
-    void start() {
-        startTime = std::chrono::high_resolution_clock::now();
-    }
-    void stop() {
-       endTime = std::chrono::high_resolution_clock::now();
-       duration += endTime - startTime;
-    }
+    void start();
+    void stop();
     std::chrono::duration<double> duration = std::chrono::duration<double>::zero();
 private:
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime {};
@@ -34,61 +31,24 @@ class Metrics {
 public:
     Metrics() = default;
     Metrics(const std::string& name) : name(name) {}
-    void startTimer(const char* timerKey) {
-        timers[timerKey].start();
-    }
+    void startTimer(const char* timerKey);
 
-    void stopTimer(const char* timerKey) {
-        timers[timerKey].stop();
-    }
+    void stopTimer(const char* timerKey);
 
-    /* thread safe */
-    void record(std::string s, std::thread::id threadId = std::this_thread::get_id()) {
-        threads[threadId].xCounts[s]++;
-    }
+    /* thread-safe */
+    void record(std::string s);
 
-    ordered_json toJson() const {
-        ordered_json j;
-        j["scene_name"] = name;
-        j["timers"] = {};
-        for (const auto& pair: timers) {
-            const std::string& timerName = pair.first;
-            const Timer& timer = pair.second;
-            j["timers"][timerName] = timer.duration.count();
-        }
+    ordered_json toJson() const;
 
-        auto summedCounters = Counters{};
-        for (const auto& [_, thread] : threads) {
-            _;
-            for (auto& [key, val] : thread.xCounts) {
-                summedCounters[key] += val;
-            }
-        }
+    std::string toString() const;
 
-        j["counters"] = {};
-        for (const auto& [key, val] : summedCounters) {
-            j["counters"][key] = val;
-        }
-        return j;
-    }
+    void clear();
 
-    std::string toString() const {
-        return toJson().dump(4);
-    }
-
-    void clear() {
-        threads.clear();
-        timers.clear();
-        name.clear();
-    }
-
-    void reserveThread(std::thread::id threadId = std::this_thread::get_id()) {
-        std::lock_guard<std::mutex> lock(reserveThreadMutex);
-        threads[threadId] = PerThreadMetrics();
-    }
+    // non-thread safe, must call before launching threads
+    void reserveThread(size_t numThreads);
 
 private:
-    std::unordered_map<std::thread::id, PerThreadMetrics> threads {};
+    std::vector<PerThreadMetrics> threads {};
     std::unordered_map<std::string, Timer> timers {};
     std::mutex reserveThreadMutex;
     std::string name {};

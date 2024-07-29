@@ -129,7 +129,7 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
     Vec3 e1 = v2 - v0;
     float rpDist = dot(n, v0 - ray.origin); // Ray-Plane distance
     hit.t = rpDist / rProj;
-    if (hit.t < -1e-6) {
+    if (hit.t < 0) {
         hit.type = TraceHitType::PLANE_BEHIND_RAY_ORIGIN;
         return;
     }
@@ -185,7 +185,7 @@ TraceHitType Triangle::getTraceHitType(const Vec3& n, const Vec3& rayDir) {
 
 void Triangle::assertHit(const Scene& scene, const TraceHit& hit) {
     // This function should be optimized away by the compiler in release builds
-    // Suppress unused parameter warnings:
+    // Suppress unused parameter warnings for Release:
     scene;
     hit;
 #ifndef NDEBUG

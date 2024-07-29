@@ -32,3 +32,5 @@ void GResetGlobals()
     GFrameNumber = 0;
     GEndFrame = 0;
 }
+
+thread_local size_t GThreadIdx = 0;

@@ -43,8 +43,13 @@ void ShadingSamples::flatten(Image& image)
     for (size_t pIdx = 0; pIdx < width * height; ++pIdx) {
         Shades& shades = pixels[pIdx];
 
-        if (shades.size() == 0 && !settings->debugPixel) {
-            throw std::runtime_error("pixel has no data");
+        if (shades.size() == 0) {
+            if (settings->debugPixel) {
+                continue;
+            }
+            else {
+                throw std::runtime_error("pixel has no data");
+            }
         }
 
         // ... and each of its shades

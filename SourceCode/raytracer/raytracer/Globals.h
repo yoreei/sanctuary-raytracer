@@ -23,3 +23,6 @@ extern Metrics GSceneMetrics;
 extern uint64_t GBestTriangleIntersect;
 extern std::string GBestSettings;
 
+// Modified by Renderer worker threads on thread boot
+extern thread_local size_t GThreadIdx;
+

@@ -38,6 +38,8 @@ public:
     Camera camera{};
     const Settings* settings;
     Cubemap cubemap {};
+    Vec3 bgColor = { 0.f, 0.f, 0.f };
+    bool useSkybox = false;
 
     // Entities
     std::vector<Light> lights {};
@@ -56,8 +58,6 @@ public:
     std::unordered_map<int, AnimationComponent> cameraAnimations {}; // size <= 1
     // IMPORTANT: update `Scene::addObjects()` if adding new members
     // IMPORTANT: keep alphabetical order
-
-    Vec3 bgColor = { 0.f, 0.f, 0.f };
 
     bool isOccluded(const Vec3& start, const Vec3& end) const;
 

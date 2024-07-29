@@ -152,14 +152,16 @@ bool CRTSceneLoader::parseSettings(const json& j, Scene& scene, const Settings& 
     const auto& jBgColor = jSettings.at("background_color");
     scene.bgColor = Vec3{ jBgColor[0], jBgColor[1], jBgColor[2] };
 
-    std::string sceneTime = Utils::jsonGetDefault<std::string>(jSettings, "skybox", std::string("day_1"));
-
-    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0001.png", scene.cubemap.images[0]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0002.png", scene.cubemap.images[1]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0003.png", scene.cubemap.images[2]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0004.png", scene.cubemap.images[3]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0005.png", scene.cubemap.images[4]);
-    loadBitmap(settings.sceneLibraryDir + "/skybox/" + sceneTime + "/0006.png", scene.cubemap.images[5]);
+    if (jSettings.contains("skybox")) {
+        std::string skybox = jSettings.at("skybox");
+        scene.useSkybox = true;
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0001.png", scene.cubemap.images[0]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0002.png", scene.cubemap.images[1]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0003.png", scene.cubemap.images[2]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0004.png", scene.cubemap.images[3]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0005.png", scene.cubemap.images[4]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0006.png", scene.cubemap.images[5]);
+    }
 
     return true;
 }

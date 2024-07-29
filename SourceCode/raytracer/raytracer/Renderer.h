@@ -85,6 +85,7 @@ private:
         const size_t numThreads = std::thread::hardware_concurrency();
         std::vector<std::thread> threads;
         std::atomic<size_t> nextQueueIndex{ numThreads };
+        GSceneMetrics.reserveThread(numThreads);
 
         for (size_t threadId = 0; threadId < numThreads; ++threadId) {
             threads.emplace_back(&Renderer::workerThread, this, threadId, std::ref(nextQueueIndex));
@@ -97,9 +98,9 @@ private:
         }
     }
 
-    void workerThread(size_t initialIndex, std::atomic<size_t>& nextQueueIndex) {
-        GSceneMetrics.reserveThread();
-        size_t queueIndex = initialIndex;
+    void workerThread(size_t threadIdx, std::atomic<size_t>& nextQueueIndex) {
+        GThreadIdx = threadIdx;
+        size_t queueIndex = threadIdx;
         while (queueIndex < queueBuckets.size()) {
             processTraceQueue(queueBuckets[queueIndex]);
             queueIndex = nextQueueIndex.fetch_add(1);
@@ -119,14 +120,12 @@ private:
     }
 
     void processXData(TraceTask& task, TraceHit& hit, TraceQueue& traceQueue) {
-        if (!hit.successful()) {
-            if (task.weight > epsilon) {
-                Vec3 skyColor = scene->cubemap.sample(task.ray);
-                shadingSamples.addSample(task, skyColor);
-            }
+        if (task.depth >= settings->maxDepth) {
             return;
         }
-        if (task.depth >= settings->maxDepth) {
+
+        if (!hit.successful()) {
+            shadeSky(task, hit);
             return;
         }
 
@@ -172,7 +171,24 @@ private:
         //shadingSamples.addSample(task, hit.traceColor);
     }
 
-    void shadeSimpleSky(const TraceTask& task, const TraceHit& hit) {
+    void shadeSky(const TraceTask& task, const TraceHit& hit)
+    {
+        hit;
+        if (task.weight < epsilon) {
+            return;
+        }
+
+        Vec3 skyColor;
+        if (!scene->useSkybox) {
+            skyColor = scene->bgColor;
+        }
+        else {
+            skyColor = scene->cubemap.sample(task.ray);
+        }
+
+        shadingSamples.addSample(task, skyColor);
+    }
+    void shadeSkySimple(const TraceTask& task, const TraceHit& hit) {
         hit;
         GSceneMetrics.record("ShadeSky");
         float t = 0.5f * (task.ray.direction.y + 1.f);

@@ -6,6 +6,8 @@
 #include <string>
 #include <filesystem>
 
+#include "json.hpp"
+
 #include "Engine.h"
 #include "Image.h"
 #include "CRTTypes.h"

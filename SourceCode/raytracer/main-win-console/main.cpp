@@ -12,7 +12,7 @@ void logSettingsIteration(const Settings& settings) {
     logFile.close();
 }
 
-int main() 
+int launch() 
 {
     std::vector<Settings> settingsList = {Settings::load("settings.json")};
 
@@ -43,3 +43,13 @@ int main()
     //std::cout << GBestSettings << std::endl;
     return 0;
 }
+
+int main()
+{
+    // loop main to detect race conditions, memory leaks, etc.
+    size_t runTimes = 10;
+    for(size_t i = 0; i < runTimes; ++i) {
+        launch();
+    }
+}
+

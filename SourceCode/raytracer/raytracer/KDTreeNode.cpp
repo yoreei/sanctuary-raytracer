@@ -15,6 +15,7 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
     traverseRecursive(scene, ray, out);
 }
 
+// TODO optimize triangle intersections by sorting by ray - plane intersection distance first
 void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit& out) const {
     // Early out
     if (!aabb.hasIntersection(ray)) {
@@ -22,6 +23,7 @@ void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit&
     }
 
     if (isLeaf()) {
+        // TODO: refactor this into: intersectTriangles(scene, ray, triangleRefs, out);
         for (const size_t& triRef : triangleRefs) {
             const Triangle& tri = scene.triangles[triRef];
 
