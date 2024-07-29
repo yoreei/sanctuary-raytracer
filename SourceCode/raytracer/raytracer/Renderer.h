@@ -29,7 +29,7 @@ public:
 private:
     // TODO perf: reserve space for the queue
     using TraceQueue = std::queue<TraceTask>;
-    ShadingSamples shadingSamples{ 0, 0 };
+    ShadingSamples shadingSamples{ 0, 0, settings };
     std::vector<TraceQueue> queueBuckets {};
 
     // Dependencies
@@ -38,7 +38,11 @@ private:
     Image* image;
     std::vector<Image>* auxImages;
 public:
-    Renderer(const Settings* settings, const Scene* scene, Image* image, std::vector<Image>* auxImages) : settings(settings), scene(scene), image(image), auxImages(auxImages) { }
+    Renderer(const Settings* settings, const Scene* scene, Image* image, std::vector<Image>* auxImages) :
+        settings(settings),
+        scene(scene),
+        image(image),
+        auxImages(auxImages) { }
 
     /*
     * @parameter imageComponents: depth slices of the image, useful for debugging
@@ -65,7 +69,7 @@ public:
         }
 
         GSceneMetrics.stopTimer(Timers::generateQueue);
-        shadingSamples = { image->getWidth(), image->getHeight()};
+        shadingSamples = { image->getWidth(), image->getHeight(), settings };
 
         GSceneMetrics.startTimer(Timers::processQueue);
         launchBuckets();
@@ -116,9 +120,9 @@ private:
 
     void processXData(TraceTask& task, TraceHit& hit, TraceQueue& traceQueue) {
         if (!hit.successful()) {
-            Vec3 skyColor = scene->cubemap.sample(task.ray);
             if (task.weight > epsilon) {
-                shadingSamples(task.pixelX, task.pixelY).push({ skyColor, task.weight });
+                Vec3 skyColor = scene->cubemap.sample(task.ray);
+                shadingSamples.addSample(task, skyColor);
             }
             return;
         }
@@ -127,6 +131,7 @@ private:
         }
 
         const auto& material = scene->materials[hit.materialIndex];
+        // TODO refactor these
         switch (material.type) {
         case Material::Type::DIFFUSE:
             shadeDiffuse(task, hit);
@@ -158,36 +163,33 @@ private:
 
     void postProcessTraceColor(TraceTask& task, const TraceHit& hit)
     {
-        if (hit.traceColor.equal(Vec3{0.f, 0.f, 0.f})) {
+        task;
+        if (hit.traceColor.equal(Vec3{ 0.f, 0.f, 0.f })) {
             return;
         }
+        throw std::runtime_error("TODO not implemented");
 
-        shadingSamples(task.pixelX, task.pixelY).push( 
-            ColorContrib { 
-                .color = hit.traceColor, 
-                .weight = 1.f, /* weight should not matter */ 
-                .blendType = BlendType::ADDITIVE,
-            });
+        //shadingSamples.addSample(task, hit.traceColor);
     }
 
     void shadeSimpleSky(const TraceTask& task, const TraceHit& hit) {
         hit;
         GSceneMetrics.record("ShadeSky");
         float t = 0.5f * (task.ray.direction.y + 1.f);
-        Vec3 white{1.f, 1.f, 1.f};
-        Vec3 blue{0.5f, 0.7f, 1.f};
+        Vec3 white{ 1.f, 1.f, 1.f };
+        Vec3 blue{ 0.5f, 0.7f, 1.f };
         Vec3 skyColor = lerp(white, blue, t);
 
         if (task.weight > epsilon) {
-            shadingSamples(task.pixelX, task.pixelY).push({ skyColor, task.weight });
+            shadingSamples.addSample(task, skyColor, BlendType::ADDITIVE);
         }
     }
-    
+
     void shadeConstant(TraceTask& task, const TraceHit& hit)
     {
         auto& material = scene->materials[hit.materialIndex];
         if (task.weight > epsilon) {
-            shadingSamples(task.pixelX, task.pixelY).push({ material.getAlbedo(*scene, hit), task.weight });
+            shadingSamples.addSample(task, material.getAlbedo(*scene, hit));
         }
     }
 
@@ -202,18 +204,20 @@ private:
         Vec3 light = hitLight(hit.biasP(settings->bias), hit.n); // overexposure x,y,z > 1.f
         Vec3 overexposedColor = multiply(light, albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
-        shadingSamples(task.pixelX, task.pixelY).push({ diffuseComponent, task.weight });
+        shadingSamples.addSample(task, diffuseComponent, BlendType::NORMAL);
         assert(shadingSamples(task.pixelX, task.pixelY).size() > 0);
     }
 
     void shadeReflective(TraceTask& task, const TraceHit& hit, TraceQueue& traceQueue)
     {
+        // TODO remove comments 
         auto& material = scene->materials[hit.materialIndex];
-        float originalWeight = task.weight;
-        task.weight = originalWeight * (1.f - material.reflectivity);
+        //float originalWeight = task.weight;
+        //task.weight = originalWeight * (1.f - material.reflectivity);
         shadeDiffuse(task, hit);
 
-        task.weight = originalWeight * material.reflectivity;
+        //task.weight = originalWeight * material.reflectivity;
+        task.weight *= material.reflectivity;
         if (task.weight > epsilon) {
             task.ray.reflect(hit.biasP(settings->bias), hit.n);
             ++task.depth;
@@ -241,9 +245,9 @@ private:
 
         TraceTask& refractionTask = task;
         TraceTask reflectiveTask = task;
+        shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
 
         bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-settings->bias), hit.n, etai, etat);
-
         if (hasRefraction) {
             float fresnelFactor = schlickApprox(task.ray.direction, hit.n, etai, etat);
 
@@ -254,15 +258,14 @@ private:
                 traceQueue.push(refractionTask);
             }
 
-            reflectiveTask.weight *= fresnelFactor;
-            shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
+            // reflectiveTask.weight *= fresnelFactor;
+            // shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
 
             GSceneMetrics.record("shadeRefractive_REFRACTED_YES");
         }
-        else {
-            shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
-            GSceneMetrics.record("shadeRefractive_REFRACTED_NO(TIR)");
-        }
+        // else {
+            // GSceneMetrics.record("shadeRefractive_REFRACTED_NO(TIR)");
+        //}
 
 #ifndef NDEBUG
         // assert refractP is farther away from ray.origin than hit.p
@@ -380,7 +383,7 @@ private:
         assert(hit.baryU <= 1.f && hit.baryU >= 0);
         assert(hit.baryV <= 1.f && hit.baryV >= 0);
         Vec3 unitColor = { hit.baryU, 0.f, hit.baryV };
-        shadingSamples(task.pixelX, task.pixelY).push({ unitColor, task.weight });
+        shadingSamples.addSample(task, unitColor);
     }
 
     void shadeUv(const TraceTask& task, const TraceHit& hit)
@@ -388,13 +391,13 @@ private:
         assert(hit.u <= 1.f && hit.u >= 0);
         assert(hit.v <= 1.f && hit.u >= 0);
         Vec3 unitColor = { hit.u, 0.f, hit.v };
-        shadingSamples(task.pixelX, task.pixelY).push({ unitColor, task.weight });
+        shadingSamples.addSample(task, unitColor);
     }
 
     void shadeNormal(TraceTask& task, const TraceHit& hit)
     {
         Vec3 unitColor = hit.n * 0.5f + Vec3{0.5f, 0.5f, 0.5f};
-        shadingSamples(task.pixelX, task.pixelY).push({ unitColor, task.weight });
+        shadingSamples.addSample(task, unitColor);
     }
 
     void flattenImage()

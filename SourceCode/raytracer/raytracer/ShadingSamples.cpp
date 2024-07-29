@@ -3,77 +3,101 @@
 #include <algorithm>
 #include "Image.h"
 #include "CRTTypes.h"
+#include "Settings.h"
 
-ShadingSamples::ShadingSamples(size_t width, size_t height): width(width), height(height)
+ShadingSamples::ShadingSamples(size_t width, size_t height, const Settings* settings): width(width), height(height), settings(settings)
 {
-    data.resize(width * height, {});
+    pixels = std::vector<Shades>(width * height);
 }
 
-PixelQueue& ShadingSamples::operator()(size_t x, size_t y)
+const Shades& ShadingSamples::operator()(size_t x, size_t y)
 {
     if (x >= width || y >= height)
     {
         throw std::out_of_range("");
     }
-    return data[y * width + x];
+    return pixels[y * width + x];
 }
+
+void ShadingSamples::addSample(const TraceTask& task, const Vec3 color, BlendType blendType)
+{ 
+    if (task.pixelX >= width || task.pixelY >= height)
+    {
+        throw std::out_of_range("");
+    }
+    Shades& shades = pixels[task.pixelY * width + task.pixelX];
+    
+    if (shades.size() == 0 && task.weight != 1.f) {
+        throw std::runtime_error("first weight should be 1.f");
+    }
+
+    shades.emplace_back(color, task.weight, blendType);
+}
+
 
 void ShadingSamples::flatten(Image& image)
 {
     assert(image.getWidth() == width && image.getHeight() == height);
 
-    // for each pixel
-    for (size_t i = 0; i < width * height; ++i) {
-        Vec3 unitColor = {0.f, 1.f, 0.f}; // should not appear in final image. TODO remove
+    // for each pixel index
+    for (size_t pIdx = 0; pIdx < width * height; ++pIdx) {
+        Shades& shades = pixels[pIdx];
 
-        // and each shade color
-        while (!data[i].empty()) {
-            ColorContrib& layer= data[i].front();
+        if (shades.size() == 0 && !settings->debugPixel) {
+            throw std::runtime_error("pixel has no data");
+        }
 
-            if (layer.blendType == BlendType::NORMAL) {
-                unitColor = lerp(unitColor, layer.color, layer.weight);
+        // ... and each of its shades
+        Vec3 result;
+        result = shades[0].color;
+        assert(shades[0].weight == 1.f);
+        for (size_t sIdx = 1; sIdx < shades.size(); ++sIdx) {
+            Shade& shade = shades[sIdx];
+
+            if (shade.blendType == BlendType::NORMAL) {
+                result = lerp(result, shade.color, shade.weight);
             }
 
-            else if (layer.blendType == BlendType::ADDITIVE) {
-                unitColor = (unitColor + layer.color);
-                unitColor.clamp(0.f, 1.f);
+            else if (shade.blendType == BlendType::ADDITIVE) {
+                result = (result + shade.color);
+                result.clamp(0.f, 1.f);
             }
-            data[i].pop();
+            else {
+                throw std::runtime_error("unknown BlendType");
+            }
 
         }
-        image.data[i] = Color::fromUnit(unitColor);
+
+        shades.clear();
+        image.data[pIdx] = Color::fromUnit(result);
     }
 }
 
 void ShadingSamples::slice(std::vector<Image>& images) {
     assert(images.size() == 0);
-    size_t depth = 0;
-    bool bContinue = true;
-    while(bContinue){
+    
+    // Prepare images vector
+    images.clear();
+    images.reserve(pixelsMaxDepth());
+    for (size_t i = 0; i < pixelsMaxDepth(); ++i) {
         images.emplace_back(width, height);
-        bContinue = false;
-        for (size_t i = 0; i < width * height; ++i) {
-            if(!data[i].empty()) {
-                bContinue = true;
-                ColorContrib& layer = data[i].front();
-                Vec3 unitColor = lerp({0.f, 0.f, 0.f}, layer.color, layer.weight);
-                images[depth].data[i] = Color::fromUnit(unitColor);
-                data[i].pop();
-            }
-            else {
-                images[depth].data[i] = Color{0, 0, 0};
-            }
+    }
+
+    // From array of stacks (pixels) To stacks of arrays (images)
+    for (size_t pIdx = 0; pIdx < width * height; ++pIdx) {
+        const Shades& shades = pixels[pIdx];
+
+        for(size_t sIdx = 0; sIdx < shades.size(); ++sIdx) {
+            const Shade& shade = shades[sIdx];
+            images[sIdx].data[pIdx] = Color::fromUnit(shade.color);
         }
-        ++depth;
     }
 }
 
-size_t ShadingSamples::maxDepth() const
-{
-    size_t max = 0;
-    for (const PixelQueue& queue : data) {
-        max = std::max(queue.size(), max);
+size_t ShadingSamples::pixelsMaxDepth() {
+    size_t maxDepth = 0;
+    for(const auto& pixel : pixels) {
+        maxDepth = std::max(pixel.size(), maxDepth);
     }
-    return max;
+    return maxDepth;
 }
-

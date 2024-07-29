@@ -51,6 +51,7 @@ public:
     Image(Image&&) = default;
     Image& operator=(Image&&) = default;
 
+    // disable copy
     Image(const Image&) = delete;
     Image& operator=(const Image&) = delete;
 

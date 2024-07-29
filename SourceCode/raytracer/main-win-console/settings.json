@@ -1,6 +1,6 @@
 {
     "sceneLibraryDir": "sceneLibrary",
-    "projectDir": "hw15_project",
+    "projectDir": "hw11_refract",
     "targetScenes": [],
     "outputDir": "out",
     
@@ -12,7 +12,7 @@
     "debugPixelY": 150,
     
     "debugLight": false,
-    "enableShadingSamples": false,
+    "enableShadingSamples": true,
     "debugAccelStructure": false,
 
     "showAabbs": false,

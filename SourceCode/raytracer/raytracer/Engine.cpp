@@ -39,6 +39,7 @@ void Engine::tick()
         scene.updateAnimations();
         renderer.render();
         writeFrame();
+        cleanFrame();
         ++GFrameNumber;
         auto summedMetrics = GSceneMetrics.toJson();
 
@@ -118,5 +119,12 @@ void Engine::writeFrame() const {
     }
     std::cout <<std::endl;
 
+}
+
+
+void Engine::cleanFrame()
+{
+    auxImages.clear();
+    GSceneMetrics.clear();
 }
 

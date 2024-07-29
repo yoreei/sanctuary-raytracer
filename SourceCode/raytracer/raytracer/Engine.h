@@ -17,6 +17,7 @@ public:
 
 private:
     void writeFrame() const;
+    void cleanFrame();
     void writeFile(const std::string& filename, const std::string& data) const;
 
     // Renderer output

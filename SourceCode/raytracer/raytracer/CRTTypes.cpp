@@ -27,6 +27,10 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
     float cosi = dot(direction, N);
     assert(cosi < 1e-6);
     cosi = std::clamp(cosi, -1.f, 0.f);
+
+    //float cosi = -dot(direction, N); // Correct the calculation of cosi
+    //cosi = std::clamp(cosi, 0.f, 1.f); // Ensure cosi is clamped correctly
+
     float eta = etai / etat;
 
     float cosTSq = 1.f - eta * eta * (1.f - cosi * cosi);
@@ -49,6 +53,7 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
     float cosTTest = fabs(dot(direction, N));
     cosTTest = std::clamp(cosTTest, -1.f, 1.f);
     assert(fEqual(cosT, cosTTest, 0.1f)); // very low precision here.
+    //assert(fEqual(fabs(cosT), cosTTest, 0.1f));
 #endif
     return true;
 }
