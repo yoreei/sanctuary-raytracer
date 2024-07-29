@@ -10,7 +10,7 @@ public:
     /* front, right, back, left, up, down */
     std::array<Image, 6> images {};
     Vec3 sample(const Ray& ray) const {
-        const Vec3& dir = ray.direction;
+        const Vec3& dir = ray.getDirection();
 
         float absX = std::fabs(dir.x);
         float absY = std::fabs(dir.y);

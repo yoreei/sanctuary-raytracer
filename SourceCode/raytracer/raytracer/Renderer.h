@@ -191,7 +191,7 @@ private:
     void shadeSkySimple(const TraceTask& task, const TraceHit& hit) {
         hit;
         GSceneMetrics.record("ShadeSky");
-        float t = 0.5f * (task.ray.direction.y + 1.f);
+        float t = 0.5f * (task.ray.getDirection().y + 1.f);
         Vec3 white{ 1.f, 1.f, 1.f };
         Vec3 blue{ 0.5f, 0.7f, 1.f };
         Vec3 skyColor = lerp(white, blue, t);
@@ -265,7 +265,7 @@ private:
 
         bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-settings->bias), hit.n, etai, etat);
         if (hasRefraction) {
-            float fresnelFactor = schlickApprox(task.ray.direction, hit.n, etai, etat);
+            float fresnelFactor = schlickApprox(task.ray.getDirection(), hit.n, etai, etat);
 
             refractionTask.weight *= (1.f - fresnelFactor);
             if (refractionTask.weight > epsilon) {
@@ -360,7 +360,7 @@ private:
     Color traceImagePlane(const Ray& ray) const
     {
         float imagePlaneDist = 1.f;
-        Vec3 p = ray.origin + ray.direction;
+        Vec3 p = ray.origin + ray.getDirection();
         Vec3 ortho = ray.origin + scene->camera.getDir(); // shortest vect. to img plane
         float rayProj = dot(ortho, p);
 

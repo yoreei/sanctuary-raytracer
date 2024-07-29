@@ -6,7 +6,7 @@
 /*
 * @Danny search OneNote 'Triangle Intersect'
 * Input: ray, rayProj
-* Input: rayProj: projection of ray.direction onto camera direction
+* Input: rayProj: projection of ray.getDirection() onto camera direction
 * Output: t: distance from ray.origin to the intersection point
 * Output: p: intersection point
 * Output: n: triangle normal (unit)
@@ -66,11 +66,11 @@ bool Triangle::hasVertex(size_t vertexIndex) const {
 }
 
 void Triangle::intersect(const Scene& scene, const Ray& ray, size_t triRef, TraceHit& hit) const {
-    assert(fEqual(ray.direction.lengthSquared(), 1.f));
+    assert(fEqual(ray.getDirection().lengthSquared(), 1.f));
     GSceneMetrics.record("TriangleIntersection");
     if (!scene.triangleAABBs[triRef].hasIntersection(ray)) return;
 
-    float rayProj = ray.direction.dot(normal);
+    float rayProj = ray.getDirection().dot(normal);
 
     if (rayProj < -1e-6) { // normal is facing ray
         computeHit(scene, ray, rayProj, hit);
@@ -83,7 +83,7 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, size_t triRef, Trac
             if (hit.type == TraceHitType::SUCCESS) {
                 hit.type = TraceHitType::INSIDE_REFRACTIVE;
                 hit.n = -hit.n;
-                assert(dot(hit.n, ray.direction) > 1e-6); // ray is exiting refractive material
+                assert(dot(hit.n, ray.getDirection()) > 1e-6); // ray is exiting refractive material
             }
         }
         else {
@@ -133,7 +133,7 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
         hit.type = TraceHitType::PLANE_BEHIND_RAY_ORIGIN;
         return;
     }
-    hit.p = ray.origin + ray.direction * hit.t;
+    hit.p = ray.origin + ray.getDirection() * hit.t;
 
     // check if `p` is inside triangle
     Vec3 v0p = hit.p - v0;
@@ -160,7 +160,7 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
 
         hit.materialIndex = this->materialIndex;
         hit.n = hitNormal(scene, hit);
-        hit.type = getTraceHitType(hit.n, ray.direction);
+        hit.type = getTraceHitType(hit.n, ray.getDirection());
         assertHit(scene, hit);
         return;
     }
@@ -222,13 +222,13 @@ bool Triangle::intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray
     Vec3 e0 = v1 - v0;
     Vec3 e1 = v2 - v0;
 
-    float rayProj = dot(ray.direction, normal);
+    float rayProj = dot(ray.getDirection(), normal);
 
     // if triangle is facing the ray, compute ray-plane intersection
     if (rayProj < -1e-6) {
         float rpDist = dot(normal, v0 - ray.origin);
         t = rpDist / rayProj;
-        p = ray.origin + ray.direction * t;
+        p = ray.origin + ray.getDirection() * t;
         return true;
     }
     return false;

@@ -439,27 +439,20 @@ private:
 class Ray {
 public:
     Vec3 origin;
-    Vec3 direction;
     Vec3 invdir;
+    // minus = 1; plus = 0
     int sign[3];
 
-    Ray(const Vec3& origin, const Vec3& direction) : origin(origin), direction(direction)
-    {
-        invdir = {1 / direction.x, 1 / direction.y, 1 / direction.z};
-        sign[0] = (invdir.x < 0);
-        sign[1] = (invdir.y < 0);
-        sign[2] = (invdir.z < 0);
-    }
+    Ray(const Vec3& origin, const Vec3& direction);
+
+    void setDirection(const Vec3& newDirection);
+
+    const Vec3& getDirection() const { return direction; }
 
     /*
     * @param N: expected to face the ray.
     */
-    void reflect(const Vec3& point, const Vec3& N) {
-        float cosi = dot(direction, N);
-        origin = point;
-        direction = direction - 2 * cosi * N;
-        direction.normalize();
-    }
+    void reflect(const Vec3& point, const Vec3& N);
 
     bool compareRefract(const Vec3 point, const Vec3& N, float etai, float etat);
     /*
@@ -474,6 +467,10 @@ public:
     * @param normal: expected to face the ray.
     **/
     bool refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR);
+private:
+
+    // Only change through setDirection so that caches are updated!
+    Vec3 direction;
 };
 
 

@@ -23,7 +23,7 @@ public:
     /*
     * @Danny search OneNote 'Triangle Intersect'
     * Input: ray, rayProj
-    * Input: rayProj: projection of ray.direction onto camera direction
+    * Input: rayProj: projection of ray.getDirection() onto camera direction
     * Output: t: distance from ray.origin to the intersection point
     * Output: p: intersection point
     * Output: n: triangle normal (unit)

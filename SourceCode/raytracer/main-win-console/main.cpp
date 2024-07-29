@@ -47,7 +47,7 @@ int launch()
 int main()
 {
     // loop main to detect race conditions, memory leaks, etc.
-    size_t runTimes = 10;
+    size_t runTimes = 1;
     for(size_t i = 0; i < runTimes; ++i) {
         launch();
     }

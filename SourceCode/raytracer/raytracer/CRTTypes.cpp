@@ -2,6 +2,32 @@
 #include "Globals.h"
 #include "json.hpp"
 
+
+/*
+* @param N: expected to face the ray.
+*/
+
+Ray::Ray(const Vec3& origin, const Vec3& direction) : origin(origin)
+{
+    setDirection(direction);
+}
+
+void Ray::setDirection(const Vec3& newDirection)
+{
+    direction = newDirection;
+    invdir = { 1 / direction.x, 1 / direction.y, 1 / direction.z };
+    sign[0] = (invdir.x < 0);
+    sign[1] = (invdir.y < 0);
+    sign[2] = (invdir.z < 0);
+}
+
+void Ray::reflect(const Vec3& point, const Vec3& N) {
+    float cosi = dot(direction, N);
+    origin = point;
+    setDirection(direction = direction - 2 * cosi * N);
+    direction.normalize();
+}
+
 bool Ray::compareRefract(const Vec3 point, const Vec3& N, float etai, float etat)
 {
     Vec3 oldDirection = direction;
@@ -37,8 +63,8 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
     if (cosTSq < 0.f) return false; // Total Internal Reflection
     float cosT = sqrtf(cosTSq);
     cosT = std::clamp(cosT, -1.f, 1.f);
-    direction = eta * direction + (eta * cosi - cosT) * N;
-    direction.normalize();
+    Vec3 newDirection = eta * direction + (eta * cosi - cosT) * N;
+    newDirection.normalize();
     // explanation:
     // T = X + Y
     // X = -N * cosT
@@ -47,6 +73,7 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
     // = M * sinT 
     // M = (I + cosI * N) * 1 / sinI, where M is unit surface tangent in plane of incidence
     // sinT = eta * sinI
+    setDirection(newDirection);
     origin = point;
 
 #ifndef NDEBUG
@@ -79,12 +106,14 @@ bool Ray::refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR) {
     }
     float cosR = sqrt(1 - sinR * sinR);
     // bump direction to avoid 0 vector check // TODO ask in Discord
-    direction = direction * (1.f + 1e-6f);
-    Vec3 C = (direction + cosI * normal).getUnit();
+    Vec3 newDirection = direction * (1.f + 1e-6f);
+    Vec3 C = (newDirection + cosI * normal).getUnit();
     Vec3 B = C * sinR;
     Vec3 A = -normal * cosR;
-    direction = A + B;
-    direction.normalize(); // TODO ask in Discord: can we avoid this?
+    newDirection = A + B;
+    newDirection.normalize(); // TODO ask in Discord: can we avoid this?
+
+    setDirection(newDirection);
     origin = point;
 
     assert(fEqual(dot(direction, normal), -cosR, 1e-2f)); // very low precision here. This one fails for hw11/scene8

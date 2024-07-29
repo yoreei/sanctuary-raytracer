@@ -43,6 +43,11 @@ bool AABB::hasIntersection(const Ray& r) const {
     tmax = (bounds[1-r.sign[0]].x - r.origin.x) * r.invdir.x;
     tymin = (bounds[r.sign[1]].y - r.origin.y) * r.invdir.y;
     tymax = (bounds[1-r.sign[1]].y - r.origin.y) * r.invdir.y;
+
+    assert(fEqual(r.origin.x + tmin * r.getDirection().x, bounds[r.sign[0]].x));
+    assert(fEqual(r.origin.x + tmax * r.getDirection().x, bounds[1-r.sign[0]].x));
+    assert(fEqual(r.origin.y + tymin * r.getDirection().y, bounds[r.sign[1]].y));
+    assert(fEqual(r.origin.y + tymax * r.getDirection().y, bounds[1-r.sign[1]].y));
     
     if ((tmin > tymax) || (tymin > tmax))
         return false;
@@ -54,6 +59,9 @@ bool AABB::hasIntersection(const Ray& r) const {
     
     tzmin = (bounds[r.sign[2]].z - r.origin.z) * r.invdir.z;
     tzmax = (bounds[1-r.sign[2]].z - r.origin.z) * r.invdir.z;
+
+    assert(fEqual(r.origin.z + tzmin * r.getDirection().z, bounds[r.sign[2]].z));
+    assert(fEqual(r.origin.z + tzmax * r.getDirection().z, bounds[1-r.sign[2]].z));
     
     if ((tmin > tzmax) || (tzmin > tmax))
         return false;
