@@ -27,13 +27,12 @@ void ShadingSamples::addSample(const TraceTask& task, const Vec3 color, BlendTyp
     }
     Shades& shades = pixels[task.pixelY * width + task.pixelX];
     
-    if (shades.size() == 0 && task.weight != 1.f) {
-        throw std::runtime_error("first weight should be 1.f");
-    }
+    //if (shades.size() == 0 && task.weight != 1.f) {
+    //    throw std::runtime_error("first weight should be 1.f");
+    //}
 
     shades.emplace_back(color, task.weight, blendType);
 }
-
 
 void ShadingSamples::flatten(Image& image)
 {
@@ -55,7 +54,7 @@ void ShadingSamples::flatten(Image& image)
         // ... and each of its shades
         Vec3 result;
         result = shades[0].color;
-        assert(shades[0].weight == 1.f);
+        // assert(shades[0].weight == 1.f); todo remove
         for (size_t sIdx = 1; sIdx < shades.size(); ++sIdx) {
             Shade& shade = shades[sIdx];
 
@@ -83,8 +82,9 @@ void ShadingSamples::slice(std::vector<Image>& images) {
     
     // Prepare images vector
     images.clear();
-    images.reserve(pixelsMaxDepth());
-    for (size_t i = 0; i < pixelsMaxDepth(); ++i) {
+    size_t maxDepth = pixelsMaxDepth();
+    images.reserve(maxDepth);
+    for (size_t i = 0; i < maxDepth; ++i) {
         images.emplace_back(width, height);
     }
 

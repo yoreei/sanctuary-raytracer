@@ -1,15 +1,15 @@
 {
     "sceneLibraryDir": "sceneLibrary",
     "projectDir": "hw11_refract",
-    "targetScenes": ["debug_reflect.crtscene"],
+    "targetScenes": [],
     "outputDir": "out",
     
     "maxDepth": 16,
     "bias": 0.001,
     
     "debugPixel": false,
-    "debugPixelX": 130,
-    "debugPixelY": 135,
+    "debugPixelX": 150,
+    "debugPixelY": 100,
     
     "debugLight": false,
     "enableShadingSamples": true,
@@ -22,7 +22,7 @@
     "resolutionY": 200,
     
     "bWritePng": true,
-    "bWriteBmp": true,
+    "bWriteBmp": false,
     
     "forceNoAccelStructure": false,
     "forceSingleThreaded": false,

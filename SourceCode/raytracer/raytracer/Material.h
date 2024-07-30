@@ -5,7 +5,6 @@ class TraceHit;
 class Scene;
 class Material
 {
-    static constexpr float REFLECTIVITY = 0.5f;
 public:
     enum Type
     {
@@ -23,11 +22,15 @@ public:
     Material(const Vec3& albedo, bool smoothShading, Type type) : albedo(albedo), smoothShading(smoothShading), type(type) {}
 
     Type type = Type::DIFFUSE;
-    float reflectivity = REFLECTIVITY;
-    float ior = 0.f;
+
+    // reflectivity + transparency + diffuseness = 1.f
+    float reflectivity = 0.f;
     float transparency = 0.f;
+    float diffuseness = 0.f;
+
+    float ior = 0.f;
     size_t textureIdx = 0;
-    /* Whether light calculations ignore objects with this material */
+    // occludes: Does it cast shadows?
     bool occludes = true;
     bool hasTexture = false;
     bool smoothShading = false;

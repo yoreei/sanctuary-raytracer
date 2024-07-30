@@ -278,13 +278,17 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene, const st
         }
         if (material.type == Material::Type::REFRACTIVE) {
             material.occludes = false;
-            material.transparency = 1.f;
-            material.reflectivity = 1.f;
+            // transparency + reflectivity + diffuseness = 1.f
+            material.transparency = 0.9f;
+            material.reflectivity = 0.1f;
         }
 
         else if (material.type == Material::Type::REFLECTIVE) {
             material.reflectivity = .8f;
+            material.transparency = .0f;
         }
+
+        material.diffuseness = 1 - material.transparency - material.reflectivity;
     }
 
     return true;

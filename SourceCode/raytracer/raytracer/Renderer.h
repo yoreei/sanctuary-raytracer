@@ -226,14 +226,13 @@ private:
 
     void shadeReflective(TraceTask& task, const TraceHit& hit, TraceQueue& traceQueue)
     {
-        // TODO remove comments 
         auto& material = scene->materials[hit.materialIndex];
-        //float originalWeight = task.weight;
-        //task.weight = originalWeight * (1.f - material.reflectivity);
+
+        float originalWeight = task.weight;
+        task.weight *= material.diffuseness;
         shadeDiffuse(task, hit);
 
-        //task.weight = originalWeight * material.reflectivity;
-        task.weight *= material.reflectivity;
+        task.weight = originalWeight * material.reflectivity;
         if (task.weight > epsilon) {
             task.ray.reflect(hit.biasP(settings->bias), hit.n);
             ++task.depth;
@@ -259,29 +258,31 @@ private:
             GSceneMetrics.record("shadeRefractive_OUTSIDE");
         }
 
-        TraceTask& refractionTask = task;
+        // Reflection
         TraceTask reflectiveTask = task;
-        shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
+        float fresnelFactor = schlickApprox(reflectiveTask.ray.getDirection(), hit.n, etai, etat);
 
-        bool hasRefraction = refractionTask.ray.refractSP(hit.biasP(-settings->bias), hit.n, etai, etat);
+        reflectiveTask.weight *= fresnelFactor;
+        if (reflectiveTask.weight > epsilon) {
+            reflectiveTask.ray.reflect(hit.biasP(settings->bias), hit.n);
+            ++reflectiveTask.depth;
+            traceQueue.push(reflectiveTask);
+        }
+
+
+        // Refraction
+        TraceTask& refractionTask = task;
+        bool hasRefraction = refractionTask.ray.refractVladi(hit.biasP(-settings->bias), hit.n, etai, etat);
         if (hasRefraction) {
-            float fresnelFactor = schlickApprox(task.ray.getDirection(), hit.n, etai, etat);
 
+            // refractionTask.weight *= material.transparency;
             refractionTask.weight *= (1.f - fresnelFactor);
             if (refractionTask.weight > epsilon) {
                 ++refractionTask.depth;
                 refractionTask.ior = etat;
                 traceQueue.push(refractionTask);
             }
-
-            // reflectiveTask.weight *= fresnelFactor;
-            // shadeReflective(reflectiveTask, hit, traceQueue); // shadeReflective takes care of shadeDiffuse
-
-            GSceneMetrics.record("shadeRefractive_REFRACTED_YES");
         }
-        // else {
-            // GSceneMetrics.record("shadeRefractive_REFRACTED_NO(TIR)");
-        //}
 
 #ifndef NDEBUG
         // assert refractP is farther away from ray.origin than hit.p
@@ -292,6 +293,7 @@ private:
         assert(oReflectLen < oPLen + 10 * epsilon);
 #endif
     }
+
     /*
     * return: non-clamped hit light color, summed from all lights in the scene
     */
