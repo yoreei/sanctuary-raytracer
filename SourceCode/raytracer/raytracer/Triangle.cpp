@@ -66,7 +66,7 @@ bool Triangle::hasVertex(size_t vertexIndex) const {
 }
 
 void Triangle::intersect(const Scene& scene, const Ray& ray, size_t triRef, TraceHit& hit) const {
-    assert(fEqual(ray.getDirection().lengthSquared(), 1.f));
+    assertFEqual(ray.getDirection().lengthSquared(), 1.f);
     GSceneMetrics.record("TriangleIntersection");
     if (!scene.triangleAABBs[triRef].hasIntersection(ray)) return;
 

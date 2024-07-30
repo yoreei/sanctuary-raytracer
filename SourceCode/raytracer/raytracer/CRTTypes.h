@@ -14,8 +14,27 @@
 #include "Utils.h"
 #include "json_fwd.h"
 
-inline bool fEqual(float a, float b, float maxDiff = epsilon) {
-    return std::abs(a - b) < maxDiff;
+/* For more, read https://leimao.github.io/blog/CPP-Float-Point-Number-Comparison/ */
+inline void assertFEqual(float a, float b, float atol = epsilon) {
+    a;
+    b;
+    atol;
+#ifndef NDEBUG
+    float absA = std::fabs(a);
+    float absB = std::fabs(b);
+    float diff = std::fabs(a - b);
+
+    // Use relative tolerance if numbers are large, absolute tolerance otherwise
+    float rtol = epsilon * std::max(absA, absB);
+    float tol = std::max(atol, rtol);
+    assert(diff <= tol);
+#endif
+}
+
+/* fast, to be used in Release code. Needs atol to be fine-tuned for number magnitude*/
+inline bool fEqual(float a, float b, float atol = epsilon) {
+    float diff = std::fabs(a - b);
+    return diff <= atol;
 }
 
 inline bool fLower(float a, float b, float maxDiff = epsilon) {
@@ -80,6 +99,14 @@ public:
     Vec3 operator/(float scalar) const {
         float divCache = 1.f / scalar; // division optimization
         return Vec3(x * divCache, y * divCache, z * divCache);
+    }
+
+    Vec3& operator/=(float scalar) {
+        float divCache = 1.f / scalar; // division optimization
+        x *= divCache;
+        y *= divCache;
+        z *= divCache;
+        return *this;
     }
 
     float dot(const Vec3& other) const {

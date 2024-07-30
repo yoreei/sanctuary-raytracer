@@ -121,6 +121,7 @@ private:
 
     void processXData(TraceTask& task, TraceHit& hit, TraceQueue& traceQueue) {
         if (task.depth >= settings->maxDepth) {
+            shadeSky(task, hit);
             return;
         }
 
@@ -174,16 +175,13 @@ private:
     void shadeSky(const TraceTask& task, const TraceHit& hit)
     {
         hit;
-        if (task.weight < epsilon) {
-            return;
-        }
 
         Vec3 skyColor;
         if (!scene->useSkybox) {
             skyColor = scene->bgColor;
         }
         else {
-            skyColor = scene->cubemap.sample(task.ray);
+            skyColor = scene->skybox.sample(task.ray.getDirection());
         }
 
         shadingSamples.addSample(task, skyColor);
@@ -218,6 +216,10 @@ private:
         const Material& material = scene->materials[hit.materialIndex];
         Vec3 albedo = material.getAlbedo(*scene, hit);
         Vec3 light = hitLight(hit.biasP(settings->bias), hit.n); // overexposure x,y,z > 1.f
+
+        Vec3 ambient = multiply(scene->ambientLightColor, albedo);
+        light += ambient;
+
         Vec3 overexposedColor = multiply(light, albedo);
         Vec3 diffuseComponent = clampOverexposure(overexposedColor);
         shadingSamples.addSample(task, diffuseComponent, BlendType::NORMAL);
@@ -258,6 +260,7 @@ private:
             GSceneMetrics.record("shadeRefractive_OUTSIDE");
         }
 
+        bool reflected = false, transmitted = false;
         // Reflection
         TraceTask reflectiveTask = task;
         float fresnelFactor = schlickApprox(reflectiveTask.ray.getDirection(), hit.n, etai, etat);
@@ -267,21 +270,26 @@ private:
             reflectiveTask.ray.reflect(hit.biasP(settings->bias), hit.n);
             ++reflectiveTask.depth;
             traceQueue.push(reflectiveTask);
+            reflected = true;
         }
-
 
         // Refraction
         TraceTask& refractionTask = task;
         bool hasRefraction = refractionTask.ray.refractVladi(hit.biasP(-settings->bias), hit.n, etai, etat);
         if (hasRefraction) {
 
-            // refractionTask.weight *= material.transparency;
             refractionTask.weight *= (1.f - fresnelFactor);
+            // refractionTask.weight *= material.transparency;
             if (refractionTask.weight > epsilon) {
                 ++refractionTask.depth;
                 refractionTask.ior = etat;
                 traceQueue.push(refractionTask);
+                transmitted = true;
             }
+        }
+
+        if (!reflected && !transmitted) {
+            shadeSky(task, hit);
         }
 
 #ifndef NDEBUG

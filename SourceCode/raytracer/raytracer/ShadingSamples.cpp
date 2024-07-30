@@ -10,6 +10,7 @@ ShadingSamples::ShadingSamples(size_t width, size_t height, const Settings* sett
     pixels = std::vector<Shades>(width * height);
 }
 
+// todo remove?
 const Shades& ShadingSamples::operator()(size_t x, size_t y)
 {
     if (x >= width || y >= height)
@@ -34,46 +35,46 @@ void ShadingSamples::addSample(const TraceTask& task, const Vec3 color, BlendTyp
     shades.emplace_back(color, task.weight, blendType);
 }
 
+Vec3 flattenShades(const Shades& shades)
+{
+    Vec3 result;
+    result = shades[0].color;
+    // assert(shades[0].weight == 1.f); todo remove
+    for (size_t sIdx = 1; sIdx < shades.size(); ++sIdx) {
+        const Shade& shade = shades[sIdx];
+
+        if (shade.blendType == BlendType::NORMAL) {
+            result = lerp(result, shade.color, shade.weight);
+        }
+
+        else if (shade.blendType == BlendType::ADDITIVE) {
+            result = (result + shade.color);
+            result.clamp(0.f, 1.f);
+        }
+        else {
+            throw std::runtime_error("unknown BlendType");
+        }
+    }
+    return result;
+}
+
 void ShadingSamples::flatten(Image& image)
 {
     assert(image.getWidth() == width && image.getHeight() == height);
 
     // for each pixel index
-    for (size_t pIdx = 0; pIdx < width * height; ++pIdx) {
-        Shades& shades = pixels[pIdx];
+    for (size_t y = image.startPixelY; y < image.endPixelY; ++y) {
+        for (size_t x = image.startPixelX; x < image.endPixelX; ++x) {
+            Shades& shades = pixels[y * width + x];
+            if (shades.size() == 0) {
+                std::string pixelStr = std::to_string(y) + ", " + std::to_string(x);
+                throw std::runtime_error("pixel " + pixelStr + " has no data");
+            }
 
-        if (shades.size() == 0) {
-            if (settings->debugPixel) {
-                continue;
-            }
-            else {
-                throw std::runtime_error("pixel has no data");
-            }
+            Vec3 result = flattenShades(shades);
+            shades.clear();
+            image(x,y) = Color::fromUnit(result);
         }
-
-        // ... and each of its shades
-        Vec3 result;
-        result = shades[0].color;
-        // assert(shades[0].weight == 1.f); todo remove
-        for (size_t sIdx = 1; sIdx < shades.size(); ++sIdx) {
-            Shade& shade = shades[sIdx];
-
-            if (shade.blendType == BlendType::NORMAL) {
-                result = lerp(result, shade.color, shade.weight);
-            }
-
-            else if (shade.blendType == BlendType::ADDITIVE) {
-                result = (result + shade.color);
-                result.clamp(0.f, 1.f);
-            }
-            else {
-                throw std::runtime_error("unknown BlendType");
-            }
-
-        }
-
-        shades.clear();
-        image.data[pIdx] = Color::fromUnit(result);
     }
 }
 

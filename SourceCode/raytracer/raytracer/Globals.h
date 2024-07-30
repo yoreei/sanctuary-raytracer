@@ -26,3 +26,4 @@ extern std::string GBestSettings;
 // Modified by Renderer worker threads on thread boot
 extern thread_local size_t GThreadIdx;
 
+static constexpr float PI = static_cast<float>(std::numbers::pi);

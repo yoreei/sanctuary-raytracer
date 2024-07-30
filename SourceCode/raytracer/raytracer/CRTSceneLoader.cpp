@@ -119,30 +119,33 @@ bool CRTSceneLoader::validateCrtscene(const json& j) {
 bool CRTSceneLoader::parseLight(const json& j, Scene& scene)
 {
     warnIfMissing(j, "lights");
-    if (!j.contains("lights") || j.at("lights").empty()) {
+    if (!j.contains("lights")) {
         return true;
     }
-    else if (!j.at("lights").is_array()) {
-        std::cerr << "Error loading lights: lights is not an array\n";
-        return false;
-    }
-    else {
-        for (const auto& jLight : j.at("lights")) {
-            if (!jLight.contains("intensity") || !jLight.contains("position")) {
-                std::cerr << "Error loading light: intensity or position not found\n";
-                return false;
-            }
 
-            if (!jLight.at("position").is_array() || jLight.at("position").size() != 3) {
-                std::cerr << "Error loading light: position is not an array or not of size 3\n";
-                return false;
-            }
+    for (const auto& jLight : j.at("lights")) {
+        float intensity = jLight.at("intensity");
+        Vec3 color = Utils::jsonGetDefault<Vec3>(jLight, "color", {1.f, 1.f, 1.f});
+        std::string typeStr = Utils::jsonGetDefault<std::string>(jLight, "type", "point");
+        LightType type = Light::lightTypeFromString(typeStr);
+        Light light;
 
-            float intensity = jLight.at("intensity");
-            Vec3 pos{ jLight.at("position")[0], jLight.at("position")[1], jLight.at("position")[2] };
-            Light light{ pos, intensity };
-            scene.lights.push_back(light);
+        if (type == LightType::SUN) {
+            const auto& jDir = jLight.at("direction");
+            Vec3 dir{ jDir[0], jDir[1], jDir[2] };
+            dir.normalize();
+            light = Light::MakeSun(dir, intensity, color);
         }
+        else if (type == LightType::POINT) {
+            const auto& jPos = jLight.at("position");
+            Vec3 pos{ jPos[0], jPos[1], jPos[2] };
+            light = Light::MakePoint(pos, intensity, color);
+        }
+        else {
+            throw std::runtime_error("unknown light type");
+        }
+
+        scene.lights.push_back(light);
     }
     return true;
 }
@@ -155,13 +158,15 @@ bool CRTSceneLoader::parseSettings(const json& j, Scene& scene, const Settings& 
     if (jSettings.contains("skybox")) {
         std::string skybox = jSettings.at("skybox");
         scene.useSkybox = true;
-        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0001.png", scene.cubemap.images[0]);
-        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0002.png", scene.cubemap.images[1]);
-        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0003.png", scene.cubemap.images[2]);
-        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0004.png", scene.cubemap.images[3]);
-        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0005.png", scene.cubemap.images[4]);
-        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0006.png", scene.cubemap.images[5]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0001.png", scene.skybox.images[0]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0002.png", scene.skybox.images[1]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0003.png", scene.skybox.images[2]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0004.png", scene.skybox.images[3]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0005.png", scene.skybox.images[4]);
+        loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0006.png", scene.skybox.images[5]);
     }
+
+    scene.ambientLightColor = scene.skybox.calculateAmbientColor();
 
     return true;
 }
@@ -277,7 +282,6 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene, const st
             else { throw std::runtime_error("Error loading albedo: albedo is not a string or array\n"); }
         }
         if (material.type == Material::Type::REFRACTIVE) {
-            material.occludes = false;
             // transparency + reflectivity + diffuseness = 1.f
             material.transparency = 0.9f;
             material.reflectivity = 0.1f;

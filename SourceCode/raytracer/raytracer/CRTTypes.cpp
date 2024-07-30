@@ -79,8 +79,7 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
 #ifndef NDEBUG
     float cosTTest = fabs(dot(direction, N));
     cosTTest = std::clamp(cosTTest, -1.f, 1.f);
-    assert(fEqual(cosT, cosTTest, 0.1f)); // very low precision here.
-    //assert(fEqual(fabs(cosT), cosTTest, 0.1f));
+    assertFEqual(cosT, cosTTest, 0.1f); // very low precision here.
 #endif
     return true;
 }
@@ -94,7 +93,7 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
 bool Ray::refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR) {
 #ifndef NDEBUG
     auto dbgOldDirection = direction;
-    assert(fEqual(direction.lengthSquared(), 1.f));
+    assertFEqual(direction.lengthSquared(), 1.f);
     assert(dot(direction, normal) < -epsilon); // usage req: normal should face the ray
 #endif
 
@@ -116,7 +115,7 @@ bool Ray::refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR) {
     setDirection(newDirection);
     origin = point;
 
-    assert(fEqual(dot(direction, normal), -cosR, 1e-2f)); // very low precision here. This one fails for hw11/scene8
+    assertFEqual(dot(direction, normal), -cosR, 1e-2f); // very low precision here. This one fails for hw11/scene8
     // assert R not going backwards:
     assert(dot(direction, dbgOldDirection) > 0);
     return true;

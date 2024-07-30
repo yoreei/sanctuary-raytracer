@@ -1,5 +1,7 @@
 #pragma once
 #include <array>
+#include <cmath>
+#include "Globals.h"
 #include "Image.h"
 
 class Cubemap
@@ -9,8 +11,7 @@ public:
 
     /* front, right, back, left, up, down */
     std::array<Image, 6> images {};
-    Vec3 sample(const Ray& ray) const {
-        const Vec3& dir = ray.getDirection();
+    Vec3 sample(const Vec3& dir) const {
 
         float absX = std::fabs(dir.x);
         float absY = std::fabs(dir.y);
@@ -72,6 +73,44 @@ public:
         assert(image.getHeight() * image.getWidth() >= 1024 * 1024);
 
         return Vec3(pixelColor.r / 255.0f, pixelColor.g / 255.0f, pixelColor.b / 255.0f);
+    }
+
+    Vec3 calculateAmbientColor() {
+        Vec3 totalColor = {0.f, 0.f, 0.f};
+        int sampleCount = 1000;
+
+        for (const auto& direction : fibonacciSphereSample(sampleCount)) {
+            Vec3 sampleColor = sample(direction);
+            totalColor += sampleColor;
+        }
+
+        if (sampleCount > 0) {
+            totalColor /= float(sampleCount);
+        }
+
+        return totalColor;
+    }
+
+    static std::vector<Vec3> fibonacciSphereSample(int sampleCount) {
+        std::vector<Vec3> points;
+        points.reserve(sampleCount);
+
+        const float phi = (1.f + std::sqrt(5.f)) / 2.f; // golden ratio
+        const float ga = 2.f * PI * (1.f - 1.f / phi); // golden angle
+
+        for (size_t i = 0; i < sampleCount; ++i) {
+            float t = float(i) / (sampleCount - 1.f); // Normalize i to [0, 1]
+            float inclination = std::acos(1.f - 2.f * t); // Polar angle
+            float azimuth = ga * i; // Azimuthal angle
+
+            float x = std::sin(inclination) * std::cos(azimuth);
+            float y = std::sin(inclination) * std::sin(azimuth);
+            float z = std::cos(inclination);
+
+            points.emplace_back(x, y, z);
+        }
+
+        return points;
     }
 };
 

@@ -16,18 +16,11 @@
         } \
     } while (false)
 
-template<class T>
-inline bool contains(const std::vector<T>& vec, const T& item) {
-    return std::find(vec.begin(), vec.end(), item) != vec.end();
-}
-
-inline std::string stringFromBool(bool b) {
-    return b ? "true" : "false";
-}
 
 inline constexpr float epsilon = 1e-5f; // high precision
 // inline constexpr float epsilon = 1e-4f; // good precision
 
+class Vec3;
 namespace Utils {
     /*
     * @return the number of elements moved
@@ -46,5 +39,16 @@ namespace Utils {
 
     template <typename T>
     T jsonGetDefault(const nlohmann::json& j, const std::string& key, T defaultVal);
+    template <>
+    Vec3 jsonGetDefault<Vec3>(const nlohmann::json& j, const std::string& key, Vec3 defaultVal);
+
+    template<class T>
+    inline bool contains(const std::vector<T>& vec, const T& item) {
+        return std::find(vec.begin(), vec.end(), item) != vec.end();
+    }
+
+    inline std::string stringFromBool(bool b) {
+        return b ? "true" : "false";
+    }
 }
 

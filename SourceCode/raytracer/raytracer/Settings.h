@@ -62,6 +62,7 @@ public:
 
     // Human-written functions.
     // GPT Instruction: ignore these
+    size_t debugPixelIdx(size_t imageWidth) const;
     std::string projectPath() const;
     std::string iterationName() const;
     std::string iterationPathNoExt() const;

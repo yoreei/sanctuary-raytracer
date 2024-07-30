@@ -90,3 +90,7 @@ std::string Settings::iterationPathNoExt() const {
 std::string Settings::framePathNoExt(const std::string& sceneName, size_t frameNumber) const {
     return outputDir + "/" + iterationName() + "/" + projectDir + "/" + sceneName + "/" + std::to_string(frameNumber);
 }
+
+size_t Settings::debugPixelIdx(size_t imageWidth) const {
+    return debugPixelY * imageWidth + debugPixelX;
+}

@@ -37,9 +37,10 @@ public:
     std::string fileName = "";
     Camera camera{};
     const Settings* settings;
-    Cubemap cubemap {};
+    Cubemap skybox{};
     Vec3 bgColor = { 0.f, 0.f, 0.f };
     bool useSkybox = false;
+    Vec3 ambientLightColor = { 0.f, 0.f, 0.f };
 
     // Entities
     std::vector<Light> lights {};
