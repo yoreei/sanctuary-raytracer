@@ -21,6 +21,7 @@
 #include "Scripts.h"
 #include "Globals.h"
 #include "Utils.h"
+#include <sstream>
 
 namespace fs = std::filesystem;
 
@@ -41,7 +42,6 @@ void Engine::tick()
         scene.updateAnimations();
         renderer.render();
         writeFrame();
-        cleanFrame();
         ++GFrameNumber;
         auto summedMetrics = GSceneMetrics.toJson();
 
@@ -49,6 +49,8 @@ void Engine::tick()
             if (triInt < GBestTriangleIntersect) {
                 GBestSettings = summedMetrics.dump(4);
         }
+
+        cleanFrame();
     }
 
 }
@@ -56,10 +58,15 @@ void Engine::tick()
 void Engine::loadScene(const std::string& filePath, const std::string& sceneName) {
     std::cout << ">> Loading scene: " << sceneName << std::endl;
     GResetGlobals();
+
+    GSceneMetrics.startTimer("loadScene");
+
     scene.fileName = sceneName;
     CRTSceneLoader::loadCrtscene(settings, filePath, scene, image) ? void() : exit(1);
     Scripts::onSceneLoaded(scene);
     std::cout << ">> Scene " << sceneName << " loaded\n";
+
+    GSceneMetrics.stopTimer("loadScene");
 }
 
 int Engine::runAllScenes()
@@ -103,23 +110,24 @@ void Engine::writeFrame() const {
     std::ofstream fileStream(framePathNoExt + ".log", std::ios::out);
     std::string metricsString = GSceneMetrics.toString();
     std::string globalDebugString = GlobalDebug::toString();
+    std::stringstream stream;
 
-    fileStream << metricsString << std::endl;
-    fileStream << std::endl;
-    fileStream << globalDebugString << std::endl;
-    fileStream << std::endl;
-
-    std::cout << metricsString << std::endl;
-    std::cout << std::endl;
-    std::cout << globalDebugString << std::endl;
-    std::cout << std::endl;
+    stream << metricsString << std::endl;
+    stream << std::endl;
+    stream << globalDebugString << std::endl;
+    stream << std::endl;
 
     if (settings.debugPixel) {
-        std::cout << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
-
-        fileStream << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
+        stream << "debugPixel: " << image(settings.debugPixelX, settings.debugPixelY) << std::endl;
     }
-    std::cout <<std::endl;
+
+    std::string logStr = stream.str();
+    std::cout << logStr;
+
+    bool writeLogFile = false; // todo move to settings
+    if (writeLogFile) {
+        fileStream << logStr;
+    }
 
 }
 

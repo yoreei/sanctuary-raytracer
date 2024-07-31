@@ -35,6 +35,8 @@ Settings Settings::load(const std::string& filename) {
     settings.maxTrianglesPerLeaf = json.at("maxTrianglesPerLeaf");
     settings.accelTreeMaxDepth = json.at("accelTreeMaxDepth");
 
+    settings.checkSettings();
+
     return settings;
 }
 
@@ -93,4 +95,12 @@ std::string Settings::framePathNoExt(const std::string& sceneName, size_t frameN
 
 size_t Settings::debugPixelIdx(size_t imageWidth) const {
     return debugPixelY * imageWidth + debugPixelX;
+}
+
+void Settings::checkSettings() const {
+    if (debugPixel && overrideResolution) {
+        if (debugPixelX > resolutionX || debugPixelY > resolutionY) {
+            throw std::runtime_error("no such pixel to debug");
+        }
+    }
 }

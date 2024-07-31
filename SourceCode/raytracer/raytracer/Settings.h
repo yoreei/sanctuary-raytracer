@@ -3,7 +3,7 @@
 *
 * GPT Prompt: Generate the corresponding implementation file (Settings.cpp) with all functions implemented as per this header file. The output should consist only of valid C++ code, including necessary comments, and should not contain any explanations or additional text. Ensure all code is syntactically correct and complete.
 *
-* Comment to Human: Copy and paste this header into a GPT to receive implementation
+* Comment to Human: Copy and paste this header into a GPT to receive implementation. Why? Because parsing this is repetitive and error-prone.
 */
 
 #pragma once
@@ -54,14 +54,16 @@ public:
 
     // GPT Generated Functions
     /* GPT Instruction: parse each element using json.at(elem). Do not check if `elem` exists */
-    /* @brief: Will not catch exceptions from nlohmann::json if any key is missing */
+    /* @brief: Caller needs to catch exceptions from nlohmann::json. Missing keys is also an exception */
     static Settings load(const std::string& filename = "settings.json");
     
     /* Format back to Json-formatted string */
     std::string toString() const;
 
-    // Human-written functions.
+    // Human-written functions:
     // GPT Instruction: ignore these
+
+    void checkSettings() const;
     size_t debugPixelIdx(size_t imageWidth) const;
     std::string projectPath() const;
     std::string iterationName() const;

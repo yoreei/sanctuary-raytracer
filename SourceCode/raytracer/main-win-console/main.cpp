@@ -12,9 +12,9 @@ void logSettingsIteration(const Settings& settings) {
     logFile.close();
 }
 
-int launch() 
+int launch()
 {
-    std::vector<Settings> settingsList = {Settings::load("settings.json")};
+    std::vector<Settings> settingsList = { Settings::load("settings.json") };
 
     // Manually specify multiple iterations based on settings file
 
@@ -35,7 +35,7 @@ int launch()
     for (Settings& settings : settingsList) {
         std::cout << "Running iteration " << settings.iterationName() << std::endl;
         logSettingsIteration(settings);
-        Engine rt {settings};
+        Engine rt{ settings };
         rt.runAllScenes();
     }
 
@@ -46,10 +46,21 @@ int launch()
 
 int main()
 {
-    // loop main to detect race conditions, memory leaks, etc.
-    size_t runTimes = 1;
-    for(size_t i = 0; i < runTimes; ++i) {
-        launch();
+    try {
+        // Loop main to detect race conditions, memory leaks, etc.
+        size_t runTimes = 1;
+        for (size_t i = 0; i < runTimes; ++i) {
+            launch();
+        }
     }
+    catch (const std::exception& e) {
+        std::cerr << "Standard exception caught: " << e.what() << std::endl;
+        throw;
+    }
+    catch (...) {
+        std::cerr << "Unknown exception caught" << std::endl;
+        throw;
+    }
+
 }
 

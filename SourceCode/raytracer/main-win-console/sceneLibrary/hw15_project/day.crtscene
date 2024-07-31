@@ -31,12 +31,18 @@
 			]
 		}
 	],
+
+	"textures":[
+		{
+			"name": "solidRock",
+			"type": "bitmap",
+			"file_path": "/textures/concrete_wall_003_diff_2k.jpg"
+		}
+	],
 	
 	"materials": [{
 			"type": "diffuse",
-			"albedo": [
-				0.8, 0.8, 0.8
-			],
+			"albedo": "solidRock",
 			"smooth_shading": true
 		},
 		{
@@ -44,7 +50,7 @@
 			"albedo": [
 				0.9, 0.6, 0.9
 			],
-			"ior": 1.3,
+			"ior": 1.7,
 			"smooth_shading": false,
 			"occludes": true
 		}			
@@ -59,6 +65,12 @@
 				-15, -5, -15,
 				15, -5, -15
 			],
+			"uvs": [
+				0, 1, 0,
+				1, 1, 0,
+				0, 0, 0,
+				1, 0, 0
+			],		
 			
 			"triangles": [
 				0, 1, 2,

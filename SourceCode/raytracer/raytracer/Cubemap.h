@@ -3,6 +3,7 @@
 #include <cmath>
 #include "Globals.h"
 #include "Image.h"
+#include <algorithm>
 
 class Cubemap
 {
@@ -64,6 +65,8 @@ public:
         const size_t height = image.getHeight();
         size_t x = size_t(u * (float(width) - 1.f));
         size_t y = size_t(v * (float(height) - 1.f));
+        x = std::clamp(x, size_t(0), width -1);
+        y = std::clamp(y, size_t(0), height -1);
         // reverse top-bottom
         // y = height - 1 - y;
 

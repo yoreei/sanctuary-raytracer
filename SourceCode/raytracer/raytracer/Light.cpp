@@ -20,8 +20,8 @@ Vec3 Light::lightContrib(const Scene& scene, const Vec3& point, const Vec3& norm
         lightDir.normalize();
         float cosLaw = std::fabs(normal.dot(lightDir)); // fabs takes care of refractive materials
         float sa = 4 * PI * sr * sr; // Sphere Area
-        float contrib = this->intensity * cosLaw / sa;
-        return Vec3{ contrib, contrib, contrib };
+        Vec3 contrib = color * intensity * cosLaw / sa;
+        return contrib;
     }
     
     if (type == LightType::SUN) {

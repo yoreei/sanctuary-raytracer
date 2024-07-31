@@ -5,6 +5,7 @@
 #include "Image.h"
 #include "SceneObject.h"
 #include "json_fwd.h"
+#include "Globals.h"
 
 class Camera : public SceneObject
 {
@@ -18,16 +19,6 @@ public:
     auto getFov() const { return fov; }
     auto getPos() const { return pos; }
     auto getDir() const { return mat.getCol(2); }
-    //void setDir(const Vec3& dir)
-    //{
-    //    assert(dir.isUnit());
-    //    mat.setCol(2, dir); 
-
-    //    // Make matrix orthogonal
-    //    mat.setCol(0, Matrix3x3::Yaw(-90.f) * dir); // Right
-    //    mat.setCol(1, Matrix3x3::Pitch(90.f) * dir); // Up
-
-    //}
 
     /* warning: does not preserve roll. Will fix this with quaternions */
     void setDir(const Vec3& dir)
@@ -37,15 +28,16 @@ public:
         mat.setCol(2, dir);
 
         Vec3 right;
-        Vec3{0.f, 1.f, 0.f}.cross(dir, right);
+        Vec3{ 0.f, 1.f, 0.f }.cross(dir, right);
         if (fEqual(right.lengthSquared(), 0))
         {
-            Vec3{1.f, 0.f, 0.f}.cross(dir, right);
+            Vec3{ 1.f, 0.f, 0.f }.cross(dir, right);
         }
         right.normalize();
 
         Vec3 up;
         dir.cross(right, up);
+        up.normalize();
 
         mat.setCol(0, right);
         mat.setCol(1, up);
@@ -79,15 +71,7 @@ public:
         queue.emplace(ray, x, y);
     }
 
-    Ray rayFromPixel(const Image& image, size_t x, size_t y) const {
-        Vec3 coords{ static_cast<float>(x), static_cast<float>(y), 0 };
-        ndcFromRaster(image, coords);
-        imageFromNdc(image, coords);
-
-        Vec3 raydir = getDir() + getRight() * coords.x + getUp() * coords.y;
-        raydir.normalize();
-        return { this->pos, raydir };
-    }
+    Ray rayFromPixel(const Image& image, size_t x, size_t y) const;
 
 protected:
 
@@ -108,23 +92,6 @@ protected:
         x /= float(image.getWidth());
         y /= float(image.getHeight());
     }
-
-    //void screenFromNdc(Vec3& coordinates) const
-    //{
-    //    float& x = coordinates.x;
-    //    float& y = coordinates.y;
-
-    //    // x[0, 1] -> x[0, 2]
-    //    // y[0, 1] -> y[-2, 0]
-    //    x *= 2.0f;
-    //    y *= -2.0f;
-
-    //    // x[0, 2] y[0, -2] -> xy[-1, 1]
-    //    x += -1.0f;
-    //    y += 1.0f;
-
-    //    x *= aspect_ratio;
-    //}
 
     /*
     * returns image plane coordinates. Positive y is up, positive x is right

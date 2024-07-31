@@ -207,6 +207,7 @@
     <ClCompile Include="Globals.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="Metrics.cpp" />
+    <ClCompile Include="Scripts.cpp" />
     <ClCompile Include="ShadingSamples.cpp" />
     <ClCompile Include="KDTreeNode.cpp" />
     <ClCompile Include="MeshObject.cpp" />
