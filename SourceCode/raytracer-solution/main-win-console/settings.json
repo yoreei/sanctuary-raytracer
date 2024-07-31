@@ -1,0 +1,31 @@
+{
+    "sceneLibraryDir": "sceneLibrary",
+    "projectDir": "hw15_project",
+    "targetScenes": ["day.crtscene", "day2.crtscene", "night.crtscene", "night2.crtscene"],
+    "outputDir": "out",
+    
+    "maxDepth": 6,
+    "bias": 0.001,
+    
+    "debugPixel": false,
+    "debugPixelX": 0,
+    "debugPixelY": 0,
+    
+    "debugLight": false,
+    "enableShadingSamples": false,
+    "debugAccelStructure": false,
+
+    "showAabbs": false,
+    
+    "overrideResolution": false,
+    "resolutionX": 800,
+    "resolutionY": 450,
+    
+    "bWritePng": true,
+    "bWriteBmp": false,
+    
+    "forceNoAccelStructure": false,
+    "forceSingleThreaded": false,
+    "maxTrianglesPerLeaf": 4,
+    "accelTreeMaxDepth": 20
+}

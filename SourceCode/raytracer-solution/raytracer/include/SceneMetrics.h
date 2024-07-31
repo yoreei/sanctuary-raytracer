@@ -3,7 +3,7 @@
 #include <string>
 #include <chrono>
 #include "json.hpp"
-#include "Intersection.h"
+#include "include/Intersection.h"
 
 using ordered_json = nlohmann::ordered_json;
 

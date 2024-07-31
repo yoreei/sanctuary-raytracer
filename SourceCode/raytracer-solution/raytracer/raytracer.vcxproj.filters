@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="AABB.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CRTMath.cpp" />
+    <ClCompile Include="CRTSceneLoader.cpp" />
+    <ClCompile Include="CRTTypes.cpp" />
+    <ClCompile Include="Cubemap.cpp" />
+    <ClCompile Include="Globals.cpp" />
+    <ClCompile Include="Image.cpp" />
+    <ClCompile Include="Metrics.cpp" />
+    <ClCompile Include="Scripts.cpp" />
+    <ClCompile Include="ShadingSamples.cpp" />
+    <ClCompile Include="KDTreeNode.cpp" />
+    <ClCompile Include="MeshObject.cpp" />
+    <ClCompile Include="SceneObject.cpp" />
+    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TraceHit.cpp" />
+    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="Triangle.cpp" />
+    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="..\third-party\stb_image.cpp">
+      <Filter>third-party</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third-party\stb_image_write.cpp">
+      <Filter>third-party</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\AnimationComponent.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Camera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CRTMath.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CRTSceneLoader.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CRTTypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Cubemap.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Globals.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Image.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\json_fwd.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\KDTreeNode.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Light.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Material.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MeshObject.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Metrics.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Renderer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Scene.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SceneMetrics.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SceneObject.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Scripts.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Settings.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ShadingSamples.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Texture.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TraceHit.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Triangle.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AABB.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third-party\json.hpp">
+      <Filter>third-party</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third-party\json_fwd.h">
+      <Filter>third-party</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third-party\perlin-noise.h">
+      <Filter>third-party</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third-party\stb_image.h">
+      <Filter>third-party</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third-party\stb_image_write.h">
+      <Filter>third-party</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{cb27b0e7-a2f9-4861-9791-c76e4cf9465c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third-party">
+      <UniqueIdentifier>{28ef7905-356c-4d74-8663-e00995c8cae1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,84 @@
+{
+	"settings": {
+		"background_color": [
+			0, 0.5, 0
+		],		
+		"image_settings": {
+			"width": 1920,
+			"height": 1080,
+			"bucket_size": 24
+		}
+	},
+
+	"camera": {
+		"matrix": [
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1
+		],		
+		"position": [
+			0, 0, 0
+		]
+	},
+
+	"lights": [
+		{
+			"intensity": 1000,
+			"position": [
+				5, 5, 6
+			]
+		}
+	],
+
+	"materials": [{
+			"type": "diffuse",
+			"albedo": [
+				1, 0, 0
+			],
+			"smooth_shading": false,
+			"occludes": false
+		},
+		{
+			"type": "diffuse",
+			"albedo": [
+				0, 1, 0
+			],
+			"smooth_shading": false,
+			"occludes": false
+		},
+				{
+			"type": "diffuse",
+			"albedo": [
+				0, 0, 1
+			],
+			"smooth_shading": false,
+			"occludes": false
+		}	
+	],
+
+	"objects": [
+				{		
+			"material_index": 2,
+			"vertices": [
+				15, -5, 15,
+				-15, -5, -15,
+				15, -5, -15
+			],
+			
+			"triangles": [
+				2, 1, 0
+			]
+		},
+		{
+			"material_index": 0,
+			"vertices": [
+				-6, -5, -6,
+				-2, -5, -6,
+				-4, -1, -6
+			],			
+			"triangles": [
+				0, 1, 2
+			]
+		}
+	]
+}
