@@ -16,112 +16,36 @@
 
 using json = nlohmann::json;
 
-[[nodiscard]]
-bool CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& filePath, Scene& scene, Image& image) {
+void CRTSceneLoader::loadCrtscene(const Settings& settings, const std::string& filePath, Scene& scene, Image& image) {
     // Ensure Scene is clean:
     scene = Scene{scene.fileName, &settings};
 
     std::ifstream file(filePath);
-    if (!file) {
-        throw std::runtime_error("Failed to load CRTScene file: " + filePath);
-        return false;
-    }
+    if (!file) { throw std::runtime_error("Failed to load CRTScene file: " + filePath); }
 
     json j;
     file >> j;
 
     std::cout << "Loading Scene: " << filePath << std::endl;
 
-    if (!validateCrtscene(j)) {
-        return false;
-    }
+    parseSettings(j, scene, settings);
+    parseImageSettings(j, image, settings);
+    parseCameraSettings(j, scene);
 
     std::map<std::string, size_t> idxFromTextureName;
-    if (!parseSettings(j, scene, settings) ||
-        !parseImageSettings(j, image, settings) ||
-        !parseCameraSettings(j, scene) ||
-        !parseTextures(j, scene, settings, idxFromTextureName) ||
-        !parseMaterials(j, scene, idxFromTextureName) ||
-        !parseObjects(j, scene) ||
-        !parseLight(j, scene)) {
-        return false;
-    }
+    parseTextures(j, scene, settings, idxFromTextureName);
+    parseMaterials(j, scene, idxFromTextureName);
 
+    parseObjects(j, scene);
+    parseLight(j, scene);
 
     scene.build();
-
-    return true;
 }
 
-bool CRTSceneLoader::validateCrtscene(const json& j) {
-    // TODO: move more validation to this function
-    for (const auto& element : j.items()) {
-        const std::string& key = element.key();
-        const auto& val = element.value();
-        if (key == "settings") {
-            if (!val.contains("background_color") || !val.contains("image_settings")) {
-                std::cerr << "Error loading settings: background_color or image_settings not found\n";
-                return false;
-            }
-        }
-        else if (key == "camera") {
-            if (!val.contains("position") || !val.contains("matrix")) {
-                std::cerr << "Error loading camera: position or matrix not found\n";
-                return false;
-            }
-        }
-        else if (key == "materials") {
-            if (!val.is_array() && val.size() > 0) {
-                std::cerr << "Error loading materials: materials is not an array\n";
-                return false;
-            }
-            for (size_t i = 0; i < val.size(); ++i) {
-                const auto& jMaterial = val[i];
-                if (!jMaterial.contains("type")) {
-                    std::cerr << "Error loading material[" << i << "]: type not found\n";
-                    return false;
-                }
-            }
-        }
-        else if (key == "objects") {
-            if (!val.is_array() && val.size() > 0) {
-                std::cerr << "Error loading objects: objects is not an array\n";
-                return false;
-            }
-            for (const auto& jObj : val) {
-                if (!jObj.contains("vertices") || !jObj.contains("triangles")) {
-                    std::cerr << "Error loading object: vertices or triangles or material_index not found\n";
-                    return false;
-                }
-
-                const auto& jTriangles = jObj.at("triangles");
-                if (!jTriangles.is_array() || jTriangles.size() % 3 != 0) {
-                    std::cerr << "Error loading triangles: triangles is not an array or not divisible by 3\n";
-                    return false;
-                }
-            }
-        }
-        else if (key == "lights") {
-            if (!val.is_array()) {
-                std::cerr << "Error loading lights: lights is not an array\n";
-                return false;
-            }
-        }
-        else if (key == "textures") {}
-        else {
-            std::cerr << "Error loading CRTScene: unknown key: " << key << '\n';
-            return false;
-        }
-    }
-    return true;
-}
-
-bool CRTSceneLoader::parseLight(const json& j, Scene& scene)
+void CRTSceneLoader::parseLight(const json& j, Scene& scene)
 {
     warnIfMissing(j, "lights");
-    if (!j.contains("lights")) {
-        return true;
-    }
+    if (!j.contains("lights")) { return; }
 
     for (const auto& jLight : j.at("lights")) {
         float intensity = jLight.at("intensity");
@@ -147,10 +71,9 @@ bool CRTSceneLoader::parseLight(const json& j, Scene& scene)
 
         scene.lights.push_back(light);
     }
-    return true;
 }
 
-bool CRTSceneLoader::parseSettings(const json& j, Scene& scene, const Settings& settings) {
+void CRTSceneLoader::parseSettings(const json& j, Scene& scene, const Settings& settings) {
     const auto& jSettings = j.at("settings");
     const auto& jBgColor = jSettings.at("background_color");
     scene.bgColor = Vec3{ jBgColor[0], jBgColor[1], jBgColor[2] };
@@ -166,12 +89,11 @@ bool CRTSceneLoader::parseSettings(const json& j, Scene& scene, const Settings& 
         loadBitmap(settings.sceneLibraryDir + "/skybox/" + skybox + "/0006.png", scene.skybox.images[5]);
     }
 
-    scene.ambientLightColor = scene.skybox.calculateAmbientColor();
-
-    return true;
+    if (scene.useSkybox) scene.ambientLightColor = scene.skybox.calculateAmbientColor();
+    else { scene.ambientLightColor = scene.bgColor; }
 }
 
-inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image, const Settings& settings) {
+void CRTSceneLoader::parseImageSettings(const json& j, Image& image, const Settings& settings) {
     const auto& jImgSettings = j.at("settings").at("image_settings");
 
     if (settings.overrideResolution) {
@@ -200,10 +122,9 @@ inline bool CRTSceneLoader::parseImageSettings(const json& j, Image& image, cons
         image.bucketSize = image.getWidth() * image.getHeight();
     }
 
-    return true;
 }
 
-inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
+void CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
     const auto& jCam = j.at("camera");
     const auto& jCamPos = jCam.at("position");
     Vec3 camPos{ jCamPos.at(0), jCamPos.at(1), jCamPos.at(2) };
@@ -214,16 +135,11 @@ inline bool CRTSceneLoader::parseCameraSettings(const json& j, Scene& scene) {
     Matrix3x3 camMat = Camera::DefaultMatrix * rotateMat;
 
     scene.camera = Camera{ 90.f, camPos, camMat };
-
-    return true;
 }
 
-inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Settings& settings, std::map<std::string, size_t>& idxFromTextureName)
+void CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Settings& settings, std::map<std::string, size_t>& idxFromTextureName)
 {
-    if (!j.contains("textures")) {
-        std::cerr << "No textures found\n";
-        return true;
-    }
+    if (!j.contains("textures")) { return; }
 
     auto& jTextures = j.at("textures");
     for (size_t i = 0; i < jTextures.size(); ++i) {
@@ -250,15 +166,13 @@ inline bool CRTSceneLoader::parseTextures(const json& j, Scene& scene, const Set
         idxFromTextureName[name] = i;
         scene.textures.push_back(std::move(tex));
     }
-    return true;
 }
 
-inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene, const std::map<std::string, size_t>& idxFromTextureName) {
+void CRTSceneLoader::parseMaterials(const json& j, Scene& scene, const std::map<std::string, size_t>& idxFromTextureName) {
     warnIfMissing(j, "materials");
     if (!j.contains("materials")) {
         scene.materials.push_back(Material{});
         std::cerr << "Substituting default material\n";
-        return true;
     }
 
     for (auto& jMaterial : j.at("materials")) {
@@ -294,35 +208,13 @@ inline bool CRTSceneLoader::parseMaterials(const json& j, Scene& scene, const st
 
         material.diffuseness = 1 - material.transparency - material.reflectivity;
     }
-
-    return true;
-
-    /*
-        "materials": [{
-                "type": "diffuse",
-                "albedo": [
-                    0, 1, 1
-                ],
-                "smooth_shading": false
-            }
-        ],
-    */
-
 }
 
-inline Vec3 CRTSceneLoader::Vec3FromJson(const json& j) {
+Vec3 CRTSceneLoader::Vec3FromJson(const json& j) {
     return Vec3{ j[0], j[1], j[2] };
 }
 
-inline bool CRTSceneLoader::boolFromJson(const json& j) {
-    if (!j.is_boolean()) {
-        std::cerr << "Error loading bool: not a boolean\n";
-        return false;
-    }
-    return j.get<bool>();
-}
-
-inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
+void CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
     const auto& jObjects = j.at("objects");
     for (const auto& jObj : jObjects) {
         std::vector<Vec3> vertices;
@@ -332,10 +224,10 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
 
         parseVertices(jObj, vertices);
 
-        warnIfMissing(jObj, "material_index");
-        size_t materialIdx = Utils::jsonGetDefault<size_t>(jObj, "material_index", 0);
-        // 0 is the default material index. It is guaranteed to exist
-        assert(scene.materials.size() > materialIdx);
+        size_t materialIdx = jObj.at("material_index");
+        if (scene.materials.size() <= materialIdx) {
+            throw std::runtime_error("Error loading object: material index out of bounds");
+        }
         parseTriangles(jObj, vertices, materialIdx, triangles);
 
         parseUvs(jObj, vertices.size(), uvs);
@@ -344,8 +236,6 @@ inline bool CRTSceneLoader::parseObjects(const json& j, Scene& scene) {
         assert(triangles.size() > 0);
         scene.addObject(vertices, triangles, vertexNormals, uvs);
     }
-
-    return true;
 }
 
 void CRTSceneLoader::calculateVertexNormals(const std::vector<Vec3>& vertices, const std::vector<Triangle>& triangles, std::vector<Vec3>& vertexNormals) {
@@ -375,7 +265,7 @@ void CRTSceneLoader::genAttachedTriangles(const size_t vertexIndex, const std::v
     }
 }
 
-inline bool CRTSceneLoader::parseVertices(const json& jObj, std::vector<Vec3>& vertices) {
+void CRTSceneLoader::parseVertices(const json& jObj, std::vector<Vec3>& vertices) {
     const auto& jVertices = jObj.at("vertices");
 
     if (!jVertices.is_array() || jVertices.size() % 3 != 0) {
@@ -388,8 +278,6 @@ inline bool CRTSceneLoader::parseVertices(const json& jObj, std::vector<Vec3>& v
         float z = jVertices[i + 2].get<float>();
         vertices.emplace_back(x, y, z);
     }
-
-    return true;
 }
 
 void CRTSceneLoader::parseUvs(const json& jObj, const size_t expectedSize, std::vector<Vec3>& uvs)
@@ -411,14 +299,12 @@ void CRTSceneLoader::parseUvs(const json& jObj, const size_t expectedSize, std::
     assert(uvs.size() == expectedSize);
 }
 
-inline bool CRTSceneLoader::parseTriangles(const json& jObj, const std::vector<Vec3>& vertices, const size_t materialIdx, std::vector<Triangle>& triangles) {
+void CRTSceneLoader::parseTriangles(const json& jObj, const std::vector<Vec3>& vertices, const size_t materialIdx, std::vector<Triangle>& triangles) {
 
     const auto& jTriangles = jObj.at("triangles");
     for (size_t i = 0; i < jTriangles.size(); i += 3) {
         triangles.emplace_back(vertices, jTriangles[i], jTriangles[i + 1], jTriangles[i + 2], materialIdx);
     }
-
-    return true;
 }
 
 void CRTSceneLoader::warnIfMissing(const json& j, const std::string& key) {
@@ -426,17 +312,6 @@ void CRTSceneLoader::warnIfMissing(const json& j, const std::string& key) {
         std::cerr << "CRTSceneLoader::warnIfMissing: key " << key << " not found\n";
     }
 }
-
-struct TestPixel {
-    unsigned char r, g, b;
-};
-
-struct TestImage {
-    size_t width, height;
-    std::vector<TestPixel> data;
-
-    TestImage(size_t w, size_t h) : width(w), height(h), data(w* h) {}
-};
 
 void CRTSceneLoader::loadBitmap(std::string filePath, Image& bitmap)
 {

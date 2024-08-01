@@ -5,7 +5,7 @@
 #include "include/Engine.h"
 #include "include/Settings.h"
 
-/* @brief Output benchmarking information for a settings permutation */ 
+/* @brief Output benchmarking information for a settings permutation */
 void logSettingsIteration(const Settings& settings) {
     std::ofstream logFile;
     logFile.open("out/" + settings.iterationName() + ".json", std::ios::out);
@@ -14,7 +14,7 @@ void logSettingsIteration(const Settings& settings) {
     logFile.close();
 }
 
-/* @brief Add extra parameters */ 
+/* @brief Add extra parameters */
 void addSettingsPermutations(std::vector<Settings>& settingsList)
 {
     settingsList.back().accelTreeMaxDepth = 2;
@@ -27,8 +27,8 @@ void addSettingsPermutations(std::vector<Settings>& settingsList)
             settingsList.back().settingsId += 1;
             settingsList.back().maxTrianglesPerLeaf += 2;
         }
-            settingsList.back().accelTreeMaxDepth += 2;
-            settingsList.back().maxTrianglesPerLeaf = 2;
+        settingsList.back().accelTreeMaxDepth += 2;
+        settingsList.back().maxTrianglesPerLeaf = 2;
     }
 }
 
@@ -56,20 +56,10 @@ int launch()
 /* @brief As a console application, propagates all exceptions */
 int main()
 {
-    try {
-        // Loop main to detect race conditions, memory leaks, etc.
-        size_t runTimes = 1;
-        for (size_t i = 0; i < runTimes; ++i) {
-            launch();
-        }
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Standard exception caught: " << e.what() << std::endl;
-        throw;
-    }
-    catch (...) {
-        std::cerr << "Unknown exception caught" << std::endl;
-        throw;
+    // Loop main to detect race conditions, memory leaks, etc.
+    size_t runTimes = 1;
+    for (size_t i = 0; i < runTimes; ++i) {
+        launch();
     }
 
 }

@@ -3,18 +3,6 @@
 #include "include/Triangle.h"
 #include "include/Scene.h"
 
-/*
-* @Danny search OneNote 'Triangle Intersect'
-* Input: ray, rayProj
-* Input: rayProj: projection of ray.getDirection() onto camera direction
-* Output: t: distance from ray.origin to the intersection point
-* Output: p: intersection point
-* Output: n: triangle normal (unit)
-* Output: u, v: triangle-space coordinates of intersection for UV mapping
-* return: true if the ray intersects the triangle
-*/
-// TODO return bool
-
 Triangle::Triangle(const std::vector<Vec3>& vertices, size_t v0, size_t v1, size_t v2, size_t _materialIndex)
 {
     v[0] = v0;
@@ -96,11 +84,7 @@ void Triangle::intersect(const Scene& scene, const Ray& ray, size_t triRef, Trac
 
 }
 
-/*
-* Quick line-triangle intersect that returns only a bool. Used for occlusion testing.
-* @return: true also for backside
-*/
-bool Triangle::boolIntersect(const Scene& scene, const Vec3& start, const Vec3& end) const
+bool Triangle::fastIntersect(const Scene& scene, const Vec3& start, const Vec3& end) const
 {
     const Vec3& v0 = scene.vertices[v[0]];
     const Vec3& v1 = scene.vertices[v[1]];
@@ -115,11 +99,8 @@ bool Triangle::boolIntersect(const Scene& scene, const Vec3& start, const Vec3& 
     return false;
 }
 
-/**
-* @param n: normal of the triangle to use instead of this->normal (for refraction)
-*/
 void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, TraceHit& hit) const {
-    const Vec3& n = normal; // refactoring helper. TODO: remove
+    const Vec3& n = normal;
     const Vec3& v0 = scene.vertices[v[0]];
     const Vec3& v1 = scene.vertices[v[1]];
     const Vec3& v2 = scene.vertices[v[2]];
@@ -142,7 +123,7 @@ void Triangle::computeHit(const Scene& scene, const Ray& ray, float rProj, Trace
     Vec3 c1 = cross(v0p, e1);
     Vec3 c2 = cross(e2, hit.p - v1);
 
-    bool inside = dot(n, c0) > -1e-6 && // TODO: optimize dot away
+    bool inside = dot(n, c0) > -1e-6 &&
         dot(n, c1) > -1e-6 &&
         dot(n, c2) > -1e-6;
 
@@ -192,10 +173,10 @@ void Triangle::assertHit(const Scene& scene, const TraceHit& hit) {
     if (hit.type == TraceHitType::SMOOTH_SHADING_BACKFACE || hit.type == TraceHitType::SMOOTH_SHADING_PARALLEL) {
         assert(scene.materials[hit.materialIndex].smoothShading);
     }
-    if (hit.successful()){
+    if (hit.successful()) {
         assert(hit.t >= 0);
     }
-    
+
 #endif
 }
 
@@ -218,7 +199,7 @@ bool Triangle::intersect_plane(const std::vector<Vec3>& vertices, const Ray& ray
     const Vec3& v1 = vertices[v[1]];
     const Vec3& v2 = vertices[v[2]];
 
-    // Here assuming counter-clockwise order
+    // We use counter-clockwise winding order
     Vec3 e0 = v1 - v0;
     Vec3 e1 = v2 - v0;
 
@@ -249,18 +230,13 @@ Vec3 Triangle::hitNormal(const Scene& scene, const TraceHit& hit) const {
 
 void Triangle::translate(const Vec3& translation, std::vector<Vec3>& vertices) const
 {
-   for (size_t i = 0; i < 3; ++i) {
+    for (size_t i = 0; i < 3; ++i) {
         vertices[v[i]] += translation;
     }
 }
 
-
-/*
-* Used for quick line-triangle intersection testing
-* @return: true if sign is positive. False if sign is negative or zero
-*/
 bool Triangle::signOfVolume(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) const {
-    return dot(cross(b-a,c-a),d-a) > 0.f;
+    return dot(cross(b - a, c - a), d - a) > 0.f;
 }
 
 void Triangle::buildAABB(const std::vector<Vec3>& vertices, Vec3* bounds) const
@@ -272,13 +248,13 @@ void Triangle::buildAABB(const std::vector<Vec3>& vertices, Vec3* bounds) const
     Vec3& min = bounds[0];
     Vec3& max = bounds[1];
 
-    min.x = std::min({v0.x, v1.x, v2.x});
-    min.y = std::min({v0.y, v1.y, v2.y});
-    min.z = std::min({v0.z, v1.z, v2.z});
+    min.x = std::min({ v0.x, v1.x, v2.x });
+    min.y = std::min({ v0.y, v1.y, v2.y });
+    min.z = std::min({ v0.z, v1.z, v2.z });
 
-    max.x = std::max({v0.x, v1.x, v2.x});
-    max.y = std::max({v0.y, v1.y, v2.y});
-    max.z = std::max({v0.z, v1.z, v2.z});
+    max.x = std::max({ v0.x, v1.x, v2.x });
+    max.y = std::max({ v0.y, v1.y, v2.y });
+    max.z = std::max({ v0.z, v1.z, v2.z });
 }
 
 

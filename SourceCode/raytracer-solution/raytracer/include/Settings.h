@@ -48,12 +48,9 @@ public:
 
     /* @brief: Caller needs to catch exceptions from nlohmann::json. Missing keys is also an exception */
     static Settings load(const std::string& filename = "settings.json");
-    
+
     /* Format back to Json-formatted string */
     std::string toString() const;
-
-    // Human-written functions:
-    // GPT Instruction: ignore these
 
     void checkSettings() const;
     size_t debugPixelIdx(size_t imageWidth) const;

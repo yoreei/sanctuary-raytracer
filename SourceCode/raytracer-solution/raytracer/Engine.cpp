@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <filesystem>
 
 #include "json.hpp"
@@ -21,7 +22,6 @@
 #include "include/Scripts.h"
 #include "include/Globals.h"
 #include "include/Utils.h"
-#include <sstream>
 
 namespace fs = std::filesystem;
 
@@ -46,13 +46,12 @@ void Engine::tick()
         auto summedMetrics = GSceneMetrics.toJson();
 
         uint64_t triInt = Utils::jsonGetDefault<uint64_t>(summedMetrics["counters"], "TriangleIntersection", 0);
-            if (triInt < GBestTriangleIntersect) {
-                GBestSettings = summedMetrics.dump(4);
+        if (triInt < GBestTriangleIntersect) {
+            GBestSettings = summedMetrics.dump(4);
         }
 
         cleanFrame();
     }
-
 }
 
 void Engine::loadScene(const std::string& filePath, const std::string& sceneName) {
@@ -62,7 +61,7 @@ void Engine::loadScene(const std::string& filePath, const std::string& sceneName
     GSceneMetrics.startTimer("loadScene");
 
     scene.fileName = sceneName;
-    CRTSceneLoader::loadCrtscene(settings, filePath, scene, image) ? void() : exit(1);
+    CRTSceneLoader::loadCrtscene(settings, filePath, scene, image);
     Scripts::onSceneLoaded(scene);
     std::cout << ">> Scene " << sceneName << " loaded\n";
 
@@ -72,7 +71,7 @@ void Engine::loadScene(const std::string& filePath, const std::string& sceneName
 int Engine::runAllScenes()
 {
     using path = std::filesystem::path;
-    using dir =  std::filesystem::directory_entry;
+    using dir = std::filesystem::directory_entry;
     std::vector<path> scenePaths = {};
 
     if (settings.loadEntireProject()) {
@@ -109,12 +108,9 @@ void Engine::writeFrame() const {
 
     std::ofstream fileStream(framePathNoExt + ".log", std::ios::out);
     std::string metricsString = GSceneMetrics.toString();
-    std::string globalDebugString = GlobalDebug::toString();
     std::stringstream stream;
 
     stream << metricsString << std::endl;
-    stream << std::endl;
-    stream << globalDebugString << std::endl;
     stream << std::endl;
 
     if (settings.debugPixel) {
@@ -123,12 +119,7 @@ void Engine::writeFrame() const {
 
     std::string logStr = stream.str();
     std::cout << logStr;
-
-    bool writeLogFile = false; // todo move to settings
-    if (writeLogFile) {
-        fileStream << logStr;
-    }
-
+    fileStream << logStr;
 }
 
 

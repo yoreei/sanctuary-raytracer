@@ -27,7 +27,7 @@ AABB AABB::MakeEnclosingAABB(std::vector<AABB> aabbs)
         max.z = std::max(max.z, aabb.bounds[1].z);
     }
 
-    return {min, max};
+    return { min, max };
 }
 
 bool AABB::hasIntersection(const AABB& other) const {
@@ -44,12 +44,12 @@ bool AABB::hasIntersection(const Ray& r) const {
 #endif
 
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
-    
+
     tmin = (bounds[r.sign[0]].x - r.origin.x) * r.invdir.x;
-    tmax = (bounds[1-r.sign[0]].x - r.origin.x) * r.invdir.x;
+    tmax = (bounds[1 - r.sign[0]].x - r.origin.x) * r.invdir.x;
     tymin = (bounds[r.sign[1]].y - r.origin.y) * r.invdir.y;
-    tymax = (bounds[1-r.sign[1]].y - r.origin.y) * r.invdir.y;
-    
+    tymax = (bounds[1 - r.sign[1]].y - r.origin.y) * r.invdir.y;
+
     if ((tmin > tymax) || (tymin > tmax))
         return false;
 
@@ -57,19 +57,18 @@ bool AABB::hasIntersection(const Ray& r) const {
         tmin = tymin;
     if (tymax < tmax)
         tmax = tymax;
-    
-    tzmin = (bounds[r.sign[2]].z - r.origin.z) * r.invdir.z;
-    tzmax = (bounds[1-r.sign[2]].z - r.origin.z) * r.invdir.z;
 
-    
+    tzmin = (bounds[r.sign[2]].z - r.origin.z) * r.invdir.z;
+    tzmax = (bounds[1 - r.sign[2]].z - r.origin.z) * r.invdir.z;
+
+
     if ((tmin > tzmax) || (tzmin > tmax))
         return false;
 
-    // todo can we use these?
-    if (tzmin > tmin)
-        tmin = tzmin;
-    if (tzmax < tmax)
-        tmax = tzmax;
+    //if (tzmin > tmin)
+    //    tmin = tzmin;
+    //if (tzmax < tmax)
+    //    tmax = tzmax;
 
     return true;
 }
@@ -88,19 +87,19 @@ size_t AABB::getMaxAxis() const
     Vec3 extents = bounds[1] - bounds[0];
     if (extents.x > extents.y && extents.x > extents.z) {
         return 0; // x-axis
-    } else if (extents.y > extents.z) {
+    }
+    else if (extents.y > extents.z) {
         return 1; // y-axis
-    } else {
+    }
+    else {
         return 2; // z-axis
     }
 }
 
-
-
 bool AABB::contains(const Vec3& point) const {
     return (point.x >= bounds[0].x - epsilon && point.x <= bounds[1].x + epsilon) &&
-           (point.y >= bounds[0].y - epsilon && point.y <= bounds[1].y + epsilon) &&
-           (point.z >= bounds[0].z - epsilon && point.z <= bounds[1].z + epsilon);
+        (point.y >= bounds[0].y - epsilon && point.y <= bounds[1].y + epsilon) &&
+        (point.z >= bounds[0].z - epsilon && point.z <= bounds[1].z + epsilon);
 }
 
 void AABB::expand(const Vec3& point)
@@ -112,15 +111,6 @@ void AABB::expand(const Vec3& point)
     bounds[1].x = std::max(bounds[1].x, point.x);
     bounds[1].y = std::max(bounds[1].y, point.y);
     bounds[1].z = std::max(bounds[1].z, point.z);
-}
-
-
-Vec3 AABB::getCenter() const {
-    return Vec3((bounds[0].x + bounds[1].x) / 2, (bounds[0].y + bounds[1].y) / 2, (bounds[0].z + bounds[1].z) / 2);
-}
-
-Vec3 AABB::getSize() const {
-    return bounds[1] - bounds[0];
 }
 
 inline std::string AABB::toString() const {

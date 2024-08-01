@@ -17,22 +17,13 @@ void KDTreeNode::traverse(const Scene& scene, const Ray& ray, TraceHit& out) con
 
 // TODO optimize triangle intersections by sorting by ray - plane intersection distance first
 void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit& out) const {
-    // Early out
     if (!aabb.hasIntersection(ray)) {
         return;
     }
 
     if (isLeaf()) {
-        // TODO: refactor this into: intersectTriangles(scene, ray, triangleRefs, out);
-        for (const size_t& triRef : triangleRefs) {
-            const Triangle& tri = scene.triangles[triRef];
-
-            TraceHit tryHit{};
-            tri.intersect(scene, ray, triRef, tryHit);
-            if (tryHit.successful() && tryHit.t < out.t && aabb.contains(tryHit.p)) {
-                out = tryHit;
-            }
-        }
+        intersectMyTriangles(scene, ray, out);
+        return;
     }
     else {
         std::array<const KDTreeNode*, 2> sortedChildren = closestChildren(ray.origin);
@@ -48,9 +39,16 @@ void KDTreeNode::traverseRecursive(const Scene& scene, const Ray& ray, TraceHit&
     }
 }
 
-void KDTreeNode::processAabbDebug(const Scene& scene, size_t childIdx, TraceHit& out) const
-{
-    scene; childIdx, out;
+void KDTreeNode::intersectMyTriangles(const Scene& scene, const Ray& ray, TraceHit& out) const {
+    for (const size_t& triRef : triangleRefs) {
+        const Triangle& tri = scene.triangles[triRef];
+
+        TraceHit tryHit{};
+        tri.intersect(scene, ray, triRef, tryHit);
+        if (tryHit.successful() && tryHit.t < out.t && aabb.contains(tryHit.p)) {
+            out = tryHit;
+        }
+    }
 }
 
 std::array<const KDTreeNode*, 2> KDTreeNode::closestChildren(const Vec3& point) const {
@@ -71,7 +69,7 @@ void KDTreeNode::build(std::vector<size_t>&& newTriangleRefs, const std::vector<
     // Required: newTriangleRefs intersect aabb
 
     // 0.1 Recursion Root (Make Leaf)
-    if (depth >= maxDepth  || newTriangleRefs.size() <= maxTrianglesPerLeaf ) {
+    if (depth >= maxDepth || newTriangleRefs.size() <= maxTrianglesPerLeaf) {
         triangleRefs = std::move(newTriangleRefs);
         return; // Leaf
     }

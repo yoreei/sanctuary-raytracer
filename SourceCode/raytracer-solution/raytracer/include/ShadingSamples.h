@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <queue>
+
 #include "include/CRTTypes.h"
 
 enum class BlendType {
@@ -18,14 +19,11 @@ public:
 class Image;
 using Shades = std::vector<Shade>;
 
-/*
-* Aux Output. Records each shade's contribution to a pixel. `flatten(..)` to produce the final image.
-*/
 class Settings;
+/* Auxiliary Output. Records each shade's contribution to a pixel. `flatten(..)` to produce the final image. */
 class ShadingSamples
 {
 public:
-    // TODO: refactor width, height to pixelHandle
     ShadingSamples(size_t width, size_t height, const Settings* settings);
 
     /* @ouput image: flattened image */
@@ -33,14 +31,13 @@ public:
 
     /* Output each depth as its own image. Useful for debugging */
     void slice(std::vector<Image>& images);
-    const Shades& operator()(size_t x, size_t y);
-    // void addSample(const TraceTask& task, const Shade& contrib);
     void addSample(const TraceTask& task, const Vec3 color, BlendType blendType = BlendType::NORMAL);
     std::vector<Shades> pixels;
     size_t width;
     size_t height;
     const Settings* settings;
 private:
+    /* @brief max depth across all pixels */
     size_t pixelsMaxDepth();
 };
 

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "json.hpp"
+
 #include "include/AABB.h"
 
 class Scene;
@@ -20,33 +21,27 @@ public:
     KDTreeNode& operator=(const KDTreeNode&) = delete;
     KDTreeNode(KDTreeNode&&) = default;
     KDTreeNode& operator=(KDTreeNode&&) = default;
-
     ~KDTreeNode() = default;
 
     void build(std::vector<size_t>&& triangleRefs, const std::vector<AABB>& triangleAABBs, size_t maxTrianglesPerLeaf, size_t maxDepth, size_t depth = 0);
-
+    /* @brief intersect the KDTree with a ray. Write output to `out` */
     void traverse(const Scene& scene, const Ray& ray, TraceHit& out) const;
-
-    void traverseRecursive(const Scene& scene, const Ray& ray, TraceHit& out) const;
-
-    std::array<const KDTreeNode*, 2> closestChildren(const Vec3& point) const;
-
-    void processAabbDebug(const Scene& scene, size_t childIdx, TraceHit& out) const;
-
     ordered_json toJson() const;
-
     std::string toString() const;
 
-    AABB aabb {};
-
     std::array<std::unique_ptr<KDTreeNode>, 2> child {nullptr, nullptr};
+    AABB aabb{};
 private:
-    std::vector<size_t> triangleRefs {};
-
     bool isLeaf() const { return child[0] == nullptr; }
+    void traverseRecursive(const Scene& scene, const Ray& ray, TraceHit& out) const;
+    /* @return sorted array of children closest to the point */
+    std::array<const KDTreeNode*, 2> closestChildren(const Vec3& point) const;
+    void intersectMyTriangles(const Scene& scene, const Ray& ray, TraceHit& out) const;
 
+    std::vector<size_t> triangleRefs {};
+    /* 0: x Axis, 1: y Axis, 2: z Axis */
     int axisSplit = -1;
-
+    /* if we are a child, which child are we? */
     size_t childId = 0;
 };
 

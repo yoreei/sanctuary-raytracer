@@ -5,7 +5,6 @@
 #include <string>
 #include "json.hpp"
 
-// Function to load settings from a JSON file
 Settings Settings::load(const std::string& filename) {
     Settings settings;
     std::ifstream file(filename);
@@ -40,7 +39,6 @@ Settings Settings::load(const std::string& filename) {
     return settings;
 }
 
-// Function to convert settings to a JSON-formatted string
 std::string Settings::toString() const {
     nlohmann::json json;
 

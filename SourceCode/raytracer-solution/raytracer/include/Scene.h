@@ -3,6 +3,8 @@
 #include <fstream>
 #include <unordered_map>
 
+#include "json.hpp"
+
 #include "include/KDTreeNode.h"
 #include "include/AnimationComponent.h"
 #include "include/CRTTypes.h"
@@ -18,8 +20,6 @@
 #include "include/Texture.h"
 #include "include/Globals.h"
 
-#include "json.hpp"
-
 using json = nlohmann::json;
 
 class TraceHit;
@@ -34,6 +34,7 @@ public:
     Scene(const Scene&) = delete;
     Scene& operator=(const Scene&) = delete;
 
+    // Properties
     std::string fileName = "";
     Camera camera{};
     const Settings* settings;
@@ -61,7 +62,6 @@ public:
     // IMPORTANT: keep alphabetical order
 
     bool isOccluded(const Vec3& start, const Vec3& end) const;
-
     void intersect(const Ray& ray, TraceHit& out) const;
 
     /* @brief: Marks scene dirty. Do not forget to `build` the scene after addObject! */
@@ -71,27 +71,19 @@ public:
         std::vector<Vec3>& objVertexNormals,
         std::vector<Vec3>& objUvs);
 
-    void merge(const Scene& other);
-
-    /*
-    * Show debug visualizations for lights in the scene
-    */
-    void showLightDebug();
-
-    /* @brief: build acceleration structures. Marks scene clean. */
+    /* @brief: build acceleration structures. Marks scene clean. See `isDirty` */
     void build();
-
-    struct Timers {
-        static constexpr const char* buildScene = "buildScene";
-    };
 
     bool getIsDirty() const { return isDirty; }
 
     void updateAnimations();
-
 private:
     KDTreeNode accelStruct{};
     bool isDirty = true; /* Scene is dirty if objects are added or removed */
-
     bool triangleAABBsDirty = true;
+
+    /* Metrics Timers for [start/stop]Timer*/
+    struct Timers {
+        static constexpr const char* buildScene = "buildScene";
+    };
 };

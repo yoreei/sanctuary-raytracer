@@ -1,21 +1,15 @@
 #pragma once
 #include <string>
+
 #include "include/CRTTypes.h"
 #include "include/Metrics.h"
 
-namespace GlobalDebug
-{
-    extern Vec3 fErrors;
-    extern Vec3 maxError;
-    extern Vec3 maxErrorDirection;
-
-    std::string toString();
-}
-
 // Only Engine should write to GFrameNumber
 extern uint64_t GFrameNumber;
+// Scripts are expected to set GEndFrame
 extern uint64_t GEndFrame;
 
+// Reset all global variables to their default values
 extern void GResetGlobals();
 
 extern Metrics GSceneMetrics;

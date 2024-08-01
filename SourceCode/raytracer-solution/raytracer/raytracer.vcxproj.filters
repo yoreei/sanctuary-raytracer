@@ -3,14 +3,12 @@
   <ItemGroup>
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="CRTMath.cpp" />
     <ClCompile Include="CRTSceneLoader.cpp" />
     <ClCompile Include="CRTTypes.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Globals.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="Metrics.cpp" />
-    <ClCompile Include="Scripts.cpp" />
     <ClCompile Include="ShadingSamples.cpp" />
     <ClCompile Include="KDTreeNode.cpp" />
     <ClCompile Include="MeshObject.cpp" />
@@ -30,15 +28,14 @@
     <ClCompile Include="..\third-party\stb_image_write.cpp">
       <Filter>third-party</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Scripts.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AnimationComponent.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Camera.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\CRTMath.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\CRTSceneLoader.h">
@@ -57,9 +54,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Image.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\json_fwd.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\KDTreeNode.h">
@@ -83,13 +77,7 @@
     <ClInclude Include="include\Scene.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\SceneMetrics.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\SceneObject.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Scripts.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Settings.h">
@@ -127,6 +115,9 @@
     </ClInclude>
     <ClInclude Include="..\third-party\stb_image_write.h">
       <Filter>third-party</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Scripts.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

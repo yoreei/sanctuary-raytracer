@@ -2,8 +2,6 @@
 #include "include/Triangle.h"
 #include "include/Scene.h"
 
-/* Construct a mesh object from a range of triangles. `l` and `u` inclusive. */
-
 MeshObject::MeshObject(size_t l, size_t u) : SceneObject()
 {
     triangleIndexes.reserve(u);
@@ -38,6 +36,6 @@ Material& MeshObject::getMaterial(Scene& scene) const
 void MeshObject::setMaterialIdx(Scene& scene, size_t materialIdx)
 {
     for (auto& tri : scene.triangles) {
-       tri.materialIndex = materialIdx;
+        tri.materialIndex = materialIdx;
     }
 }

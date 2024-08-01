@@ -31,8 +31,8 @@ namespace Utils {
         size_t padding = from.size();
         to.reserve(to.size() + from.size());
         to.insert(to.end(),
-                   std::make_move_iterator(from.begin()),
-                   std::make_move_iterator(from.end()));
+            std::make_move_iterator(from.begin()),
+            std::make_move_iterator(from.end()));
         return padding;
     }
 

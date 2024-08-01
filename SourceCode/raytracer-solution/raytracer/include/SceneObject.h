@@ -1,8 +1,9 @@
 #pragma once
 #include <memory>
 
-#include "include/CRTTypes.h"
 #include "json_fwd.h"
+
+#include "include/CRTTypes.h"
 
 class SceneObject {
 public:
@@ -15,14 +16,13 @@ public:
     void rotate(Vec3 rotVec)
     {
         rotVec;
-        throw std::runtime_error("not impl");
-
+        throw std::runtime_error("SceneObject::rotate not implemented");
     }
 
     void translateTo(Vec3 absPos)
     {
         absPos;
-        throw std::runtime_error("not impl");
+        throw std::runtime_error("SceneObject::translateTo not implemented");
     }
 
     nlohmann::ordered_json toJson() const;

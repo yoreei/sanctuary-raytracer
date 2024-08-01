@@ -1,7 +1,7 @@
 {
     "sceneLibraryDir": "sceneLibrary",
-    "projectDir": "hw15_project",
-    "targetScenes": ["day.crtscene", "day2.crtscene", "night.crtscene", "night2.crtscene"],
+    "projectDir": "hw14",
+    "targetScenes": [],
     "outputDir": "out",
     
     "maxDepth": 6,
@@ -17,7 +17,7 @@
 
     "showAabbs": false,
     
-    "overrideResolution": false,
+    "overrideResolution": true,
     "resolutionX": 800,
     "resolutionY": 450,
     

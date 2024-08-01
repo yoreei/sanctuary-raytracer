@@ -1,11 +1,7 @@
-#include "include/CRTTypes.h"
-#include "include/Globals.h"
 #include "json.hpp"
 
-
-/*
-* @param N: expected to face the ray.
-*/
+#include "include/CRTTypes.h"
+#include "include/Globals.h"
 
 Ray::Ray(const Vec3& origin, const Vec3& direction) : origin(origin)
 {
@@ -28,34 +24,11 @@ void Ray::reflect(const Vec3& point, const Vec3& N) {
     direction.normalize();
 }
 
-bool Ray::compareRefract(const Vec3 point, const Vec3& N, float etai, float etat)
-{
-    Vec3 oldDirection = direction;
-    Vec3 oldOrigin = origin;
-    refractSP(point, N, etai, etat);
-    Vec3 spDirection = direction;
-
-    bool result = refractVladi(point, N, etai, etat);
-    static Vec3 fError = spDirection - direction;
-    if (fError.lengthSquared() > GlobalDebug::maxError.lengthSquared()) {
-        GlobalDebug::maxError = fError;
-        GlobalDebug::maxErrorDirection = oldDirection;
-    }
-    fError = { fabs(fError.x), fabs(fError.y), fabs(fError.z) };
-    GlobalDebug::fErrors += fError;
-
-    return result;
-}
-
-
 bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
 {
     float cosi = dot(direction, N);
     assert(cosi < 1e-6);
     cosi = std::clamp(cosi, -1.f, 0.f);
-
-    //float cosi = -dot(direction, N); // Correct the calculation of cosi
-    //cosi = std::clamp(cosi, 0.f, 1.f); // Ensure cosi is clamped correctly
 
     float eta = etai / etat;
 
@@ -84,40 +57,32 @@ bool Ray::refractSP(const Vec3 point, const Vec3& N, float etai, float etat)
     return true;
 }
 
-/**
-* @brief: Inuitive implementation, suffers from precision issues.
-* @return false if no refraction (i.e. total internal reflection)
-* @param normal: expected to face the ray.
-**/
-
 bool Ray::refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR) {
 #ifndef NDEBUG
     auto dbgOldDirection = direction;
     assertFEqual(direction.lengthSquared(), 1.f);
-    assert(dot(direction, normal) < -epsilon); // usage req: normal should face the ray
+    assert(dot(direction, normal) < -epsilon); 
 #endif
 
     float cosI = -dot(direction, normal);
     float sinR = sqrt(1 - cosI * cosI) * iorI / iorR;
     if (sinR - 1.f >= -1e-6f) {
-        // total internal reflection
-        return false;
+        return false; // total internal reflection
     }
     float cosR = sqrt(1 - sinR * sinR);
-    // bump direction to avoid 0 vector check // TODO ask in Discord
+    // bump direction to avoid 0 vector check
     Vec3 newDirection = direction * (1.f + 1e-6f);
     Vec3 C = (newDirection + cosI * normal).getUnit();
     Vec3 B = C * sinR;
     Vec3 A = -normal * cosR;
     newDirection = A + B;
-    newDirection.normalize(); // TODO ask in Discord: can we avoid this?
+    newDirection.normalize();
 
     setDirection(newDirection);
     origin = point;
 
-    assertFEqual(dot(direction, normal), -cosR, 1e-2f); // very low precision here. This one fails for hw11/scene8
-    // assert R not going backwards:
-    assert(dot(direction, dbgOldDirection) > 0);
+    assertFEqual(dot(direction, normal), -cosR, 1e-2f);
+    assert(dot(direction, dbgOldDirection) > 0); // R must never be "reflected"
     return true;
 }
 
@@ -151,3 +116,76 @@ nlohmann::ordered_json Matrix3x3::toJson() const {
     return j;
 }
 
+bool Matrix3x3::isOrthonormal() const {
+    Vec3 col0 = getCol(0);
+    Vec3 col1 = getCol(1);
+    Vec3 col2 = getCol(2);
+
+    bool unitVectors = col0.isUnit() &&
+        col1.isUnit() &&
+        col2.isUnit();
+
+    bool perpendicular = fEqual(col0.dot(col1), 0.0f) &&
+        fEqual(col0.dot(col2), 0.0f) &&
+        fEqual(col1.dot(col2), 0.0f);
+
+    return unitVectors && perpendicular;
+}
+
+
+/* For more, read https://leimao.github.io/blog/CPP-Float-Point-Number-Comparison/ */
+void assertFEqual(float a, float b, float atol) {
+    a;
+    b;
+    atol;
+#ifndef NDEBUG
+    float absA = std::fabs(a);
+    float absB = std::fabs(b);
+    float diff = std::fabs(a - b);
+
+    // Use relative tolerance if numbers are large, absolute tolerance otherwise
+    float rtol = epsilon * std::max(absA, absB);
+    float tol = std::max(atol, rtol);
+    assert(diff <= tol);
+#endif
+}
+
+Vec3 slerp(const Vec3& vec0Ref, const Vec3& vec1, float t) {
+    assert(vec0Ref.isUnit());
+    assert(vec1.isUnit());
+
+    Vec3 vec0 = vec0Ref;
+    // if opposing, nudge vec0 in arbitrary direction
+    if ((vec0 + vec1).equal({ 0.f, 0.f, 0.f })) {
+        Vec3 orthogonal = std::fabs(vec0.x) < 1.f ? Vec3(1, 0, 0) : Vec3(0, 1, 0);
+        orthogonal = orthogonal - vec0 * vec0.dot(orthogonal);
+        orthogonal.normalize();
+        vec0 = vec0 + orthogonal * 0.1f;
+        vec0.normalize();
+    }
+    float dot = vec0.dot(vec1);
+    dot = std::clamp(dot, -1.f, 1.f);
+    float theta = std::acos(dot);
+
+    // Special case which preserves numerical stability
+    if (std::fabs(theta) < epsilon) {
+        return lerp(vec0, vec1, t);
+    }
+
+    float sinTheta = std::sin(theta);
+
+    float factor0 = std::sin((1 - t) * theta) / sinTheta;
+    float factor1 = std::sin(t * theta) / sinTheta;
+
+    Vec3 result = vec0 * factor0 + vec1 * factor1;
+    assert(result.isUnit());
+    return result;
+}
+
+Color Color::fromUnit(float fr, float fg, float fb) {
+    auto r = static_cast<uint8_t>(std::round(fr * maxColorComponent));
+    auto g = static_cast<uint8_t>(std::round(fg * maxColorComponent));
+    auto b = static_cast<uint8_t>(std::round(fb * maxColorComponent));
+    CHECK(r <= maxColorComponent && g <= maxColorComponent && b <= maxColorComponent);
+    return Color{ r, g, b };
+}

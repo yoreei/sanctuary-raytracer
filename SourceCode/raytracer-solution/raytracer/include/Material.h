@@ -45,7 +45,7 @@ public:
 
     void setAlbedo(const Vec3& _albedo) { this->albedo = _albedo; }
 private:
-    Vec3 albedo {0.f, 1.f, 0.f};
+    Vec3 albedo{ 0.f, 1.f, 0.f };
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Material& material) {

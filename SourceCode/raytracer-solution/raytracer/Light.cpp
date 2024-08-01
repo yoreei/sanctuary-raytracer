@@ -12,29 +12,43 @@
 Vec3 Light::lightContrib(const Scene& scene, const Vec3& point, const Vec3& normal) const {
 
     if (type == LightType::POINT) {
+        Vec3 lightDir = (pos - point);
+        float srSq = lightDir.lengthSquared(); // Sphere Radius Squared
+        lightDir.normalize();
+        float cosLaw = std::fabs(normal.dot(lightDir)); // fabs takes care of refractive materials
+        float sa = 4 * PI * srSq; // Sphere Area
+        Vec3 contrib = color * intensity * cosLaw / sa;
+        if (std::max({contrib.x, contrib.y, contrib.z}) < 0.01f) {
+            return Vec3{ 0.f, 0.f, 0.f };
+        }
+
         if (scene.isOccluded(point, pos)) {
             return Vec3{ 0.f, 0.f, 0.f };
         }
-        Vec3 lightDir = (pos - point);
-        float sr = lightDir.length(); // Sphere Radius
-        lightDir.normalize();
-        float cosLaw = std::fabs(normal.dot(lightDir)); // fabs takes care of refractive materials
-        float sa = 4 * PI * sr * sr; // Sphere Area
-        Vec3 contrib = color * intensity * cosLaw / sa;
         return contrib;
     }
-    
+
     if (type == LightType::SUN) {
-        Vec3 sunPos = point - direction * 1e+3f; // Assume 'direction' is normalized and set for the sun
+        Vec3 sunPos = point - direction * 1e+3f;
         if (scene.isOccluded(point, sunPos)) {
             return Vec3{ 0.f, 0.f, 0.f };
         }
 
-        // todo remove comments
-        float cosLaw = std::fabs(normal.dot(direction)); // fabs takes care of refractive materials
-        //float cosLaw = std::max(0.f, normal.dot(direction)); // Consider only the positive part
-        Vec3 contrib = intensity * cosLaw * color; // No attenuation for directional light
+        float cosLaw = std::fabs(normal.dot(direction)); // fabs takes care of the inside of transmissive materials
+        Vec3 contrib = intensity * cosLaw * color;
         return contrib;
     }
     else { throw std::runtime_error("unknown light type"); }
+}
+
+LightType Light::lightTypeFromString(const std::string& str) {
+    if (str == "sun") {
+        return LightType::SUN;
+    }
+    else if (str == "point") {
+        return LightType::POINT;
+    }
+    else {
+        throw std::runtime_error("Unknown light type: " + str);
+    }
 }

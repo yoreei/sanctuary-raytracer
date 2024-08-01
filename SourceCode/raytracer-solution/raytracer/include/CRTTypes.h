@@ -1,35 +1,20 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <vector>
 #include <stdexcept>
 #include <cmath>
 #include <numbers>
-#include <iostream>
 #include <string>
-#include <cassert>
-#include <array>
 
-#include "include/Utils.h"
 #include "json_fwd.h"
 
-/* For more, read https://leimao.github.io/blog/CPP-Float-Point-Number-Comparison/ */
-inline void assertFEqual(float a, float b, float atol = epsilon) {
-    a;
-    b;
-    atol;
-#ifndef NDEBUG
-    float absA = std::fabs(a);
-    float absB = std::fabs(b);
-    float diff = std::fabs(a - b);
+#include "include/Utils.h"
 
-    // Use relative tolerance if numbers are large, absolute tolerance otherwise
-    float rtol = epsilon * std::max(absA, absB);
-    float tol = std::max(atol, rtol);
-    assert(diff <= tol);
-#endif
-}
+/* For more, read https://leimao.github.io/blog/CPP-Float-Point-Number-Comparison/ */
+void assertFEqual(float a, float b, float atol = epsilon);
 
 /* fast, to be used in Release code. Needs atol to be fine-tuned for number magnitude*/
 inline bool fEqual(float a, float b, float atol = epsilon) {
@@ -41,6 +26,7 @@ inline bool fLower(float a, float b, float maxDiff = epsilon) {
     return a - b < -maxDiff;
 }
 
+/* @brief: Float Vector in R^3 */
 class Vec3 {
 public:
     float x = 0.0f;
@@ -52,20 +38,19 @@ public:
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
     float& axis(size_t i) {
-        if (i == 0) return x; 
-        if (i == 1) return y; 
-        if (i == 2) return z; 
-        throw std::runtime_error("Vec3::axis: bad parameter"); 
+        if (i == 0) return x;
+        if (i == 1) return y;
+        if (i == 2) return z;
+        throw std::runtime_error("Vec3::axis: bad parameter");
     }
 
     const float& axis(size_t i) const {
-        if (i == 0) return x; 
-        if (i == 1) return y; 
-        if (i == 2) return z; 
-        throw std::runtime_error("Vec3::axis: bad parameter"); 
+        if (i == 0) return x;
+        if (i == 1) return y;
+        if (i == 2) return z;
+        throw std::runtime_error("Vec3::axis: bad parameter");
     }
 
-    nlohmann::ordered_json toJson() const;
 
     Vec3 operator+(const Vec3& other) const {
         return Vec3(x + other.x, y + other.y, z + other.z);
@@ -152,6 +137,8 @@ public:
         z = z * divCache;
     }
 
+    nlohmann::ordered_json toJson() const;
+
     std::string toString() const
     {
         return "{ " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z) + " }";
@@ -210,37 +197,7 @@ inline Vec3 lerp(const Vec3& a, const Vec3& b, float t) {
     };
 }
 
-inline Vec3 slerp(const Vec3& vec0Ref, const Vec3& vec1, float t) {
-    assert(vec0Ref.isUnit());
-    assert(vec1.isUnit());
-
-    Vec3 vec0 = vec0Ref;
-    // if opposing, nudge vec0 in arbitrary direction
-    if ((vec0 + vec1).equal({0.f, 0.f, 0.f})) {
-        Vec3 orthogonal = std::fabs(vec0.x) < 1.f ? Vec3(1, 0, 0) : Vec3(0, 1, 0);
-        orthogonal = orthogonal - vec0 * vec0.dot(orthogonal);
-        orthogonal.normalize();
-        vec0 = vec0 + orthogonal * 0.1f;
-        vec0.normalize();
-    }
-    float dot = vec0.dot(vec1);
-    dot = std::clamp(dot, -1.f, 1.f);
-    float theta = std::acos(dot);
-
-    // Special case which preserves numerical stability
-    if (std::fabs(theta) < epsilon) {
-        return lerp(vec0, vec1, t);
-    }
-
-    float sinTheta = std::sin(theta);
-
-    float factor0 = std::sin((1 - t) * theta) / sinTheta;
-    float factor1 = std::sin(t * theta) / sinTheta;
-
-    Vec3 result = vec0 * factor0 + vec1 * factor1;
-    assert(result.isUnit());
-    return result;
-}
+Vec3 slerp(const Vec3& vec0Ref, const Vec3& vec1, float t);
 
 inline std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
     os << vec.toString();
@@ -304,12 +261,12 @@ public:
     }
 
     Matrix3x3 operator+(const Matrix3x3& other) const {
-        return {{
+        return { {
                 (*this)(0,0) + other(0,0), (*this)(0, 1) + other(0,1), (*this)(0,2) + other(0,2),
                 (*this)(1,0) + other(1,0), (*this)(1, 1) + other(1,1), (*this)(1,2) + other(1,2),
                 (*this)(2,0) + other(2,0), (*this)(2, 1) + other(2,1), (*this)(2,2) + other(2,2),
 
-            }};
+            } };
     }
 
     Vec3 operator*(const Vec3& vec) const {
@@ -321,12 +278,12 @@ public:
     }
 
     Matrix3x3 operator*(const float num) const {
-        return {{
+        return { {
                 (*this)(0,0) * num, (*this)(0, 1) * num, (*this)(0, 2) * num,
                 (*this)(1,0) * num, (*this)(1, 1) * num, (*this)(1, 2) * num,
                 (*this)(2,0) * num, (*this)(2, 1) * num, (*this)(2, 2) * num,
 
-            }};
+            } };
     }
 
     Matrix3x3& operator*=(const Matrix3x3& other) {
@@ -358,7 +315,7 @@ public:
             throw std::out_of_range("Matrix3x3::row: Index out of range: " + std::to_string(num));
         }
         return Vec3{ data[num * 3], data[num * 3 + 1], data[num * 3 + 2] };
-     }
+    }
 
     static Matrix3x3 identity() {
         return Matrix3x3();
@@ -430,21 +387,7 @@ public:
         } };
     }
 
-    bool isOrthonormal() const {
-        Vec3 col0 = getCol(0);
-        Vec3 col1 = getCol(1);
-        Vec3 col2 = getCol(2);
-        
-        bool unitVectors = col0.isUnit() &&
-                           col1.isUnit() && 
-                           col2.isUnit();
-
-        bool perpendicular = fEqual(col0.dot(col1), 0.0f) &&
-                             fEqual(col0.dot(col2), 0.0f) &&
-                             fEqual(col1.dot(col2), 0.0f);
-
-        return unitVectors && perpendicular;
-    }
+    bool isOrthonormal() const;
 
     std::string toString() const {
         std::string result = "";
@@ -476,26 +419,17 @@ public:
 
     const Vec3& getDirection() const { return direction; }
 
-    /*
-    * @param N: expected to face the ray.
-    */
+    /* @param N: expected to face the ray. */
     void reflect(const Vec3& point, const Vec3& N);
 
-    bool compareRefract(const Vec3 point, const Vec3& N, float etai, float etat);
-    /*
-    * algorithm from Scratchapixel
-    * @param N: expected to face the ray.
-    */
+    /* @param N: expected to face the ray. source: Scratchapixel */
     bool refractSP(const Vec3 point, const Vec3& N, float etai, float etat);
 
-    /**
-    * @brief: Inuitive implementation, suffers from precision issues.
-    * @return false if no refraction (i.e. total internal reflection)
-    * @param normal: expected to face the ray.
-    **/
+    /* @brief: Inuitive implementation, suffers from precision issues.
+    *  @return false if no refraction (i.e. total internal reflection)
+    *  @param normal: expected to face the ray. */
     bool refractVladi(const Vec3& point, Vec3 normal, float iorI, float iorR);
 private:
-
     // Only change through setDirection so that caches are updated!
     Vec3 direction;
 };
@@ -525,13 +459,7 @@ struct Color
     static const uint8_t maxColorComponent = 255;
 
     /* Create Color from RGB values in the range [0, 1] */
-    static Color fromUnit(float fr, float fg, float fb) {
-        auto r = static_cast<uint8_t>(std::round(fr * maxColorComponent));
-        auto g = static_cast<uint8_t>(std::round(fg * maxColorComponent));
-        auto b = static_cast<uint8_t>(std::round(fb * maxColorComponent));
-        CHECK(r <= maxColorComponent && g <= maxColorComponent && b <= maxColorComponent);
-        return Color{ r, g, b };
-    }
+    static Color fromUnit(float fr, float fg, float fb);
 
     static Color fromUnit(const Vec3& vec) {
         return fromUnit(vec.x, vec.y, vec.z);

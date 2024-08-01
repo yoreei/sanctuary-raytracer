@@ -1,9 +1,8 @@
 #include "include/Metrics.h"
 
 #include "json.hpp"
-#include "include/Globals.h"
 
-/* thread-safe */
+#include "include/Globals.h"
 
 void Metrics::startTimer(const char* timerKey) {
     timers[timerKey].start();
@@ -50,8 +49,6 @@ void Metrics::clear() {
     timers.clear();
     name.clear();
 }
-
-// non-thread safe, must call before launching threads
 
 void Metrics::reserveThread(size_t numThreads) {
     threads.resize(numThreads, PerThreadMetrics{});
