@@ -10,14 +10,10 @@
 		}
 	},
 	
-	"camera": {
-		"matrix": [			
-			1, 0, 0,
-			0, 0.906307757, -0.422618270,
-			0, 0.422618270, 0.906307757
-		],		
+	"camera": {	
+		"dir": [0.0000, -1.0, 0.0],
 		"position": [
-			0, 14, 26
+			0, 26, 14
 		]
 	},
 	
@@ -33,12 +29,12 @@
 	],
 	
 	"materials": [{
-			"type": "constant",
+			"type": "diffuse",
 			"albedo": [0, 0, 1],
 			"smooth_shading": false
 		},
 		{
-			"type": "constant",
+			"type": "diffuse",
 			"albedo": [1, 0, 0],
 			"smooth_shading": false
 		}			
