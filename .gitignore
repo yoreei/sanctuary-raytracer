@@ -1,32 +1,58 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# --- Visual Studio / MSVC / CUDA build output ---
+.vs/
+x64/
+x86/
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+ipch/
+enc_temp_folder/
 *.obj
-
-# Precompiled Headers
-*.gch
+*.o
 *.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+*.pdb
+*.idb
+*.ilk
+*.iobj
+*.ipdb
+*.exp
 *.lib
-
-# Executables
+*.a
+*.dll
+*.so
 *.exe
 *.out
-*.app
+*.tlog
+*.lastbuildstate
+*.log
+*.tmp
+
+# --- IDE / user-specific files ---
+.vscode/
+.idea/
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+*.aps
+
+# --- Renderer output (written next to the working directory) ---
+out/
+outBackup/
+compare/
+*.ppm
+*.bmp
+
+# --- Scene library inputs that are not part of the repo ---
+SourceCode/raytracer-solution/main-win-console/sceneLibrary/in/
+
+# --- Blender ---
+*.blend1
+SourceCode/raytracer-solution/blender_projects/large_assets/
+
+# --- Scratch copies ---
+*.backup
+*.dis
