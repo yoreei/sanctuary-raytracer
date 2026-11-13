@@ -100,7 +100,7 @@ std::array<const KDTreeNode*, 2> KDTreeNode::closestChildren(const Vec3& point) 
     const KDTreeNode* firstChild = child[0].get();
     const KDTreeNode* secondChild = child[1].get();
 
-	zzz precalculate this for all initial rays
+    // TODO: precalculate this for all initial rays
     if (firstChild->aabb.contains(point)) {
         return { firstChild, secondChild };
     } 

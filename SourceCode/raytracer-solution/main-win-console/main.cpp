@@ -33,11 +33,6 @@ void addBenchmarkingPermutations(std::vector<Settings>& settingsList)
     }
 }
 
-void writeDiffs(std::vector<Vec2<size_t>> diff)
-{
-
-}
-
 void compare(const Settings& settings)
 {
     namespace fs = std::filesystem;
