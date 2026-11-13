@@ -24,19 +24,7 @@
     <ClInclude Include="CameraUnitTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RendererIntegrationTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TestUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UnitTestData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Benchmarks.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneUnitTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="KDTreeUnitTests.h">

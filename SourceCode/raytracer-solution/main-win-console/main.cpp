@@ -6,6 +6,10 @@
 #include "include/Engine.h"
 #include "include/Settings.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+
 /* @brief Output benchmarking information for a settings permutation */
 void logSettingsIteration(const Settings& settings) {
     std::ofstream logFile;
@@ -91,9 +95,36 @@ int launch()
     return 0;
 }
 
+/* @brief Make relative paths (settings.json, sceneLibrary/, out/) independent of where the exe was launched from.
+*  Walks up from the exe's folder to the first folder that holds settings.json, either directly
+*  (exe deployed next to its data) or in main-win-console/ (exe in the solution's x64/<Config>/ folder). */
+void enterDataDirectory()
+{
+    namespace fs = std::filesystem;
+    wchar_t exePath[MAX_PATH];
+    DWORD length = GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+    if (length == 0 || length == MAX_PATH) {
+        throw std::runtime_error("Could not determine the executable's path");
+    }
+
+    for (fs::path dir = fs::path(exePath).parent_path(); !dir.empty(); dir = dir.parent_path()) {
+        for (const fs::path& candidate : { dir, dir / "main-win-console" }) {
+            if (fs::exists(candidate / "settings.json")) {
+                fs::current_path(candidate);
+                return;
+            }
+        }
+        if (dir == dir.root_path()) {
+            break;
+        }
+    }
+    throw std::runtime_error("settings.json not found next to the executable or in any parent folder");
+}
+
 /* @brief As a console application, propagates all exceptions */
 int main()
 {
+    enterDataDirectory();
     // Loop main to detect race conditions, memory leaks, etc.
     size_t runTimes = 1;
     for (size_t i = 0; i < runTimes; ++i) {

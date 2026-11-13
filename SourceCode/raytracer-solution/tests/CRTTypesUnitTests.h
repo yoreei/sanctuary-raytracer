@@ -1,35 +1,30 @@
 #pragma once
 
-#include <cassert>
-
 #include "include/CRTTypes.h"
+#include "TestUtils.h"
 
 namespace CRTTypesUnitTests
 {
-    using namespace std;
-    void run()
+    inline void run()
     {
-        Vec3 A = { 3.5f, 0.f, 0.f };
-        Vec3 B = { 1.75f, 3.5f, 0.f };
-        Vec3 c;
-        float l;
-        
-        A.cross(B, c);
-        assert(c.equal({ 0.f, 0.f, 12.25f }));
+        Vec3 a{ 3.5f, 0.f, 0.f };
+        Vec3 b{ 1.75f, 3.5f, 0.f };
+        Vec3 c{};
 
-        A = { 3.f,-3.f,1.f };
-        B = { 4.f, 9.f, 2.f };
-        A.cross(B, c);
-        assert(c.equal({ -15.f, -2.f, 39.f }));
+        a.cross(b, c);
+        EXPECT(c.equal({ 0.f, 0.f, 12.25f }));
 
-        l = c.length();
-        assert(fEqual(l, 41.833f));
+        a = { 3.f, -3.f, 1.f };
+        b = { 4.f, 9.f, 2.f };
+        a.cross(b, c);
+        EXPECT(c.equal({ -15.f, -2.f, 39.f }));
+        EXPECT(fEqual(c.length(), 41.833f));
 
-        A = { 3.f,-3.f,1.f };
-        B = { -12.f, 12.f, -4.f };
-        A.cross(B, c);
-        assert(c.equal({ 0.f, 0.f, 0.f }));
-        l = c.length();
-        assert(fEqual(l, 0.f));
+        // Parallel vectors have a zero cross product
+        a = { 3.f, -3.f, 1.f };
+        b = { -12.f, 12.f, -4.f };
+        a.cross(b, c);
+        EXPECT(c.equal({ 0.f, 0.f, 0.f }));
+        EXPECT(fEqual(c.length(), 0.f));
     }
 } // namespace CRTTypesUnitTests

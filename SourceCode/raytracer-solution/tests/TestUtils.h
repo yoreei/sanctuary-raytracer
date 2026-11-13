@@ -1,30 +1,62 @@
 #pragma once
+#include <iostream>
+#include <streambuf>
+#include <vector>
+
 #include "include/CRTTypes.h"
+#include "include/Material.h"
+#include "include/Scene.h"
 #include "include/Triangle.h"
 
-Triangle& addTriangle(Scene& scene, const Vec3& v0, const Vec3& v1, const Vec3& v2)
+/* Unlike assert(), EXPECT also runs in Release builds and does not stop at the first failure. */
+#define EXPECT(expr) ::TestUtils::check(static_cast<bool>(expr), #expr, __FILE__, __LINE__)
+
+namespace TestUtils
 {
-    auto& vs = scene.vertices;
-    auto& tris = scene.triangles;
+    inline size_t& checkCount() { static size_t n = 0; return n; }
+    inline size_t& failureCount() { static size_t n = 0; return n; }
 
-    size_t startIdx = vs.size();
-    vs.push_back(v0);
-    vs.push_back(v1);
-    vs.push_back(v2);
+    inline void check(bool passed, const char* expr, const char* file, int line)
+    {
+        ++checkCount();
+        if (!passed) {
+            ++failureCount();
+            std::cerr << file << "(" << line << "): CHECK failed: " << expr << "\n";
+        }
+    }
 
-    size_t materialIdx = 0;
-    Triangle t{ vs, startIdx, startIdx + 1, startIdx + 2, materialIdx };
-    tris.push_back(t);
+    /* Discards std::cout while alive. The library logs heavily to std::cout
+       (Scene::build dumps the KD-tree, Debug traversal logs every node). */
+    class MuteCout {
+    public:
+        MuteCout() : saved(std::cout.rdbuf(nullptr)) {}
+        ~MuteCout() { std::cout.rdbuf(saved); }
+        MuteCout(const MuteCout&) = delete;
+        MuteCout& operator=(const MuteCout&) = delete;
+    private:
+        std::streambuf* saved;
+    };
 
-    return tris.back();
-}
+    /* Scene with a single default (diffuse) material at index 0 */
+    inline Scene makeScene(const std::string& name, const Settings& settings)
+    {
+        Scene scene{ name, &settings };
+        scene.materials.push_back(Material{});
+        return scene;
+    }
 
-void resetScene(Scene& scene)
-{
-    scene.vertices.clear();
-    scene.triangles.clear();
-    scene.materials.clear();
-    scene.meshObjects.clear();
-    scene.cacheVertexNormals.clear();
-    scene.lights.clear();
-}
+    /* Adds one triangle as its own mesh object. Call `buildScene` before intersecting. */
+    inline void addTriangle(Scene& scene, const Vec3& v0, const Vec3& v1, const Vec3& v2)
+    {
+        std::vector<Vec3> vertices{ v0, v1, v2 };
+        std::vector<Triangle> triangles{ Triangle{ 0, 1, 2, 0 } };
+        std::vector<Vec3> uvs(vertices.size(), Vec3{ 0.f, 0.f, 0.f });
+        scene.addObject(vertices, triangles, uvs);
+    }
+
+    inline void buildScene(Scene& scene)
+    {
+        MuteCout mute;
+        scene.build();
+    }
+} // namespace TestUtils

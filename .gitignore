@@ -43,6 +43,7 @@ enc_temp_folder/
 out/
 outBackup/
 compare/
+dist/
 *.ppm
 *.bmp
 

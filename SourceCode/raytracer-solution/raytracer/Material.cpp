@@ -9,7 +9,7 @@ Material::Type Material::TypeFromString(const std::string& type)
 {
     if (type == "void")
     {
-        return Type::VOID;
+        return Type::NONE;
     }
     else if (type == "diffuse")
     {
@@ -51,7 +51,7 @@ Material::Type Material::TypeFromString(const std::string& type)
 
 std::string Material::StringFromType(const Material::Type& type)
 {
-    if (type == Type::VOID)
+    if (type == Type::NONE)
     {
         return "void";
     }

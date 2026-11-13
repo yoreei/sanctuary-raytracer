@@ -110,7 +110,7 @@ void Renderer::processXData(TraceTask& task, TraceHit& hit, TraceQueue& traceQue
 	case Material::Type::DEBUG_BARY:
 		shadeBary(task, hit);
 		break;
-	case Material::Type::VOID:
+	case Material::Type::NONE:
 		throw std::invalid_argument("not handled");
 		break;
 	}

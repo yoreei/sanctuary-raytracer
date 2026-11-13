@@ -10,7 +10,7 @@ class Material
 public:
     enum Type
     {
-        VOID, // No material
+        NONE, // No material
         DIFFUSE,
         CONSTANT,
         REFLECTIVE,

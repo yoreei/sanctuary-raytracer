@@ -1,24 +1,27 @@
 #include <iostream>
 
-#include "include/CRTTypesUnitTests.h"
-#include "include/TriangleUnitTests.h"
-#include "include/CameraUnitTests.h"
-#include "include/Benchmarks.h"
-#include "include/SceneUnitTests.h"
-#include "include/KDTreeUnitTests.h"
-//#include "include/RendererIntegrationTests.h"
+#include "TestUtils.h"
+#include "CRTTypesUnitTests.h"
+#include "CameraUnitTests.h"
+#include "TriangleUnitTests.h"
+#include "KDTreeUnitTests.h"
 
 int main()
 {
+    // Triangle::intersect records per-thread metrics; the renderer reserves a slot per worker thread
+    GSceneMetrics.reserveThread(1);
+
     CRTTypesUnitTests::run();
-    TriangleUnitTests::run();
     CameraUnitTests::run();
-    SceneUnitTests::run();
+    TriangleUnitTests::run();
     KDTreeUnitTests::run();
-    Benchmarks::run();
 
-    //RendererIntegrationTests::run();
-
-    std::cout<<"All tests passed!"<<std::endl;
+    const size_t checks = TestUtils::checkCount();
+    const size_t failures = TestUtils::failureCount();
+    if (failures > 0) {
+        std::cout << failures << " of " << checks << " checks FAILED" << std::endl;
+        return 1;
+    }
+    std::cout << "All " << checks << " checks passed" << std::endl;
     return 0;
 }

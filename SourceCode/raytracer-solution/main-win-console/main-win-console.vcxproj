@@ -208,4 +208,31 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <!-- Release packaging. Run from the solution folder:
+         msbuild solution.sln /p:Configuration=Release /p:Platform=x64 /p:Deploy=true
+       Produces dist\ with the exe, settings.release.json (as settings.json), the final project scenes,
+       the skyboxes they use, and the MSVC runtime DLLs (app-local, so no VC++ Redistributable is needed). -->
+  <PropertyGroup>
+    <DeployDir>$(SolutionDir)dist\</DeployDir>
+  </PropertyGroup>
+  <Target Name="Deploy" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
+    <Error Condition="'$(Configuration)' != 'Release'" Text="Deploy only supports the Release configuration." />
+    <PropertyGroup>
+      <DeployRedistVersion>$([System.IO.File]::ReadAllText('$(VCInstallDir)Auxiliary\Build\Microsoft.VCRedistVersion.default.txt').Trim())</DeployRedistVersion>
+      <DeployRedistDir>$(VCInstallDir)Redist\MSVC\$(DeployRedistVersion)\x64\Microsoft.VC143.CRT\</DeployRedistDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <DeployScene Include="sceneLibrary\hw15_project\**\*" Exclude="sceneLibrary\hw15_project\**\*.nocobble;sceneLibrary\hw15_project\**\*.texturetests;sceneLibrary\hw15_project\**\*.white" />
+      <DeploySkybox Include="sceneLibrary\skybox\day_1\*;sceneLibrary\skybox\night_01\*" />
+      <DeployRuntime Include="$(DeployRedistDir)*.dll" />
+    </ItemGroup>
+    <Error Condition="'@(DeployRuntime)' == ''" Text="MSVC runtime DLLs not found in $(DeployRedistDir)" />
+    <RemoveDir Directories="$(DeployDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployDir)" />
+    <Copy SourceFiles="settings.release.json" DestinationFiles="$(DeployDir)settings.json" />
+    <Copy SourceFiles="@(DeployScene)" DestinationFiles="@(DeployScene->'$(DeployDir)%(Identity)')" />
+    <Copy SourceFiles="@(DeploySkybox)" DestinationFiles="@(DeploySkybox->'$(DeployDir)%(Identity)')" />
+    <Copy SourceFiles="@(DeployRuntime)" DestinationFolder="$(DeployDir)" />
+    <Message Importance="high" Text="Deployed to $(DeployDir)" />
+  </Target>
 </Project>
